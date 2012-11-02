@@ -6,3 +6,4 @@ jinja2
 mongoengine>=0.7
 pymongo
 werkzeug
+passlib

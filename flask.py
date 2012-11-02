@@ -13,6 +13,7 @@ import logging
 from furl import furl
 from .support import ejson
 from .support.mongosession import MongoSessionInterface
+from .cdn import FlaskCDN
 
 app = None
 
@@ -104,6 +105,7 @@ class Flask(flask.Flask):
         self.select_jinja_autoescape = True
 
         self.jinja_env.filters['tojson'] = lambda o: ejson.dumps(o)
+        self.jinja_env.filters['moment_stamp'] = lambda dt: dt.isoformat()+'Z'
 
         if self.settings.getboolean('server', 'enable_csrf'):
             self.csrf = SeaSurf(self)
@@ -113,6 +115,8 @@ class Flask(flask.Flask):
                 return ''
             self.csrf_token = nothing
             self.jinja_env.globals['csrf_token'] = nothing
+
+        FlaskCDN(self)
 
         self.init_application()
 

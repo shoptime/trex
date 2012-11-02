@@ -1,0 +1,75 @@
+{% macro pager(pager) %}
+{% if pager.first_page != pager.last_page %}
+    <div class="pagination">
+        <ul>
+            {% if pager.prev() %}
+                <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.prev()}) }}">Prev</a></li>
+            {% else %}
+                <li class="disabled"><a>Prev</a></li>
+            {% endif %}
+            {% for page in pager.list %}
+            <li{% if page == pager.page %} class="active"{% endif %}><a href="{{ pager.uri.remove(['page']).add({'page':page}) }}">{{ page }}</a></li>
+            {% endfor %}
+            {% if pager.next() %}
+                <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.next()}) }}">Next</a></li>
+            {% else %}
+                <li class="disabled"><a>Next</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% endif %}
+{% endmacro %}
+
+{% macro form_render(form, button_label='Submit', vertical=False, id=None) %}
+<form
+    action=""
+    method="POST"
+    enctype="multipart/form-data"
+    class="wtform {% if vertical %}form-vertical{% else %}form-horizontal{% endif %}"
+    accept-charset="utf-8"
+    {% if id %}id="{{ id }}"{% endif %}
+    >
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    {{ form.hidden_tag() }}
+    {% for field in form %}
+    {{ form_render_field(field) }}
+    {% endfor %}
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ button_label }}</button>
+    </div>
+</form>
+{% endmacro %}
+
+{% macro form_render_field(field) %}
+{% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
+<div class="control-group{% if field.errors %} error{% endif %}{% if field.flags.required %} required{% endif %}">
+    {% if field.label.text %}
+    <label class="control-label" for="{{ field.id }}">{{ field.label.text }}</label>
+    {% endif %}
+    <div class="controls">
+        {{ field(**kwargs) | safe }}
+        <span class="help-inline">
+        {% for error in field.errors %}{{ error }} {% endfor %}
+        </span>
+        {% if field.description %}
+        <span class="help-block">{{ field.description }}</span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% if field.type == 'LabelField' %}
+<div class="control-group">
+    <div class="controls">
+        <p>{{ field.label.text }}</p>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro bootstrap_nav_item(endpoint, label, match=None) -%}
+    <li
+    {%- if match -%}
+        {%- if request.endpoint and request.endpoint.startswith(match) %} class="active"{%- endif -%}
+    {%- elif request.endpoint == endpoint %} class="active"{%- endif -%}
+    ><a href="{{ url_for(endpoint) }}">{{ label }}</a></li>
+{%- endmacro %}
