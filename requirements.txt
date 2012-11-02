@@ -1,0 +1,8 @@
+decorator
+flask
+flask-seasurf
+furl
+jinja2
+mongoengine>=0.7
+pymongo
+werkzeug
