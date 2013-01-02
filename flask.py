@@ -10,10 +10,12 @@ import warnings
 import pymongo
 import mongoengine
 import logging
-from furl import furl
+from werkzeug.datastructures import OrderedMultiDict
 from .support import ejson
+from .support import parser
 from .support.mongosession import MongoSessionInterface
-from .cdn import FlaskCDN
+#from .cdn import FlaskCDN
+from furl import furl
 
 app = None
 
@@ -70,6 +72,9 @@ def render_json():
         return http_response
     return decorator(decorated)
 
+class DinoRequest(flask.Request):
+    parameter_storage_class = OrderedMultiDict
+
 class Flask(flask.Flask):
     settings = ConfigParser()
     db = None
@@ -87,9 +92,36 @@ class Flask(flask.Flask):
         assert len(mongo_url.path.segments) == 1, "mongo.url %s has a database set" % mongo_url
         assert mongo_url.path.segments[0] != '', "mongo.url %s has a database set" % mongo_url
 
+
+    def switch_to_test_mode(self):
+        mongo_url = furl(self.settings.get('mongo', 'url'))
+        mongo_url.path.segments[0] = "test_%s" % mongo_url.path.segments[0]
+        self.settings.set('mongo', 'url', str(mongo_url))
+
+        if 'server_port' in self.settings.options('test'):
+            self.settings.set('server', 'port', self.settings.get('test', 'server_port'))
+
+        if 'server_url' in self.settings.options('test'):
+            self.settings.set('server', 'url', self.settings.get('test', 'server_url'))
+
+        self.in_test_mode = True
+
+        self.init_application()
+
+    def switch_to_wsgi_mode(self):
+        log_filename = os.path.abspath(os.path.join(self.root_path, '..', 'logs', 'application.log'))
+        file_handler = logging.FileHandler(log_filename)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s '
+            '[in %(pathname)s:%(lineno)d]'
+        ))
+        self.logger.addHandler(file_handler)
+
     def __init__(self, *args, **kwargs):
         super(Flask, self).__init__(*args, **kwargs)
 
+        self.request_class = DinoRequest
         # Add trex/templates to the jinja2 search path
         self.jinja_loader.searchpath.append(os.path.join(os.path.dirname(__file__), 'templates'))
 
@@ -106,6 +138,9 @@ class Flask(flask.Flask):
 
         self.jinja_env.filters['tojson'] = lambda o: ejson.dumps(o)
         self.jinja_env.filters['moment_stamp'] = lambda dt: dt.isoformat()+'Z'
+        self.jinja_env.filters['textarea2html'] = lambda text: parser.textarea2html(text)
+
+        self.jinja_env.globals['hostname'] = os.uname()[1]
 
         if self.settings.getboolean('server', 'enable_csrf'):
             self.csrf = SeaSurf(self)
@@ -116,14 +151,17 @@ class Flask(flask.Flask):
             self.csrf_token = nothing
             self.jinja_env.globals['csrf_token'] = nothing
 
-        FlaskCDN(self)
+        #FlaskCDN(self)
 
         self.init_application()
 
     def init_application(self):
         self.debug = self.settings.getboolean('server', 'debug')
-        if not self.debug:
-            self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
+
+        if self.settings.get('server', 'url').startswith('https:'):
+            self.logger.info("Detected SSL service URL, enabling secure cookies")
+            self.config['SESSION_COOKIE_SECURE'] = True
 
         mongo_url = furl(self.settings.get('mongo', 'url'))
         mongo_db = mongo_url.path.segments[0]
@@ -172,3 +210,10 @@ class Flask(flask.Flask):
         options['extra_files'].append(os.path.join(self.root_path, 'local.ini'))
 
         super(Flask, self).run(host, port, debug, **options)
+
+    def shutdown(self):
+        # This funky cleanup code is necessary to ensure that we nicely kill off any
+        # mongo replicaset connection monitoring threads
+        db = mongoengine.connection.get_connection('default')
+        if db:
+            db.close()

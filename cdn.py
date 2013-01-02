@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import re
 import os
 from os import path
-import md5
+import hashlib
 from flask import Response, abort, request
 import mimetypes
 from werkzeug.http import http_date
@@ -27,6 +27,8 @@ class FlaskCDN(object):
         @self.app.route('/cdn/<path:uri>', endpoint='cdn')
         def serve_file(uri):
             uri, hash = self.cdn.unhash_uri(uri)
+            if uri is None:
+                abort(404)
             try:
                 info = self.cdn.info(uri)
             except OSError:
@@ -113,12 +115,16 @@ class CDN(object):
         self.plugins.append(CDN_CSS(self))
         #self.plugins.append(CDNJavascriptMinifier(self))
 
-    def resolve(self, uri):
+    def resolve(self, uri, base=None):
+        if base is None:
+            base = self.base
         info = self.update(uri)
-        return "%s%s" % (self.base, info.cdn_file)
+        return "%s%s" % (base, info.cdn_file)
 
     def unhash_uri(self, uri):
         components = re.split(r'\.', uri)
+        if len(components) < 3:
+            return None, None
         hash = components[-2]
         url = ".".join(components[:-2])
         url += ".%s" % components[-1]
@@ -209,7 +215,7 @@ class CDNFile(object):
         self.mime = mimetypes.guess_type(self.full_path)[0] or "application/octet-stream"
 
     def calculate(self):
-        self.hash = md5.new(self.file_data()).hexdigest()
+        self.hash = hashlib.md5(self.file_data()).hexdigest()
         self.hash = self.hash[:12]
         self.cdn_file = "%s.%s.%s" % (self.basename, self.hash, self.extension)
         if self.fragment:
