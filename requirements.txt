@@ -1,9 +1,13 @@
 decorator
 flask
+flask-script
 flask-seasurf
 furl
 jinja2
+markdown
 mongoengine>=0.7
-pymongo
-werkzeug
 passlib
+pymongo
+selenium
+termcolor
+werkzeug
