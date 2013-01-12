@@ -139,6 +139,8 @@ class Flask(flask.Flask):
         self.jinja_env.filters['tojson'] = lambda o: ejson.dumps(o)
         self.jinja_env.filters['moment_stamp'] = lambda dt: dt.isoformat()+'Z'
         self.jinja_env.filters['textarea2html'] = lambda text: parser.textarea2html(text)
+        self.jinja_env.filters['english_join'] = lambda items: ', '.join(items[0:-1]) + ' and ' + items[-1]
+        self.jinja_env.filters['oxford_join'] = lambda items: len(items) == 2 and ' and '.join(items) or ', '.join(items[0:-1]) + ', and ' + items[-1]
 
         self.jinja_env.globals['hostname'] = os.uname()[1]
 
