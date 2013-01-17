@@ -14,7 +14,7 @@ from werkzeug.datastructures import OrderedMultiDict
 from .support import ejson
 from .support import parser
 from .support.mongosession import MongoSessionInterface
-#from .cdn import FlaskCDN
+from .cdn import FlaskCDN
 from furl import furl
 
 app = None
@@ -151,7 +151,7 @@ class Flask(flask.Flask):
             self.csrf_token = nothing
             self.jinja_env.globals['csrf_token'] = nothing
 
-        #FlaskCDN(self)
+        FlaskCDN(self)
 
         self.init_application()
 
