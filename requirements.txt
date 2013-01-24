@@ -4,10 +4,12 @@ flask-script
 flask-seasurf
 furl
 jinja2
+httpagentparser
 markdown
 mongoengine>=0.7
 passlib
 pymongo
+requests
 selenium
 termcolor
 werkzeug
