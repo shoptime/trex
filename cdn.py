@@ -145,6 +145,14 @@ class CDN(object):
         else:
             fragment = None
         uri = match[0]
+
+        match = re.split('\?', uri, maxsplit=2)
+        if len(match) > 1:
+            query = "#%s" % match[1]
+        else:
+            query = None
+        uri = match[0]
+
         uri = self.cleanup_uri(uri)
 
         info = self.cache_get(uri)
