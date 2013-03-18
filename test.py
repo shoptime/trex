@@ -215,6 +215,9 @@ class WebElementSet(object):
                 [ found.append(x) for x in el.find_elements_by_css_selector(selector) ]
         return self.new(found, selector=selector_desc)
 
+    def __call__(self, *args, **kwargs):
+        return self.find(*args, **kwargs)
+
     def filter_by_text(self, text, selector_desc=None):
         if not selector_desc:
             selector_desc = ":text(%s)" % text
@@ -465,6 +468,9 @@ class TestBase(object):
     def find(self, *args, **kwargs):
         return WebElementSet(self.browser, context=self).find(*args, **kwargs)
 
+    def __call__(self, *args, **kwargs):
+        return self.find(*args, **kwargs)
+
     def fakepause(self):
         sleep(self.slowdown)
 
@@ -484,6 +490,26 @@ class TestBase(object):
                 return True
             last[0] = value
             return False
+        self.wait().until(inner_wait)
+        return self
+
+    def wait_for_element_visible(self, element, *args):
+        def inner_wait(driver):
+            try:
+                e = self.find(element)[-1]
+            except IndexError:
+                return False
+            return e.is_visible()
+        self.wait().until(inner_wait)
+        return self
+
+    def wait_for_element_hidden(self, element, *args):
+        def inner_wait(driver):
+            try:
+                e = self.find(element)[-1]
+            except IndexError:
+                return False
+            return not e.is_visible()
         self.wait().until(inner_wait)
         return self
 
@@ -618,6 +644,12 @@ class TestBase(object):
         Reload the current page
         """
         self.browser.refresh()
+
+    def source(self):
+        """
+        Return the source for the current page
+        """
+        return self.browser.page_source
 
     def back(self):
         """
