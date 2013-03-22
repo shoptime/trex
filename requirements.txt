@@ -1,3 +1,4 @@
+blinker
 cssselect
 decorator
 flask

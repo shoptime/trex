@@ -16,6 +16,10 @@ from .support import parser
 from .support.mongosession import MongoSessionInterface
 from .cdn import FlaskCDN
 from furl import furl
+import sys
+import copy
+import re
+import traceback
 
 app = None
 
@@ -150,6 +154,8 @@ class Flask(flask.Flask):
 
         self.jinja_env.globals['hostname'] = os.uname()[1]
 
+        FlaskExceptionReporter(self)
+
         if self.settings.getboolean('server', 'enable_csrf'):
             self.csrf = SeaSurf(self)
             self.csrf_token = self.csrf._get_token
@@ -225,3 +231,43 @@ class Flask(flask.Flask):
         db = mongoengine.connection.get_connection('default')
         if db:
             db.close()
+
+#
+# Exception handling
+#
+
+def _exception_handler(app, exception):
+
+    exc_type, exc_value, tb = sys.exc_info()
+
+    exc_type_name = exc_type.__name__
+    if exc_type.__module__ not in ('__builtin__', 'exceptions'):
+        exc_type_name = "%s.%s" % (exc_type.__module__, exc_type_name)
+
+    env_data = copy.copy(flask.request.environ)
+
+    for key in env_data.keys():
+        if not re.search(r'^[A-Z_]+$', key):
+            del env_data[key]
+
+    data = {
+        'url': flask.request.url,
+        'type': exc_type_name,
+        'value': str(exc_value),
+        'traceback': traceback.extract_tb(tb),
+        'environ': env_data,
+    }
+
+    from trex.support import notify
+    try:
+        last_frame = data['traceback'][-1]
+        file = last_frame[0]
+        line = last_frame[1]
+        notify.error('instantpredict.com', data['type'], '%s at %s:%s' % (data['value'], file, line))
+    except:
+        notify.error('instantpredict.com', data['type'], '%s (no file/line info available)' % data['value'])
+
+
+class FlaskExceptionReporter(object):
+    def __init__(self, app=None):
+        flask.got_request_exception.connect(_exception_handler)
