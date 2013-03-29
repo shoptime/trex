@@ -15,5 +15,6 @@ pymongo
 python-postmark
 requests
 selenium
+sendgrid-python
 termcolor
 werkzeug

@@ -16,6 +16,7 @@ attempt to wrap those at this time.
 from __future__ import absolute_import
 import postmark
 from postmark.core import PMMailUnprocessableEntityException
+import sendgrid
 import pickle
 from trex.flask import app
 from mongoengine import Document, StringField
@@ -23,6 +24,7 @@ from jinja2 import Environment, PackageLoader
 from flask import url_for
 from premailer import transform
 import re
+from email.utils import parseaddr
 
 
 # Jinja env for templated emails
@@ -35,7 +37,21 @@ env.globals['url_for'] = url_for
 capturing = False
 
 
-def send(sender=None, to=None, cc=None, bcc=None, reply_to=None, subject=None, tag=None, html_body=None, text_body=None, custom_headers=None, attachments=None, test=False):
+def send(
+        sender         = None,
+        to             = None,
+        cc             = None,
+        bcc            = None,
+        reply_to       = None,
+        subject        = None,
+        tag            = None,
+        html_body      = None,
+        text_body      = None,
+        custom_headers = None,
+        attachments    = None,
+        test           = False,
+        service        = 'postmark'
+        ):
     """
     Send email immediately. If postmark.test_override is set in the config then it will always generate test mode regardless
     of the test setting
@@ -52,9 +68,58 @@ def send(sender=None, to=None, cc=None, bcc=None, reply_to=None, subject=None, t
     @param custom_headers: custom headers as a dictionary of key=value
     @param attachments: A list of tuples or email.mime.base.MIMEBase objects as attachments
     @param test: Whether to simply dump the results in the log instead of sending.
+    @param service: Which email service to use. Supported: postmark, sendgrid
     @return:
     """
 
+    if service == 'postmark':
+        return _send_postmark(
+            sender         = sender,
+            to             = to,
+            cc             = cc,
+            bcc            = bcc,
+            reply_to       = reply_to,
+            subject        = subject,
+            tag            = tag,
+            html_body      = html_body,
+            text_body      = text_body,
+            custom_headers = custom_headers,
+            attachments    = attachments,
+            test           = test
+        )
+
+    if service == 'sendgrid':
+        return _send_sendgrid(
+            sender         = sender,
+            to             = to,
+            cc             = cc,
+            bcc            = bcc,
+            reply_to       = reply_to,
+            subject        = subject,
+            tag            = tag,
+            html_body      = html_body,
+            text_body      = text_body,
+            custom_headers = custom_headers,
+            attachments    = attachments,
+            test           = test
+        )
+
+    raise Exception("Unknown service for sending email")
+
+def _send_postmark(
+        sender         = None,
+        to             = None,
+        cc             = None,
+        bcc            = None,
+        reply_to       = None,
+        subject        = None,
+        tag            = None,
+        html_body      = None,
+        text_body      = None,
+        custom_headers = None,
+        attachments    = None,
+        test           = False
+        ):
     api_key = app.settings.get('postmark', 'api_key')
     sender  = sender or app.settings.get('postmark', 'sender')
     test    = test or app.settings.getboolean('postmark', 'test')
@@ -66,7 +131,20 @@ def send(sender=None, to=None, cc=None, bcc=None, reply_to=None, subject=None, t
     if attachments is None:
         attachments = []
 
-    pm = postmark.PMMail(api_key=api_key, sender=sender, to=to, cc=cc, bcc=bcc, reply_to=reply_to, subject=subject, tag=tag, html_body=html_body, text_body=text_body, custom_headers=custom_headers, attachments=attachments)
+    pm = postmark.PMMail(
+        api_key        = api_key,
+        sender         = sender,
+        to             = to,
+        cc             = cc,
+        bcc            = bcc,
+        reply_to       = reply_to,
+        subject        = subject,
+        tag            = tag,
+        html_body      = html_body,
+        text_body      = text_body,
+        custom_headers = custom_headers,
+        attachments    = attachments
+    )
 
     if capturing or app.in_test_mode:
         doc = CapturedEmail()
@@ -77,6 +155,51 @@ def send(sender=None, to=None, cc=None, bcc=None, reply_to=None, subject=None, t
         test = True
 
     pm.send(test=test)
+
+def _send_sendgrid(
+        sender         = None,
+        to             = None,
+        cc             = None,
+        bcc            = None,
+        reply_to       = None,
+        subject        = None,
+        tag            = None,
+        html_body      = None,
+        text_body      = None,
+        custom_headers = None,
+        attachments    = None,
+        test           = False
+        ):
+    username = app.settings.get('sendgrid', 'username')
+    password = app.settings.get('sendgrid', 'password')
+    test     = test or app.settings.getboolean('sendgrid', 'test')
+
+    if not sender:
+        sender = parseaddr(app.settings.get('sendgrid', 'sender'))
+        sender = (sender[1], sender[0])
+    if not reply_to and 'reply_to' in app.settings.options('sendgrid'):
+        reply_to = app.settings.get('sendgrid', 'reply_to')
+
+    s = sendgrid.Sendgrid(username, password, secure=False)
+
+    message = sendgrid.Message(sender, subject, text_body, html_body)
+    message.set_replyto(reply_to)
+    message.add_to(to)
+    if cc:
+        message.add_cc(cc)
+    if bcc:
+        message.add_bcc(bcc)
+
+    if capturing or app.in_test_mode:
+        doc = CapturedEmail()
+        doc.sendgrid_obj = pickle.dumps(message)
+        doc.save()
+
+    if test:
+        app.logger.info('Sendgrid message: to=%(to)s subject=%(subject)s html=%(html)s text=%(text)s', dict(to=message.to, subject=message.subject, html=message.html, text=message.text))
+        return
+
+    s.web.send(message)
 
 def html_sample(template, tplvars):
     html_template = env.get_template('%s-html.jinja2' % template)
