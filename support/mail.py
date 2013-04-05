@@ -196,10 +196,15 @@ def _send_sendgrid(
         doc.save()
 
     if test:
-        app.logger.info('Sendgrid message: to=%(to)s subject=%(subject)s html=%(html)s text=%(text)s', dict(to=message.to, subject=message.subject, html=message.html, text=message.text))
+        app.logger.info('Sendgrid message: to=%(to)s subject=%(subject)s html=%(html)s text=%(text)s', dict(to=message.to, subject=message.subject, html=_truncate(message.html), text=_truncate(message.text)))
         return
 
     s.web.send(message)
+
+def _truncate(string):
+    if len(string) > 100:
+        return string[0:100] + '...'
+    return string
 
 def html_sample(template, tplvars):
     html_template = env.get_template('%s-html.jinja2' % template)
