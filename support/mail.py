@@ -20,16 +20,10 @@ import sendgrid
 import pickle
 from trex.flask import app
 from mongoengine import Document, StringField
-from jinja2 import Environment, PackageLoader
-from flask import url_for
+from flask import render_template
 from premailer import transform
 import re
 from email.utils import parseaddr
-
-
-# Jinja env for templated emails
-env = Environment(loader=PackageLoader(app.import_name, 'templates/email'))
-env.globals['url_for'] = url_for
 
 
 # Signals whether we're sending emails or just capturing them to mongo (for the
@@ -207,24 +201,17 @@ def _truncate(string):
     return string
 
 def html_sample(template, tplvars):
-    html_template = env.get_template('%s-html.jinja2' % template)
-    return html_to_emailhtml(html_template.render(tplvars))
+    return html_to_emailhtml(render_template('email/%s-html.jinja2' % template, **tplvars))
 
 def text_sample(template, tplvars):
-    text_template = env.get_template('%s-text.jinja2' % template)
-    return text_template.render(tplvars)
+    return render_template('email/%s-text.jinja2' % template, **tplvars)
 
 def tpl_send(template, *args, **kwargs):
-    # TODO make a template cache?
-
     tplvars = kwargs['tplvars']
     del kwargs['tplvars']
 
-    html_template = env.get_template('%s-html.jinja2' % template)
-    kwargs['html_body'] = html_to_emailhtml(html_template.render(tplvars))
-
-    text_template = env.get_template('%s-text.jinja2' % template)
-    kwargs['text_body'] = text_template.render(tplvars)
+    kwargs['html_body'] = html_to_emailhtml(render_template('email/%s-html.jinja2' % template, **tplvars))
+    kwargs['text_body'] = render_template('email/%s-text.jinja2' % template, **tplvars)
 
     return send(*args, **kwargs)
 
