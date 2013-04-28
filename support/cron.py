@@ -7,7 +7,7 @@ import sys
 import time
 import traceback
 from datetime import datetime, timedelta
-from mongoengine import Document, StringField, DateTimeField, IntField
+from mongoengine import Document, StringField, DateTimeField, IntField, DynamicDocument
 import mongoengine
 
 class CronLock(Document):
@@ -82,6 +82,79 @@ class CronJob(object):
         context.pop()
         lock.delete()
         sys.exit(0)
+
+class QueuedCronJob(CronJob):
+    """Represents a cron job that may be queued.
+
+    The jobs to be run are stored in the CronJobQueue collection (see
+    mongoengine definition for more info). Jobs to be run can be scheduled
+    using CronJobQueue.enqueue()"""
+
+    def run(self):
+        # make this go around processing for 40 seconds
+        begin_time = time.time()
+
+        while True:
+            job = CronJobQueue.objects(type=self.__class__.__name__, started=None).first()
+
+            if job:
+                # handle it here
+                self.lock_job(job)
+                self.process_job(job)
+                self.unlock_job(job)
+
+                run_time = time.time() - begin_time
+                if run_time > 40:
+                    # we're done for this cronjob invocation
+                    break
+            else:
+                # no jobs.. we're done for this time
+                break
+
+    def process_job(job):
+        raise NotImplementedError("Need to implement QueuedCronJob.process_job()")
+
+    def lock_job(self, job):
+        job.started        = datetime.utcnow()
+        job.locked_by_host = os.uname()[1]
+        job.locked_by_pid  = os.getpid()
+        job.progress       = 1
+        job.save(safe=True)
+
+    def unlock_job(self, job):
+        job.finished       = datetime.utcnow()
+        job.locked_by_host = None
+        job.locked_by_pid  = None
+        job.progress       = 100
+        job.save(safe=True)
+
+class CronJobQueue(DynamicDocument):
+    meta = {
+        'ordering': ['created'],
+    }
+
+    type           = StringField(required=True)
+    created        = DateTimeField(required=True, default=datetime.utcnow)
+    started        = DateTimeField()
+    locked_by_host = StringField()
+    locked_by_pid  = IntField()
+    progress       = IntField(default=0)
+    finished       = DateTimeField()
+
+    @staticmethod
+    def enqueue(type, **kwargs):
+        if CronJobQueue.objects(type=type, started=None, **kwargs).count():
+            # Recalculation already scheduled, let's not do it again
+            return
+
+        job = CronJobQueue()
+        job.type = type
+        for k, v in kwargs.items():
+            setattr(job, k, v)
+        job.save()
+
+        return job
+
 
 def cron_daemon(cron_jobs, base_interval=60, max_interval=600, failure_multiplier=1.5):
     if app.debug:

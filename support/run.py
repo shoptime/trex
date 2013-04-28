@@ -77,6 +77,8 @@ class Manager(script.Manager):
                     continue
                 if v == trex.support.cron.CronJob:
                     continue
+                if v == trex.support.cron.QueuedCronJob:
+                    continue
                 jobs[k] = v
                 if k == job_name:
                     cls = v
