@@ -563,7 +563,7 @@ class TestBase(object):
         for i in range(indent):
             space += "\t"
 
-        for line in message.splitlines():
+        for line in str(message).splitlines():
             print "# %s%s" % (space, line)
 
     def is_equal(self, got, expected, message=None):
