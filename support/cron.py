@@ -143,9 +143,10 @@ class CronJobQueue(DynamicDocument):
 
     @staticmethod
     def enqueue(type, **kwargs):
-        if CronJobQueue.objects(type=type, started=None, **kwargs).count():
+        job = CronJobQueue.objects(type=type, started=None, **kwargs).first()
+        if job:
             # Recalculation already scheduled, let's not do it again
-            return
+            return False, job
 
         job = CronJobQueue()
         job.type = type
@@ -153,7 +154,7 @@ class CronJobQueue(DynamicDocument):
             setattr(job, k, v)
         job.save()
 
-        return job
+        return True, job
 
 
 def cron_daemon(cron_jobs, base_interval=60, max_interval=600, failure_multiplier=1.5):
