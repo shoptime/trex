@@ -583,6 +583,23 @@ class TestBase(object):
         self.failure(message)
         self.diag("Got: %s\nExpected: %s" % (got, expected), indent=1)
 
+    def isnt_equal(self, got, expected, message=None):
+        """
+        Verify got != expected. If so, call self.ok, if not self.failure
+
+        @param got: String retrieved from DOM
+        @type got: str
+        @param expected: String expected
+        @type expected: str
+        @param message: Message to be displayed
+        @type message: str
+        """
+        if got != expected:
+            return self.ok(message)
+
+        self.failure(message)
+        self.diag("Got: %s\nExpected: %s" % (got, expected), indent=1)
+
     def is_like(self, got, regexp, message=None):
         """
         Verify got re.search expected. If so, call self.ok, if not self.failure
