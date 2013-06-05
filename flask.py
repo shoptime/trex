@@ -226,6 +226,19 @@ class Flask(flask.Flask):
 
         super(Flask, self).run(host, port, debug, **options)
 
+    def wsgi_app(self, environ, start_response):
+        if self.config.get('PREFERRED_URL_SCHEME'):
+            environ['wsgi.url_scheme'] = self.config['PREFERRED_URL_SCHEME']
+
+        if 'allow_no_referer' in self.settings.options('server') and self.settings.getboolean('server', 'allow_no_referer'):
+            # SeaSurf does a referer check when using https. Sometimes no referer
+            # is set (e.g. iOS application making AJAX requests). In these cases,
+            # we fake a referer
+            if 'HTTP_REFERER' not in environ and environ.get('wsgi.url_scheme') == 'https' and environ.get('REQUEST_METHOD') == 'POST':
+                environ['HTTP_REFERER'] = self.settings.get('server', 'url') + '/__csrf_fix__'
+
+        return super(Flask, self).wsgi_app(environ, start_response)
+
     def shutdown(self):
         # This funky cleanup code is necessary to ensure that we nicely kill off any
         # mongo replicaset connection monitoring threads
