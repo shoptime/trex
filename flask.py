@@ -176,6 +176,7 @@ class Flask(flask.Flask):
         if self.settings.get('server', 'url').startswith('https:'):
             self.logger.info("Detected SSL service URL, enabling secure cookies")
             self.config['SESSION_COOKIE_SECURE'] = True
+            self.config['PREFERRED_URL_SCHEME'] = 'https'
 
         mongo_url = furl(self.settings.get('mongo', 'url'))
         mongo_db = mongo_url.path.segments[0]
