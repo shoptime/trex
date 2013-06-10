@@ -20,6 +20,7 @@ import sys
 import copy
 import re
 import traceback
+from jinja2.exceptions import TemplateNotFound
 
 app = None
 
@@ -49,7 +50,13 @@ def render_html(template=None, add_etag=False):
         if flask.request.endpoint:
             response['html_id'] = 'endpoint-%s' % flask.request.endpoint.replace('.', '-')
 
-        out     = flask.render_template(template_name, **response)
+        try:
+            out = flask.render_template(template_name, **response)
+        except TemplateNotFound:
+            if response.get('_wiki'):
+                return flask.abort(404)
+            raise
+
         status  = response.get('_status', 200)
         headers = response.get('_headers', {})
 
