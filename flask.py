@@ -292,3 +292,73 @@ def _exception_handler(app, exception):
 class FlaskExceptionReporter(object):
     def __init__(self, app=None):
         flask.got_request_exception.connect(_exception_handler)
+
+
+"""Extends flask.Blueprint to add in declarative authentication handling for endpoints.
+
+Instead of doing auth checking in an endpoint or a before_request handler,
+you declare your auth intentions like so:
+
+    @blueprint.route('/open/<chat_id>', methods=["POST"], auth=auth.chat_owner)
+    def open(chat):
+
+The auth functions can abort(), redirect() or otherwise return a response
+that terminates the request. They can also return an instance of new_args,
+to rewrite chat arguments - for example, to turn chat_id into an actual
+chat object in the example above."""
+class AuthBlueprint(flask.Blueprint):
+    def add_url_rule(self, rule, endpoint, view_func, **options):
+        if 'auth' not in options:
+            raise Exception("No authentication handler supplied for %s.%s" % (self.name, endpoint))
+
+        authfunc = options['auth']
+
+        if hasattr(view_func, '__authblueprint_authfunc__'):
+            existing_authfunc = view_func.__authblueprint_authfunc__
+            existing_endpoint = view_func.__authblueprint_endpoint__
+            if existing_authfunc != authfunc and existing_endpoint == endpoint:
+                raise Exception("Can't use different auth methods (%s and %s) for the same endpoint: %s.%s" % (
+                    existing_authfunc,
+                    authfunc,
+                    self.name,
+                    endpoint,
+                ))
+
+        if hasattr(view_func, '__authblueprint_unwrapped__'):
+            view_func = view_func.__authblueprint_unwrapped__
+
+        def view_func_authed(**kwargs):
+            response = authfunc(**kwargs)
+            if isinstance(response, new_args):
+                # Auth OK; authfunc rewrote some arguments
+                return view_func(**response)
+            elif response:
+                # Auth not ok (returned some kind of response, e.g. 404/403 or redirect)
+                return response
+            else:
+                # Auth OK; no args rewritten so just pass 'em through
+                return view_func(**kwargs)
+
+        setattr(view_func_authed, '__authblueprint_unwrapped__', view_func)
+        setattr(view_func_authed, '__authblueprint_authfunc__', authfunc)
+        setattr(view_func_authed, '__authblueprint_endpoint__', endpoint)
+        del options['auth']
+        view_func_authed.__name__ = view_func.__name__
+
+        super(AuthBlueprint, self).add_url_rule(rule, endpoint, view_func_authed, **options)
+
+        return view_func_authed
+
+    def route(self, rule, **options):
+        """Overrides route() to allow the auth wrapper function created in
+        add_url_rule to be returned from the route decorator.
+
+        In particular, this means that SeaSurf knows which view functions are
+        exempted from CSRF checking."""
+        def decorator(f):
+            endpoint = options.pop("endpoint", f.__name__)
+            return self.add_url_rule(rule, endpoint, f, **options)
+        return decorator
+
+class new_args(dict):
+    pass
