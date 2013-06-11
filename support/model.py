@@ -21,6 +21,9 @@ class BaseUser(Document):
     last_login = DateTimeField()
     role       = StringField(required=True, default='user')
 
+    def display_name(self):
+        return self.email
+
     @classmethod
     def roles(cls):
         return dict(

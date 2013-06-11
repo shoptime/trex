@@ -43,13 +43,26 @@
                     data-confirm-label="Reset password"
                     data-confirm-label-class="btn-danger"
                 >
-                    <i class="icon-white icon-lock"></i> 
+                    <i class="icon-white icon-lock"></i>
                     {% if user.password %}
                     Reset password
                     {% else %}
                     Set initial password
                     {% endif %}
                 </button>
+                {% if g.user.has_flag('trex.user_management_login_as') and g.user != user %}
+                <button
+                    class="btn trex-post-confirm"
+                    data-href="{{ url_for('trex.auth.login_as', user_id=user.id) }}"
+                    data-title="Confirm log in as"
+                    data-body="This will log you in as {{ user.email }}. Are you sure you wish to proceed?"
+                    data-confirm-label="Log in"
+                    data-confirm-label-class="btn-danger"
+                >
+                    <i class="icon-arrow-right"></i>
+                    Log in as
+                </button>
+                {% endif %}
             </td>
         </tr>
     {% endfor %}

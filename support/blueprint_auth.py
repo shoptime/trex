@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from trex.flask import app
 from trex.flask import AuthBlueprint, render_html
 from .. import auth
-from flask import g, redirect, url_for, request, session
+from flask import g, redirect, url_for, request, session, flash, abort
 from datetime import datetime
 from flask.ext import wtf
 
@@ -55,11 +55,30 @@ def login():
 
     return dict(form=form)
 
-@blueprint.route('/logout', auth=auth.login)
-def logout():
+@blueprint.route('/login-as/<user_id>', methods=['POST'], auth=auth.has_flag('trex.user_management_login_as'))
+def login_as(user_id):
     return_to = request.args.get('return_to') or url_for('index.index')
 
-    session.pop('user_id', None)
+    try:
+        user = m.User.objects.get(id=user_id)
+    except m.DoesNotExist:
+        abort(404)
+
+    session['user_id_parent'] = g.user.id
+    session['user_id'] = user.id
+    flash("Logged in as %s" % user.display_name())
+
+    return redirect(return_to)
+
+@blueprint.route('/logout', auth=auth.login)
+def logout():
+    if 'user_id_parent' in session:
+        session['user_id'] = session.pop('user_id_parent')
+        return_to = request.args.get('return_to') or url_for('trex.user_management.index')
+    else:
+        session.pop('user_id', None)
+        return_to = request.args.get('return_to') or url_for('index.index')
+
     return redirect(return_to)
 
 @blueprint.route('/change-password', methods=['GET', 'POST'], auth=auth.login)
