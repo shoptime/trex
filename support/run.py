@@ -38,6 +38,41 @@ class Manager(script.Manager):
             # Compile less
             subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
 
+        @self.command
+        def watch_static():
+            "Compile static files (watching for changes with inotify)"
+
+            app = self.app
+
+            # Switch to static dir
+            os.chdir(os.path.join(self.app.root_path, 'cdn'))
+
+            import time
+            from watchdog.observers import Observer
+
+            observer = Observer()
+            class EventHandler(object):
+                def dispatch(self, event):
+                    if event.is_directory:
+                        return
+
+                    if event.src_path[-5:] != '.less':
+                        return
+
+                    app.logger.info("Building (%s changed)", event.src_path)
+                    subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
+
+            app.logger.info("Building")
+            subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
+            observer.schedule(EventHandler(), path='.', recursive=True)
+            observer.start()
+            try:
+                while True:
+                    time.sleep(0.5)
+            except KeyboardInterrupt:
+                observer.stop()
+            observer.join()
+
         @self.shell
         def make_context():
             context = dict(
