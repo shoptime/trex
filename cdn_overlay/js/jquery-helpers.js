@@ -11,6 +11,19 @@
 // >{{ _('End world') }}</button>
 
 (function($) {
+    $.fn.trex_moment = function() {
+        this.each(function() {
+            var $this = $(this);
+            var m = moment($this.data('moment'));
+            $this
+                .text(m.from())
+                .attr('title', m.format('dddd, MMMM Do YYYY, h:mm:ss a'))
+            ;
+        });
+    };
+
+    $('.trex-moment').trex_moment();
+
     $('body').on('click', 'button.trex-post', function(e) {
         e.preventDefault();
         $('<form method="post"></form>')

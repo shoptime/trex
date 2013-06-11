@@ -17,8 +17,8 @@
         <tr>
             <td>{{ user.email }}</td>
             <td>{{ user.role }}</td>
-            <td>{{ user.created }}</td>
-            <td>{{ user.last_login }}</td>
+            <td class="trex-moment" data-moment="{{ user.created | moment_stamp }}"></td>
+            <td class="trex-moment" data-moment="{{ user.last_login | moment_stamp }}"></td>
             <td>
                 <a class="btn" href="{{ url_for('.edit', user_id=user.id) }}"><i class="icon-cog"></i> edit</a>
                 <button
