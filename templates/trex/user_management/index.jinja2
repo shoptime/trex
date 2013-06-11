@@ -1,0 +1,54 @@
+{% import 'trex.jinja2' as trex with context %}
+{% extends 'base.jinja2' %}
+{% block content %}
+<a class="btn pull-right" href="{{ url_for('.edit') }}"><i class="icon-plus"></i> add user</a>
+<h2>User management</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th>Last Login</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+        <tr>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ user.created }}</td>
+            <td>{{ user.last_login }}</td>
+            <td>
+                <a class="btn" href="{{ url_for('.edit', user_id=user.id) }}"><i class="icon-cog"></i> edit</a>
+                <button
+                    class="btn btn-danger trex-post-confirm"
+                    data-href="{{ url_for('.delete', user_id=user.id) }}"
+                    data-title="Confirm remove user"
+                    data-body="Are you sure you want to remove {{ user.email }}"
+                    data-confirm-label="Remove user"
+                    data-confirm-label-class="btn-danger"
+                >
+                    <i class="icon-white icon-remove"></i> remove
+                </button>
+                <button
+                    class="btn btn-inverse trex-post-confirm"
+                    data-href="{{ url_for('.reset_password', user_id=user.id) }}"
+                    data-title="Confirm password reset"
+                    data-body="This will generate a new password for {{ user.email }} and email it to them"
+                    data-confirm-label="Reset password"
+                    data-confirm-label-class="btn-danger"
+                >
+                    <i class="icon-white icon-lock"></i> 
+                    {% if user.password %}
+                    Reset password
+                    {% else %}
+                    Set initial password
+                    {% endif %}
+                </button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

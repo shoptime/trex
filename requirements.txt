@@ -4,6 +4,7 @@ decorator
 flask
 flask-script
 flask-seasurf
+flask-wtf
 furl
 jinja2
 httpagentparser

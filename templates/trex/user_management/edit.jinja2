@@ -1,0 +1,6 @@
+{% import 'trex.jinja2' as trex with context %}
+{% extends 'base.jinja2' %}
+{% block content %}
+<h2>User management</h2>
+{{ trex.form_render(form, 'Save user') }}
+{% endblock %}
