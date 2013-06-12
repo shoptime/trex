@@ -8,6 +8,9 @@ cd "$PROJECT_ROOT"
 . bin/activate
 
 for file in {,trex/}requirements.txt; do [ -f $file ] && pip install -r $file; done
+if [ "$1" == "-d" ]; then
+    pip install -r trex/dev-requirements.txt
+fi
 
 mkdir -p node_modules
 for file in {,trex/}node-requirements.txt; do
