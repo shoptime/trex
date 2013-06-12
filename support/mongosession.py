@@ -63,7 +63,7 @@ class MongoSessionInterface(SecureCookieSessionInterface):
 
         if session.modified or session.new:
             data['mtime'] = datetime.utcnow()
-            app.db.session.update({ 'session_id': data['session_id'] }, data, upsert=True, multi=False, safe=True)
+            app.db.session.update({ 'session_id': data['session_id'] }, data, upsert=True, multi=False, w=1)
 
         # The session cookie itself only remembers the session ID
         for k in session.keys():
