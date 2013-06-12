@@ -7,7 +7,6 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
 from multiprocessing import Process
 from trex.flask import app
-from trex.support.deprecated import deprecated
 from furl.furl import furl
 from time import sleep
 import logging
@@ -18,133 +17,198 @@ import os
 import inspect
 import copy
 import json
-from operator import attrgetter
 from termcolor import colored
+import inspect
+from collections import defaultdict
 
+class TestRunner:
+    """Manages running a test suite.
 
-class TestFailedException(Exception):
-    pass
+    The test suite is a series of classes that extend TestBase, in some directory.
 
-def run_app():
-    log_handler = logging.StreamHandler(sys.stderr)
-    log_handler.setLevel(logging.DEBUG)
-    log_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s '
-        '[in %(pathname)s:%(lineno)d]'
-    ))
-    app.logger.addHandler(log_handler)
-    app.logger.setLevel(logging.DEBUG)
-    app.run(debug=False)
+    This class knows how to run those tests.
 
-def run_selenium_tests(test_list=None):
-    if not re.search(r'test', app.db.name):
-        raise Exception("Mongo database '%s' doesn't have 'test' in its name. Refusing to run tests" % app.db.name)
+    It may be "automatically" configured with the assumption that this trex
+    checkout is part of a flask application, or it may be manually configured
+    with the assumption that something else has already set up the webapp to
+    test against."""
 
-    server_url = furl(app.settings.get('server', 'url'))
+    configured           = False
+    test_dir             = None
+    server_url           = None
+    selenium_server_url  = None
+    selenium_browser     = None
+    test_cases           = []
+    server_process       = None
+    wait_after_exception = None
 
-    selenium_server = 'http://%s:%d/wd/hub' % (app.settings.get('test', 'selenium_server_host'), int(app.settings.get('test', 'selenium_server_port')))
-    selenium_browser = app.settings.get('test', 'browser')
+    def __init__(self, wait_after_exception=False):
+        self.wait_after_exception = wait_after_exception
 
-    sys.stderr.write("Tests will run against: %s\n" % server_url)
-    sys.stderr.write("Tests will use mongodb: %s\n" % app.db.name)
+    def configure(self, server_url, selenium_server_url, selenium_browser, test_dir):
+        self.server_url          = server_url
+        self.selenium_server_url = selenium_server_url
+        self.selenium_browser    = selenium_browser
+        self.test_dir            = test_dir
 
-    # This just stops the "accesslog" output from the server
-    logging.getLogger('werkzeug').setLevel(logging.ERROR)
+        self.test_cases = [ x(server_url, test_dir) for x in self._load_test_cases(test_dir) ]
 
-    scripts = [ x(server_url) for x in load_test_scripts() ]
+        if len(self.test_cases) == 0:
+            sys.stderr.write("No tests to run\n")
 
-    if len(scripts) == 0:
-        sys.stderr.write("No tests to run\n")
-        return
+        self.configured = True
 
-    # Empty the test database to get things rolling
-    app.db.connection.drop_database(app.db.name)
+    def configure_for_flask(self):
+        app.switch_to_test_mode()
 
-    # Start the server
-    server_process = Process(target=run_app)
-    server_process.start()
+        if not re.search(r'test', app.db.name):
+            raise Exception("Mongo database '%s' doesn't have 'test' in its name. Refusing to run tests" % app.db.name)
 
-    # This is a dodgy way of ensuring the server is running
-    sleep(1)
-    if not server_process.is_alive():
-        raise Exception("Server failed to start")
+        server_url = furl(app.settings.get('server', 'url'))
 
-    # Big try block to make sure we shut down the server if anything goes
-    # wrong.
-    failed = 0
-    browser = None
-    try:
-        # Do some stuff
-        browser = Remote(
-            selenium_server,
-            desired_capabilities = {
-                'browserName': selenium_browser,
-            },
+        selenium_server_url = 'http://%s:%d/wd/hub' % (app.settings.get('test', 'selenium_server_host'), int(app.settings.get('test', 'selenium_server_port')))
+        selenium_browser = app.settings.get('test', 'browser')
+
+        sys.stderr.write("Tests will run against: %s\n" % server_url)
+        sys.stderr.write("Tests will use mongodb: %s\n" % app.db.name)
+
+        # This just stops the "accesslog" output from the server
+        logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
+        self.configure(
+            server_url          = server_url,
+            selenium_server_url = selenium_server_url,
+            selenium_browser    = selenium_browser,
+            test_dir            = os.path.join(app.root_path, 'test'),
         )
-        shared_data = dict()
-        for script in scripts:
-            if test_list:
-                # Only run the named tests, plus those on the "critical path"
-                skip = True
 
-                if script.critical_path:
-                    skip = False
-                elif test_list:
-                    for test_name in test_list:
-                        if test_name == script.__class__.__name__:
-                            skip = False
+        if not self.configured:
+            return
 
-                if skip:
-                    continue
+        # Empty the test database to get things rolling
+        app.db.connection.drop_database(app.db.name)
 
-            script.browser = browser
-            if selenium_browser == 'firefox':
-                script.slowdown = .5
-            script.shared = shared_data
-            script.banner()
-            script.run()
-            script.done()
-            failed += script.failed
-    except:
-        failed += 1
-        traceback.print_exc()
+        # Start the server
+        self.server_process = Process(target=self._start_flask_app)
+        self.server_process.start()
 
-    if browser:
-        browser.quit()
+        # This is a dodgy way of ensuring the server is running
+        sleep(1)
+        if not self.server_process.is_alive():
+            raise Exception("Server failed to start")
 
-    # Terminate the server
-    server_process.terminate()
-    server_process.join()
+    def run(self, test_list=None, shared_data=None):
+        global _current_test_case
 
-    if failed:
-        raise TestFailedException("At least one test failed")
+        if not self.configured:
+            raise Exception("TestRunner was not configured before run() was called")
 
-def load_test_scripts():
-    scripts = []
+        # Big try block to make sure we shut down the server if anything goes
+        # wrong.
+        failed = 0
+        browser = None
+        try:
+            # Do some stuff
+            browser = Remote(
+                self.selenium_server_url,
+                desired_capabilities = {
+                    'browserName': self.selenium_browser,
+                },
+            )
+            if shared_data is None:
+                shared_data = dict()
+            for test_case in self.test_cases:
+                if test_list:
+                    # Only run the named tests, plus those on the "critical path"
+                    skip = True
 
-    # Creative mechanism for loading scripts
-    name_path = os.path.join(app.root_path, 'test')
-    for root, dirs, files in os.walk(name_path):
-        for name in files:
-            if name.endswith(".py") and not name.startswith("__"):
-                name = name.rsplit('.', 1)[0]
-                fp, pathname, description = imp.find_module(name, [name_path])
-                module = imp.load_module(name, fp, pathname, description)
-                for k, v in module.__dict__.items():
-                    if not inspect.isclass(v) or not issubclass(v, TestBase):
+                    if test_case.critical_path:
+                        skip = False
+                    elif test_list:
+                        for test_name in test_list:
+                            if test_name == test_case.__class__.__name__:
+                                skip = False
+
+                    if skip:
                         continue
-                    if v == TestBase:
-                        continue
-                    scripts.append(v)
 
-    return sorted(scripts, key=attrgetter('order'))
+                test_case.browser = browser
+                if self.selenium_browser == 'firefox':
+                    test_case.slowdown = .5
+                test_case.shared = shared_data
+                test_case.banner()
+                _current_test_case = test_case
+                test_case.run()
+                test_case.done()
+                _current_test_case = None
+                failed += test_case.failed
+        except KeyboardInterrupt:
+            print "interrupt"
+            failed += 1
+        except:
+            failed += 1
+            traceback.print_exc()
+            if self.wait_after_exception:
+                print "press <enter> to exit ..."
+                sys.stdin.readline()
+
+        if browser:
+            browser.quit()
+        self._shutdown()
+        return failed
+
+    def _shutdown(self):
+        if self.server_process:
+            self.server_process.terminate()
+            self.server_process.join()
+
+    def _start_flask_app(self):
+        log_handler = logging.StreamHandler(sys.stderr)
+        log_handler.setLevel(logging.DEBUG)
+        log_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s '
+            '[in %(pathname)s:%(lineno)d]'
+        ))
+        app.logger.addHandler(log_handler)
+        app.logger.setLevel(logging.DEBUG)
+        app.run(debug=False)
+
+    def _load_test_cases(self, test_dir):
+        scripts = defaultdict(list)
+
+        # Creative mechanism for loading scripts
+        for root, dirs, files in os.walk(test_dir):
+            for name in files:
+                if name.endswith(".py") and not name.startswith("__"):
+                    name = name.rsplit('.', 1)[0]
+                    fp, pathname, description = imp.find_module(name, [test_dir])
+                    module = imp.load_module(name, fp, pathname, description)
+                    for k, v in module.__dict__.items():
+                        if not inspect.isclass(v) or not issubclass(v, TestBase):
+                            continue
+                        if v == TestBase:
+                            continue
+                        if not hasattr(v, 'order'):
+                            raise Exception("Test case %s does not have an 'order' set" % v.__name__)
+                        if isinstance(v.order, list):
+                            for o in v.order:
+                                scripts[o].append(v)
+                        else:
+                            scripts[v.order].append(v)
+
+        tests = []
+        for testlist in sorted(scripts.items()):
+            for test in testlist[1]:
+                tests.append(test)
+        return tests
 
 class WebElementExpectedOneElement(Exception):
     pass
 
 class WebElementSet(object):
-    def __init__(self, elements=None, context=None, selector=None):
-        self.context = context
+    def __init__(self, elements=None, context=None, test_dir=None, selector=None):
+        self.context  = context
+        self.test_dir = test_dir
         if isinstance(selector, list):
             self.selector = selector
         elif selector:
@@ -202,7 +266,7 @@ class WebElementSet(object):
         new_selector = copy.copy(self.selector)
         if selector:
             new_selector.append(selector)
-        return self.__class__(self._verify_elements(elements), context=self.context, selector=new_selector)
+        return self.__class__(self._verify_elements(elements), context=self.context, test_dir=self.test_dir, selector=new_selector)
 
     def find(self, selector, selector_desc=None):
         if not selector_desc:
@@ -440,6 +504,26 @@ class WebElementSet(object):
         self.context.is_equal(len(self), length, message=message)
         return self
 
+    def set_file_to_upload(self, filename, message=None):
+        """
+        On a file element, sets its path so that a file upload can occur.
+
+        Use of this method probably immediately disqualifies your test suite
+        from running in htmlunit, but it'll run in chrome (and probably other
+        browsers) fine.
+
+        @param filename: The file to upload, path is relative from the test dir of your app
+        @type filename: str
+        """
+        if message is None:
+            message = "Setting file to upload: %s %s" % (self, json.dumps(filename))
+        try:
+            self.type(os.path.join(self.test_dir, filename), clear_first=False)
+            self.context.ok(message)
+        except WebElementExpectedOneElement:
+            self.context.failure("%s (Expected 1 element, got %d)" % (message, len(self.elements)))
+        return self
+
 class TestBase(object):
     """
     Inherit from this class in order to encapsulate a selenium test run.
@@ -452,21 +536,21 @@ class TestBase(object):
     to methods such as self.is_equal are performed.
     """
 
-    order = 100
     critical_path = False
 
     """ @type Remote """
     browser = None
 
-    def __init__(self, base_uri):
+    def __init__(self, base_uri, test_dir):
         self.number = 0
         self.failed = 0
         self.shared = dict()
         self.base_uri = furl(base_uri)
+        self.test_dir = test_dir
         self.slowdown = 0
 
     def find(self, *args, **kwargs):
-        return WebElementSet(self.browser, context=self).find(*args, **kwargs)
+        return WebElementSet(self.browser, context=self, test_dir=self.test_dir).find(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
         return self.find(*args, **kwargs)
@@ -477,11 +561,11 @@ class TestBase(object):
     def wait(self, timeout=10):
         return WebDriverWait(self.browser, timeout)
 
-    def wait_for_ajax(self, *args):
-        self.wait().until_not(lambda x: x.execute_script('return jQuery.active'))
+    def wait_for_ajax(self, *args, **kwargs):
+        self.wait(*args, **kwargs).until_not(lambda x: x.execute_script('return jQuery.active'))
         return self
 
-    def wait_for_bootstrap_modal(self, *args):
+    def wait_for_bootstrap_modal(self, *args, **kwargs):
         last = [None]
 
         def inner_wait(driver):
@@ -490,32 +574,33 @@ class TestBase(object):
                 return True
             last[0] = value
             return False
-        self.wait().until(inner_wait)
+        self.wait(*args, **kwargs).until(inner_wait)
         return self
 
-    def wait_for_element_visible(self, element, *args):
+    def wait_for_element_visible(self, element, *args, **kwargs):
         def inner_wait(driver):
             try:
                 e = self.find(element)[-1]
             except IndexError:
                 return False
             return e.is_visible()
-        self.wait().until(inner_wait)
+        self.wait(*args, **kwargs).until(inner_wait)
         return self
 
-    def wait_for_element_hidden(self, element, *args):
+    def wait_for_element_hidden(self, element, *args, **kwargs):
         def inner_wait(driver):
             try:
                 e = self.find(element)[-1]
             except IndexError:
                 return False
             return not e.is_visible()
-        self.wait().until(inner_wait)
+        self.wait(*args, **kwargs).until(inner_wait)
         return self
 
     def banner(self):
         name = self.__class__.__name__
-        self.diag("Test class: %s" % name)
+        file = os.path.basename(inspect.getsourcefile(self.__class__))
+        self.diag("Test class: %s (%s)" % (name, file))
 
     def run(self):
         """
@@ -549,6 +634,7 @@ class TestBase(object):
             print colored("not ok %d %s" % (self.number, message), 'red')
         else:
             print "not ok %d %s" % (self.number, message)
+        self.screenshot('%s-failure-%d.png' % (self.__class__.__name__, self.failed))
 
     def diag(self, message, indent=0):
         """
@@ -563,7 +649,7 @@ class TestBase(object):
         for i in range(indent):
             space += "\t"
 
-        for line in str(message).splitlines():
+        for line in unicode(message).splitlines():
             print "# %s%s" % (space, line)
 
     def is_equal(self, got, expected, message=None):
@@ -700,92 +786,6 @@ class TestBase(object):
         self.ok('Opened: %s' % message)
         self.url_is(uri)
 
-    @deprecated
-    def click_ok(self, css, message=None):
-        """
-        Click an element
-
-        @param css: CSS selector
-        @type css: str
-        @param message: Message to display
-        @type message: str
-        """
-        if message is None:
-            message = "Click: %s" % css
-        try:
-            self.browser.find_element_by_css_selector(css).click()
-        except NoSuchElementException:
-            self.failure('%s (%s)' % (message, 'no such element'))
-            return
-
-        self.ok(message)
-
-    @deprecated
-    def element_exists_ok(self, css, message=None):
-        """
-        Verify element exists
-
-        @param css: CSS selector
-        @type css: str
-        @param message: Message to display
-        @type message: str
-        """
-        if message is None:
-            message = "Element exists: %s" % css
-        try:
-            self.browser.find_element_by_css_selector(css)
-        except NoSuchElementException:
-            self.failure(message)
-            return
-        self.ok(message)
-
-    @deprecated
-    def element_doesnt_exist_ok(self, css, message=None):
-        """
-        Verify element does not exist
-
-        @param css: CSS selector
-        @type css: str
-        @param message: Message to display
-        @type message: str
-        """
-        if message is None:
-            message = "Element exists: %s" % css
-        try:
-            self.browser.find_element_by_css_selector(css)
-        except NoSuchElementException:
-            self.ok(message)
-            return
-        self.failure(message)
-
-
-    @deprecated
-    def type_in_element_ok(self, css, keys, message=None, clear_first=True):
-        """
-        Enter text into an element
-
-        @param css: CSS selector for element
-        @type css: str
-        @param keys: Text sequence to enter
-        @type keys: str
-        @param message: Message to display
-        @type message: str
-        @param clear_first: Whether to execute .clear() on the element first (default True)
-        @type clear_first: True
-        """
-        if message is None:
-            message = "Typing: %s '%s'" % (css, keys)
-
-        try:
-            if clear_first:
-                self.browser.find_element_by_css_selector(css).clear()
-            self.browser.find_element_by_css_selector(css).send_keys(keys)
-        except NoSuchElementException:
-            self.failure('%s (%s)' % (message, 'no such element'))
-            return
-
-        self.ok(message)
-
     def url_is(self, uri, message=None):
         """
         Verify the current URI is as given
@@ -825,53 +825,6 @@ class TestBase(object):
 
         self.is_like(str(got), expected, message)
 
-    @deprecated
-    def get_elements(self, css):
-        """
-        Retrieve the given element(s)
-
-        @param css: CSS selector
-        @type css: str
-        @return: Elements
-        @rtype: list
-        """
-        try:
-            return self.browser.find_elements_by_css_selector(css)
-        except NoSuchElementException:
-            return None
-
-    @deprecated
-    def get_text(self, css):
-        """
-        Retrieve the text of a given element
-
-        @param css: CSS selector
-        @type css: str
-        @return: Text from element
-        @rtype: str
-        """
-        try:
-            return self.browser.find_element_by_css_selector(css).text
-        except NoSuchElementException:
-            return None
-
-    @deprecated
-    def get_attr(self, css, attr):
-        """
-        Retrieve the value of a given attribute of an element
-
-        @param css: CSS selector
-        @type css: str
-        @param attr: Name of attribute
-        @type attr: str
-        @return: Text from attribute
-        @rtype: str
-        """
-        try:
-            return self.browser.find_element_by_css_selector(css).get_attribute(attr)
-        except NoSuchElementException:
-            return None
-
     def screenshot(self, filename):
         """
         Dump a screenshot of the current page to a file
@@ -880,6 +833,42 @@ class TestBase(object):
         @type filename: str
         """
         try:
-            return self.browser.get_screenshot_as_file(os.path.join(app.root_path, 'test', filename))
+            return self.browser.get_screenshot_as_file(os.path.join(self.test_dir, filename))
         except:
             self.diag("Could not take screenshot (some drivers do not support screenshots, or maybe the file couldn't be written)")
+
+
+# Create a series of helpers that will be exported when tests use:
+# from trex.test import *
+_helpers = [
+    'find',
+    'wait',
+    'wait_for_ajax',
+    'wait_for_bootstrap_modal',
+    'wait_for_element_visible',
+    'wait_for_element_hidden',
+    'ok',
+    'failure',
+    'diag',
+    'is_equal',
+    'is_like',
+    'refresh',
+    'source',
+    'back',
+    'get',
+    'get_ok',
+    'url_is',
+    'url_like',
+    'screenshot',
+]
+__all__ = _helpers + ['TestBase']
+
+_current_test_case = None
+
+def _make_helper(name):
+    def f(*args, **kwargs):
+        return getattr(_current_test_case, name)(*args, **kwargs)
+    return f
+
+for helper in _helpers:
+    vars()[helper] = _make_helper(helper)
