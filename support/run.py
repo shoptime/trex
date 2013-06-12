@@ -18,7 +18,7 @@ class Manager(script.Manager):
     def __init__(self, *args, **kwargs):
         # These are loaded here so that the calling script has time to load the
         # app for us
-        from trex.test import run_selenium_tests, TestFailedException
+        from trex.test import TestRunner
         import trex.support.cron
 
         super(Manager, self).__init__(*args, **kwargs)
@@ -88,13 +88,13 @@ class Manager(script.Manager):
 
             return context
 
-        @self.command
-        def test():
+        @self.option('-w', '--wait', action='store_true', default=False, help='Wait for keypress on test failure')
+        def test(wait=False):
             "Run the test suite"
-            self.app.switch_to_test_mode()
-            try:
-                run_selenium_tests()
-            except TestFailedException:
+            t = TestRunner(wait_after_exception=wait)
+            t.configure_for_flask()
+            failed = t.run()
+            if failed:
                 sys.exit(1)
 
         @self.command
