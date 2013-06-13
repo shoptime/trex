@@ -231,7 +231,7 @@ class WebElementSet(object):
     def require_one_element(f):
         def decorator(self, *args, **kwargs):
             if len(self.elements) != 1:
-                raise WebElementExpectedOneElement("Expected exactly 1 element")
+                raise WebElementExpectedOneElement("Expected exactly 1 element, got %d" % len(self.elements))
             return f(self, *args, **kwargs)
 
         return decorator
