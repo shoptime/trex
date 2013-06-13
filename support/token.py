@@ -12,6 +12,9 @@ def create_token(length=32, chars=default_token_chars):
 
     return token
 
+def create_url_token(length=16):
+    return create_token(length, "abcdefhijklmnopqrstuvwxyzABCDEFHIJKLMNOPQRSTUVWXYZ0123456789")
+
 def create_token_factory(**factory_args):
     """Create a random token factory"""
     def _create_token(**call_args):
