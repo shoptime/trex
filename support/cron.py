@@ -156,6 +156,13 @@ class CronJobQueue(DynamicDocument):
 
         return True, job
 
+class remove_old_file_uploads(CronJob):
+    def run(self):
+        from trex.support.wtf import Upload
+        from datetime import datetime, timedelta
+        cut_off = datetime.utcnow() - timedelta(hours=24)
+        for upload in Upload.objects(created__lte=cut_off):
+            upload.delete()
 
 def cron_daemon(cron_jobs, base_interval=60, max_interval=600, failure_multiplier=1.5):
     if app.debug:

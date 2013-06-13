@@ -1,0 +1,55 @@
+.trex-file-list-widget {
+    .file {
+        position: relative;
+        min-height: 20px;
+        padding: 4px 20px 4px 10px;
+        margin-bottom: 5px;
+        background-color: @wellBackground;
+        border: 1px solid darken(@wellBackground, 7%);
+        .box-shadow(inset 0 1px 1px rgba(0,0,0,.05));
+        .size { color: @grayLight; }
+        width: 400px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        .filename.linkable {
+            color: @linkColor;
+            text-decoration: none;
+            cursor: pointer;
+            &:hover, &:focus {
+                color: @linkColorHover;
+                text-decoration: underline;
+            }
+        }
+        .close {
+            position: absolute;
+            top: 4px;
+            right: 7px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .progress {
+            position: absolute;
+            width: 150px;
+            top: 4px;
+            right: 25px;
+        }
+        .label {
+            position: absolute;
+            top: 5px;
+            right: 25px;
+        }
+    }
+    .add-file {
+        position: relative;
+        overflow: hidden;
+        input {
+            position: absolute;
+            border: 100px solid transparent;
+            .opacity(0);
+            top: 0;
+            right: 0;
+            cursor: pointer;
+        }
+    }
+}

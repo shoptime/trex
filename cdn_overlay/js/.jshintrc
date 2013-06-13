@@ -1,0 +1,23 @@
+{
+    // Enable some more checks
+    "curly": true,
+    "forin": true,
+    "immed": true,
+    "latedef": true,
+    "noarg": true,
+    "noempty": true,
+    "undef": true,
+    "unused": true,
+    "trailing": true,
+
+    // Make things look like a browser
+    "browser": true,
+    "globals": {
+        "_": true,
+        "Backbone": true,
+        "Trex": true,
+        "SockJS": true,
+        "jQuery": true,
+        "moment": true
+    }
+}

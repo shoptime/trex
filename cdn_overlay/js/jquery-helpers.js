@@ -11,6 +11,12 @@
 // >{{ _('End world') }}</button>
 
 (function($) {
+    $.ajaxPrefilter(function(options, originalOptions, jqXHR) {
+        if ( options.type.toLowerCase() == 'post' ) {
+            jqXHR.setRequestHeader('X-CSRFToken', $('html').data('csrf-token'));
+        }
+    });
+
     $.fn.trex_moment = function() {
         this.each(function() {
             var $this = $(this);
