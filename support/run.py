@@ -101,13 +101,17 @@ class Manager(script.Manager):
         def cron(job_name):
             "Run cron jobs"
 
-            fp, pathname, description = imp.find_module('support/cron', [self.app.root_path])
-            module = imp.load_module('support/cron', fp, pathname, description)
-
             cls = None
             jobs = {}
 
-            for k, v in module.__dict__.items():
+            possible_jobs = trex.support.cron.__dict__.items()
+            try:
+                cron_module = importlib.import_module('app.support.cron', 'app.support')
+                possible_jobs.extend(cron_module.__dict__.items())
+            except ImportError:
+                pass
+
+            for k, v in possible_jobs:
                 if not inspect.isclass(v) or not issubclass(v, trex.support.cron.CronJob):
                     continue
                 if v == trex.support.cron.CronJob:
