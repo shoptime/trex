@@ -66,6 +66,44 @@ class CheckListField(wtf.SelectMultipleField):
     widget = BareListWidget()
     option_widget = BootstrapCheckboxInput()
 
+class DependentSelectField(wtf.SelectField):
+    def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', **kwargs):
+        super(DependentSelectField, self).__init__(label, validators, **kwargs)
+        if parent_field is None:
+            raise Exception("You must specify a parent field")
+        self.parent_field = parent_field
+        self.select_text = select_text
+        self.choice_dict = self.choices
+        self.choices = []
+
+    def pre_validate(self, form):
+        parent_field = form._fields.get(self.parent_field)
+        if not parent_field:
+            raise Exception("Couldn't find parent field on form")
+
+        if parent_field.data in self.choice_dict:
+            choices = self.choice_dict[parent_field.data]
+
+            for v, _ in choices:
+                if self.data == v:
+                    break
+            else:
+                raise ValueError(self.gettext('Not a valid choice'))
+
+            if self.select_text:
+                self.choices = [('', self.select_text)]+choices
+            else:
+                self.choices = choices
+        else:
+            raise ValueError(self.gettext('Not a valid choice'))
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'trex-dependent-select-field'
+        kwargs['data-parent'] = self.parent_field
+        kwargs['data-choices'] = json.dumps(self.choice_dict)
+        kwargs['data-select-text'] = self.select_text
+        return super(DependentSelectField, self).__call__(*args, **kwargs)
+
 class FileListWidget(object):
     def __call__(self, field, **kwargs):
         data = dict(
