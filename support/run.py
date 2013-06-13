@@ -11,6 +11,7 @@ if 'VIRTUAL_ENV' not in os.environ:
 from flask.ext import script
 import imp
 import inspect
+import importlib
 import datetime
 import subprocess
 
@@ -81,8 +82,7 @@ class Manager(script.Manager):
                 timedelta = datetime.timedelta,
             )
             try:
-                fp, pathname, description = imp.find_module('model', [self.app.root_path])
-                context['m'] = imp.load_module('model', fp, pathname, description)
+                context['m'] = importlib.import_module('app.model', 'app')
             except ImportError:
                 pass
 
@@ -130,6 +130,12 @@ class Manager(script.Manager):
 
             cronjob = cls(self.app)
             cronjob.run_wrapped()
+
+        try:
+            app_run = importlib.import_module('app.support.run', 'app.support')
+            app_run.register_methods(self)
+        except ImportError:
+            pass
 
     def run(self, *args, **kwargs):
         if 'default_command' not in kwargs:
