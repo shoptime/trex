@@ -1,0 +1,42 @@
+{% extends 'base.jinja2' %}
+{% block content %}
+<h2>Audit Log</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Date/Time (UTC)</th>
+            <th>Actor</th>
+            <th>Description</th>
+            <th>Tags</th>
+            <th>Related documents</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for entry in entries %}
+        <tr>
+            <td>{{ entry.created }}</td>
+            <td>
+                {% if entry.user %}
+                {{ entry.user.display_name }}
+                {% else %}
+                <i>System</i>
+                {% endif %}
+            </td>
+            <td>{{ entry.description }}</td>
+            <td>
+                {% for tag in entry.tags %}
+                <span class="label">{{ tag }}</span>
+                {% endfor %}
+            </td>
+            <td>
+                <ul>
+                {% for doc in entry.linkable_documents() %}
+                    <li><a href="{{ doc.url }}">{{ doc.label }}</a> <span class="muted">({{ doc.type }})</span></li>
+                {% endfor %}
+                </ul>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

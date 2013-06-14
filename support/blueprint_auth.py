@@ -7,6 +7,7 @@ from .. import auth
 from flask import g, redirect, url_for, request, session, flash, abort
 from datetime import datetime
 from flask.ext import wtf
+from .audit import audit
 
 # TODO - do we wanna import from app?
 import app.model as m
@@ -51,6 +52,7 @@ def login():
         user.last_login = datetime.utcnow()
         user.save()
         session['user_id'] = user.id
+        audit('User logged in: %s' % user.display_name, ['Authentication'], user=user)
         return redirect(return_to)
 
     return dict(form=form)
@@ -66,7 +68,8 @@ def login_as(user_id):
 
     session['user_id_parent'] = g.user.id
     session['user_id'] = user.id
-    flash("Logged in as %s" % user.display_name())
+    flash("Logged in as %s" % user.display_name)
+    audit('Logged in as: %s' % user.display_name, ['Authentication', 'User Management'], documents=[user])
 
     return redirect(return_to)
 
@@ -74,9 +77,11 @@ def login_as(user_id):
 def logout():
     if 'user_id_parent' in session:
         session['user_id'] = session.pop('user_id_parent')
+        audit('User ended log-in-as: %s' % g.user.display_name, ['Authentication', 'User Management'], user=m.User.objects.get(id=session['user_id']), documents=[g.user])
         return_to = request.args.get('return_to') or url_for('trex.user_management.index')
     else:
         session.pop('user_id', None)
+        audit('User logged out in: %s' % g.user.display_name, ['Authentication'])
         return_to = request.args.get('return_to') or url_for('index.index')
 
     return redirect(return_to)
@@ -103,6 +108,7 @@ def change_password():
     if form.validate_on_submit():
         g.user.set_password(form.new_password.data)
         g.user.save()
+        audit('User changed password: %s' % g.user.display_name, ['Authentication'])
         return redirect(return_to)
 
     return dict(form=form)

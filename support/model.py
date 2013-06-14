@@ -5,7 +5,7 @@ from mongoengine import *
 from datetime import datetime
 from trex.support import pcrypt
 from trex.support.mongoengine import LowerCaseEmailField
-from flask import flash
+from flask import flash, g, url_for
 
 class InvalidRoleException(Exception):
     pass
@@ -16,14 +16,12 @@ class BaseUser(Document):
         'abstract': True,
     }
 
-    email      = LowerCaseEmailField(required=True, unique=True)
-    password   = StringField()
-    created    = DateTimeField(required=True, default=datetime.utcnow)
-    last_login = DateTimeField()
-    role       = StringField(required=True, default='user')
-
-    def display_name(self):
-        return self.email
+    email        = LowerCaseEmailField(required=True, unique=True)
+    display_name = StringField(required=True)
+    password     = StringField()
+    created      = DateTimeField(required=True, default=datetime.utcnow)
+    last_login   = DateTimeField()
+    role         = StringField(required=True, default='user')
 
     @classmethod
     def roles(cls):
@@ -92,3 +90,27 @@ class BaseUser(Document):
         data = self.to_mongo()
         del data['password']
         return data
+
+class BaseAudit(Document):
+    meta = {
+        'ordering': ['-created'],
+        'abstract': True,
+    }
+
+    created     = DateTimeField(required=True, default=datetime.utcnow)
+    user        = ReferenceField('User')
+    tags        = ListField(StringField(), required=True)
+    description = StringField(required=True)
+    documents   = ListField(GenericReferenceField())
+
+    def linkable_documents(self):
+        docs = []
+        for doc in self.documents:
+            if isinstance(doc, BaseUser) and hasattr(g, 'user') and g.user.has_flag('trex.user_management'):
+                docs.append(dict(
+                    url   = url_for('trex.user_management.edit', user_id=doc.id),
+                    label = doc.display_name,
+                    type  = 'user',
+                ))
+
+        return docs
