@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from mongoengine import *
 from datetime import datetime
 from trex.support import pcrypt
+from trex.support.mongoengine import LowerCaseEmailField
 from flask import flash
 
 class InvalidRoleException(Exception):
@@ -15,7 +16,7 @@ class BaseUser(Document):
         'abstract': True,
     }
 
-    email      = EmailField(required=True, unique=True)
+    email      = LowerCaseEmailField(required=True, unique=True)
     password   = StringField()
     created    = DateTimeField(required=True, default=datetime.utcnow)
     last_login = DateTimeField()
