@@ -57,6 +57,10 @@ class BootstrapRadioInput(wtf.Input):
         html_string = super(BootstrapRadioInput, self).__call__(field, **kwargs)
         return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
+class DateField(wtf.DateField):
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'trex-date-field'
+        return super(DateField, self).__call__(*args, **kwargs)
 
 class RadioField(wtf.RadioField):
     widget = BareListWidget()

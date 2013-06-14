@@ -181,4 +181,8 @@
         $parent.on('change', render_options);
         render_options();
     });
+
+    $('.trex-date-field').each(function() {
+        $(this).datepicker({format: "yyyy-mm-dd"});
+    });
 })(jQuery);
