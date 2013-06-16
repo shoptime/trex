@@ -20,7 +20,7 @@
 {% endif %}
 {% endmacro %}
 
-{% macro form_render(form, button_label='Submit', vertical=False, id=None, secondary_action_html=None) %}
+{% macro form_render(form, button_label='Submit', vertical=False, id=None, secondary_action_html=None, button_class='btn-primary') %}
 <form
     action=""
     method="POST"
@@ -35,7 +35,7 @@
     {{ form_render_field(field) }}
     {% endfor %}
     <div class="form-actions">
-        <button type="submit" class="btn btn-primary">{{ button_label }}</button>
+        <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
         {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
     </div>
 </form>
