@@ -30,17 +30,17 @@
 
     $('.trex-moment').trex_moment();
 
-    $('body').on('click', 'button.trex-post', function(e) {
+    $('body').on('click', 'button.trex-post, .dropdown-menu a.trex-post', function(e) {
         e.preventDefault();
         $('<form method="post"></form>')
             .append($('<input type="hidden" name="_csrf_token">').val($('html').data('csrf-token')))
-            .attr('action', $(this).data('href'))
+            .attr('action', $(this).data('href') || $(this).attr('href'))
             .appendTo('body')
             .submit()
         ;
     });
 
-    $('body').on('click', 'button.trex-post-confirm', function(e) {
+    $('body').on('click', 'button.trex-post-confirm, .dropdown-menu a.trex-post-confirm', function(e) {
         e.preventDefault();
         var href = $(this).data('href');
 
