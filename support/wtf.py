@@ -11,6 +11,11 @@ from datetime import datetime
 from . import token, ejson
 import json
 
+class AttrDict(dict):
+    def __init__(self, **kwargs):
+        self.__dict__ = self
+        self.update(kwargs)
+
 class BareListWidget(object):
     """
     Renders a list of fields with no supporting markup
