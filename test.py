@@ -181,8 +181,8 @@ class TestRunner:
             for name in files:
                 if name.endswith(".py") and not name.startswith("__"):
                     name = name.rsplit('.', 1)[0]
-                    fp, pathname, description = imp.find_module(name, [test_dir])
-                    module = imp.load_module(name, fp, pathname, description)
+                    import importlib
+                    module = importlib.import_module('app.test.%s' % name, 'app.test')
                     for k, v in module.__dict__.items():
                         if not inspect.isclass(v) or not issubclass(v, TestBase):
                             continue
