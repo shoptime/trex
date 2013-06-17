@@ -190,7 +190,10 @@ class TestRunner:
                             continue
                         if not hasattr(v, 'order'):
                             raise Exception("Test case %s does not have an 'order' set" % v.__name__)
-                        if isinstance(v.order, list):
+                        if v.order is None:
+                            # Intentionally omitted
+                            pass
+                        elif isinstance(v.order, list):
                             for o in v.order:
                                 scripts[o].append(v)
                         else:
