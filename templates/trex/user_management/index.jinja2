@@ -6,18 +6,20 @@
 <table class="table">
     <thead>
         <tr>
+            <th>Display Name</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Created</th>
+            {#<th>Created</th>#}
             <th>Last Login</th>
         </tr>
     </thead>
     <tbody>
     {% for user in users.order_by('created') %}
         <tr>
+            <td>{{ user.display_name }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.role }}</td>
-            <td class="trex-moment" data-moment="{{ user.created | moment_stamp }}"></td>
+            {#<td class="trex-moment" data-moment="{{ user.created | moment_stamp }}"></td>#}
             {% if user.last_login %}
             <td class="trex-moment" data-moment="{{ user.last_login | moment_stamp }}"></td>
             {% else %}
