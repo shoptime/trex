@@ -1,7 +1,7 @@
 blinker
 cssselect
 decorator
-flask
+flask==0.9
 flask-script
 flask-seasurf
 flask-wtf
