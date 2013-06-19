@@ -221,8 +221,9 @@ def upload_xhr():
     upload.save()
 
     return dict(
-        url = url_for('trex.upload.view', token=upload.token),
-        oid = str(upload.id),
+        url      = url_for('trex.upload.view', token=upload.token),
+        oid      = str(upload.id),
+        progress = 100,
     )
 
 @blueprint.route('/iframe', methods=['POST'], endpoint='iframe', auth=auth.login)
