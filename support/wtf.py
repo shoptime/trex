@@ -162,6 +162,30 @@ class Upload(mongoengine.Document):
             url      = url_for('trex.upload.view', token=self.token)
         )
 
+    def copy_to(self, document, field_name):
+        field = document._fields[field_name]
+        is_list = False
+        if isinstance(field, mongoengine.ListField):
+            field = field.field
+            is_list = True
+        if not isinstance(field, mongoengine.FileField):
+            raise Exception("Can't copy uploads to non FileFields")
+
+        if is_list:
+            gfproxy = mongoengine.GridFSProxy(key=field_name, collection_name=field.collection_name)
+            gfproxy.put(
+                self.file.get(),
+                content_type = self.file.content_type,
+                filename = self.file.filename,
+            )
+            getattr(document, field_name).append(gfproxy)
+        else:
+            getattr(document, field_name).put(
+                self.file.get(),
+                content_type = self.file.content_type,
+                filename = self.file.filename,
+            )
+
 class FileListField(wtf.Field):
     widget = FileListWidget()
 
