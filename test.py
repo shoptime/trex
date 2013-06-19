@@ -133,6 +133,7 @@ class TestRunner:
                         continue
 
                 test_case.browser = browser
+                test_case.selenium_browser = self.selenium_browser
                 if self.selenium_browser == 'firefox':
                     test_case.slowdown = .5
                 test_case.shared = shared_data
