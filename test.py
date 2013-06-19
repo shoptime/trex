@@ -382,6 +382,34 @@ class WebElementSet(object):
             return
         return self
 
+    @require_context
+    def select_by_value_ok(self, value, message=None):
+        if message is None:
+            message = "Select: %s value=%s" % (self, value)
+        try:
+            self.select(self.find('option[value="%s"]' % value))
+            self.context.ok(message)
+        except WebElementExpectedOneElement:
+            self.context.failure("%s (Expected 1 element, got %d)" % (message, len(self.elements)))
+        except NoSuchElementException:
+            self.context.failure('%s (%s)' % (message, 'no such option'))
+            return
+        return self
+
+    @require_context
+    def select_by_label_ok(self, label, message=None):
+        if message is None:
+            message = "Select: %s label=%s" % (self, label)
+        try:
+            self.select(self.find('option').filter_by_text(label)[0].attr('value'))
+            self.context.ok(message)
+        except WebElementExpectedOneElement:
+            self.context.failure("%s (Expected 1 element, got %d)" % (message, len(self.elements)))
+        except NoSuchElementException:
+            self.context.failure('%s (%s)' % (message, 'no such option'))
+            return
+        return self
+
     @require_one_element
     @require_context
     def hover(self):
