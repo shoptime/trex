@@ -12,7 +12,7 @@ TREX_OLD_COMMIT=$(cd trex && git rev-parse HEAD)
 git submodule update --init
 TREX_NEW_COMMIT=$(cd trex && git rev-parse HEAD)
 
-if [[ "$TREX_OLD_COMMIT" != "$TREX_NEW_COMMIT" ]] && [[ "$(git merge-base $TREX_OLD_COMMIT $TREX_NEW_COMMIT)" == "$TREX_NEW_COMMIT" ]]; then
+if [[ "$TREX_OLD_COMMIT" != "$TREX_NEW_COMMIT" ]] && [[ "$(cd trex && git merge-base $TREX_OLD_COMMIT $TREX_NEW_COMMIT)" == "$TREX_NEW_COMMIT" ]]; then
     echo "STOP: trex appears to have gone backward!";
     echo "Old commit $TREX_OLD_COMMIT, new commit $TREX_NEW_COMMIT"
     ( cd trex && git checkout $TREX_OLD_COMMIT )
