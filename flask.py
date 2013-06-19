@@ -20,6 +20,7 @@ import copy
 import re
 import traceback
 from jinja2.exceptions import TemplateNotFound
+import trex.support.model
 
 app = None
 
@@ -171,6 +172,8 @@ class Flask(flask.Flask):
             self.jinja_env.globals['csrf_token'] = nothing
 
         FlaskCDN(self)
+
+        trex.support.model.settings = self.settings
 
         self.init_application()
 

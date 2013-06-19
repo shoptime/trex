@@ -3,11 +3,12 @@
 from __future__ import absolute_import
 from mongoengine import *
 from datetime import datetime, timedelta
+import os
 from trex.support import pcrypt
 from trex.support.mongoengine import LowerCaseEmailField
 from flask import flash, g, url_for
-import Crypto.Random.random
 import re
+import hashlib
 
 
 class InvalidRoleException(Exception):
@@ -119,6 +120,34 @@ class BaseAudit(Document):
         return docs
 
 
+def generate_session_id():
+    """
+    Securely generate a random token of the correct length for a session ID
+    """
+    # QUESTION: Shield the RNG?
+    # QUESTION: Sign it?
+    return hashlib.sha256(hashlib.sha256(os.urandom(32)).digest()).hexdigest()
+
+
+def verify_session_id(s):
+    """
+    Check whether it's a valid session ID
+    """
+    if len(s) != 64:
+        return False
+
+    if not re.match(r'[0-9a-f]+', s):
+        return False
+
+    return True
+
+settings = None
+
+
+def default_expiry():
+    return datetime.utcnow()+timedelta(seconds=settings.getint('identity', 'expiry'))
+
+
 class BaseIdentity(Document):
     """
     Base identity session for trex
@@ -129,132 +158,47 @@ class BaseIdentity(Document):
     }
 
     created = DateTimeField(required=True, default=datetime.utcnow)
-    session_id = StringField(required=True)
-    expires = DateTimeField(required=True)
+    session_id = StringField(required=True, default=generate_session_id)
+    expires = DateTimeField(required=True, default=default_expiry)
     real = ReferenceField('User')
     actor = ReferenceField('User')
     logged_out = BooleanField(required=True, default=False)
-
-
-    @classmethod
-    def config(cls):
-        """
-        Return a dictionary with the session configuration
-
-        Keys:
-
-        cookie_key: key to use in cookie when setting session. Defaults to 'identity'
-        expiry: Number of seconds before the session expires in the database. Defaults to 24 hours
-        cookie_expiry: Number of seconds before the cookie expires. Defaults to None (until browser closes)
-        http_only: Whether to hide the session from javascript (Yes yes yes default True)
-        domain: Domain for the cookie, default None (current page)
-        path: Path limit for the cookie, default /
-        secure: Whether to only deliver the session cookie in HTTPS, default True (set this False for dev)
-
-        """
-        # QUESTION: is this really the best way to do this?
-        return {
-            'cookie_key': 'identity',
-            'expiry': 24*60*60,
-            'cookie_expiry': None,
-            'http_only': True,
-            'domain': None,
-            'path': '/',
-            'secure': True
-        }
-
-
-    @classmethod
-    def exempt_request(cls, path):
-        """
-        Return true if the given request should not have session processing/setting. Defaults to putting a session on
-        everything.
-        """
-        # QUESTION: Ignore CDN by default? doesn't really matter since we only trigger on decorated functions anyway
-        return False
-
-
-    @classmethod
-    def generate_session_id(cls):
-        """
-        Securely generate a random token of the correct length for a session ID
-        :return:
-        :rtype:
-        """
-        # QUESTION: Shield the RNG?
-        # QUESTION: Sign it?
-        return '%032x' % Crypto.Random.random.getrandbits(128)
-
-
-    @classmethod
-    def is_session_id(cls, s):
-        """
-        Check whether it's a valid session ID
-        """
-        if len(s) != 32:
-            return False
-
-        if not re.match(r'[0-9a-f]+', s):
-            return False
-
-        return True
-
-    @classmethod
-    def new_session(cls):
-        """
-        Create a new empty session with no credentials
-        """
-
-        session = cls(
-            session_id=cls.generate_session_id(),
-        )
-        session.set_expiry(cls.config()['expiry'])
-        return session
 
     def rotate_session(self):
         """
         Rotate the session ID. Could do this by logging out existing if we cared about using the session table as an
         audit but we don't.
         """
-        self.session_id = self.generate_session_id()
+        self.session_id = generate_session_id()
         return self
-
 
     @classmethod
     def from_request(cls, request):
         """
         Load the session from the request
         """
-        # Check whether the request is exempt, if so return None
-        if cls.exempt_request(request.path):
-            return None
 
         # Get session ID from cookie
-        session_id = request.cookies.get(cls.config()['cookie_key'])
+        session_id = request.cookies.get(settings.get('identity', 'cookie_key'))
 
         #   No session ID? return new session
         if not session_id:
-            return cls.new_session()
+            return cls()
 
         # Invalid session ID? return new session
-        if not cls.is_session_id(session_id):
-            return cls.new_session()
+        if not verify_session_id(session_id):
+            return cls()
 
         # Got session id in cookie, look in DB
         session = cls.objects(session_id=session_id).first()
 
         # Not in DB? create new session.
         if not session:
-            return cls.new_session()
+            return cls()
 
         # Expired? new session
         if session.is_expired():
-            # QUESTION: Set flag on new session saying it's the result of an expiry so that login redirect can flash?
-            return cls.new_session()
-
-        # Logged out? new session
-        if session.is_logged_out():
-            return cls.new_session()
+            return cls()
 
         # return doc
         return session
@@ -264,16 +208,22 @@ class BaseIdentity(Document):
         Set the cookie with the current session
         """
         # Update expiry so session stays valid
+        self.set_expiry(settings.getint('identity', 'expiry'))
+
         # QUESTION: autorotate after given time?
-        self.set_expiry(self.config()['expiry'])
 
         # QUESTION: Add puffer?
-        response.set_cookie(self.config()['cookie_key'], self.session_id,
-                            max_age=self.config()['cookie_expiry'],
-                            path=self.config()['path'],
-                            domain=self.config()['domain'],
-                            httponly=self.config()['http_only'],
-                            secure=self.config()['secure'])
+        try:
+            max_age = settings.getint('identity', 'cookie_expiry')
+        except ValueError:
+            max_age = None
+
+        response.set_cookie(settings.get('identity','cookie_key'), self.session_id,
+                            max_age=max_age,
+                            path=settings.get('identity', 'path'),
+                            domain=settings.get('identity', 'domain'),
+                            httponly=settings.get('identity', 'http_only'),
+                            secure=settings.get('server', 'url').startswith('https:'))
 
     def set_expiry(self, seconds_from_now):
         """
@@ -289,15 +239,42 @@ class BaseIdentity(Document):
             return False
         return True
 
-    def is_logged_out(self):
+    def login(self, user):
         """
-        Check whether this session is logged out
+        Log this session in as user
         """
-        return self.logged_out
+        self.actor = user
+        self.real = user
+        self.rotate_session()
+
+    def su(self, user):
+        """
+        Change this user to be another one
+        """
+        self.actor = user
+        self.rotate_session()
+
+    def unsu(self):
+        """
+        Change user back (un-su)
+        """
+        self.actor = self.real
+        self.rotate_session()
 
     def logout(self):
         """
         Log this session out
         """
-        print "Logging out"
-        self.logged_out = True
+        self.actor = None
+        self.real = None
+        self.rotate_session()
+
+    def changed_credentials(self):
+        """
+        Log out all other sessions for this user, rotate
+        """
+        self.rotate_session()
+        for session in self.__class__.objects(real=self.real):
+            if session != self:
+                session.actor = None
+                session.real = None

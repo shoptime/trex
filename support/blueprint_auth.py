@@ -80,10 +80,7 @@ def login_as(user_id):
     except m.DoesNotExist:
         abort(404)
 
-    # Credentials change
-    g.identity.rotate_session()
-    g.identity.actor = user
-    g.identity.real = g.user
+    g.identity.su(user)
 
     flash("Logged in as %s" % user.display_name)
     audit('Logged in as: %s' % user.display_name, ['Authentication', 'User Management'], documents=[user])
@@ -92,11 +89,8 @@ def login_as(user_id):
 
 @blueprint.route('/logout', auth=auth.login)
 def logout():
-    if g.identity and g.identity.real and g.identity.actor != g.identity.real:
-        # Credentials change
-        g.identity.rotate_session()
-
-        g.identity.actor = g.identity.real
+    if g.identity.real and g.identity.actor != g.identity.real:
+        g.identity.unsu()
         return_to = request.args.get('return_to') or url_for('trex.user_management.index')
         audit('User ended log-in-as: %s' % g.user.display_name, ['Authentication', 'User Management'], user=g.identity.real, documents=[g.user])
     else:
@@ -128,8 +122,7 @@ def change_password():
     if form.validate_on_submit():
         g.user.set_password(form.new_password.data)
         g.user.save()
-        # Credentials change
-        g.identity.rotate_session()
+        g.identity.changed_credentials()
         audit('User changed password: %s' % g.user.display_name, ['Authentication'])
         return redirect(return_to)
 
