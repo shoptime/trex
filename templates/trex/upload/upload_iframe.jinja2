@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            var iframe = top.$('iframe').filter(function() {
+                try {
+                    return this.contentDocument == document;
+                }
+                catch(e) {
+                    return false;
+                }
+            });
+            iframe.trigger('upload', {{ file_info | tojson | safe }});
+        </script>
+    </head>
+</html>
