@@ -12,6 +12,7 @@ markdown
 mongoengine>=0.7
 passlib
 premailer
+pycrypto
 pymongo
 python-postmark
 requests
