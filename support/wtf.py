@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from flask.ext import wtf
 import mongoengine
 from flask import url_for, abort, request, g
-from ..flask import AuthBlueprint, render_json
+from ..flask import AuthBlueprint, render_json, render_html
 from app.support import auth
 from app import app
 from datetime import datetime
@@ -127,13 +127,14 @@ class FileListWidget(object):
                 'type': 'hidden',
                 'value': kwargs.get('value', field._value()),
             }),
+            file_input_name = "%s_file_input" % field.name,
         )
 
         return wtf.widgets.HTMLString("""
 <div %(widget_args)s>
     <input %(input_args)s>
     <div class="files"></div>
-    <a class="add-file btn">Add File <input name="file" type="file" multiple></a>
+    <a class="add-file btn">Add File <input name="%(file_input_name)s" type="file" multiple></a>
 </div>
 """ % data)
 
@@ -201,8 +202,29 @@ def upload_xhr():
     )
 
 @blueprint.route('/iframe', methods=['POST'], endpoint='iframe', auth=auth.login)
+@render_html('trex/upload/upload_iframe.jinja2')
 def upload_iframe():
-    return
+    upload = Upload(user=g.user)
+
+    file = request.files[request.form['_trex_file_field_name']]
+    if not file:
+        abort(500)
+
+    upload.file.put(
+        file.stream,
+        content_type = file.content_type,
+        filename     = file.filename,
+    )
+    upload.save()
+
+    return dict(
+        file_info = dict(
+            url      = url_for('trex.upload.view', token=upload.token),
+            oid      = str(upload.id),
+            size     = upload.file.length,
+            progress = 100,
+        )
+    )
 
 @blueprint.route('/view/<token>', methods=['GET'], endpoint='view', auth=auth.login)
 def upload_view(token):

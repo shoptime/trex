@@ -19,7 +19,7 @@ def index():
         users=m.User.objects(),
     )
 
-@blueprint.route('/add', methods=['GET', 'POST'], auth=auth.has_flag('trex.user_management'))
+@blueprint.route('/add', methods=['GET', 'POST'], endpoint='add', auth=auth.has_flag('trex.user_management'))
 @blueprint.route('/<user_id>/edit', methods=['GET', 'POST'], auth=auth.has_flag('trex.user_management'))
 @render_html('trex/user_management/edit.jinja2')
 def edit(user_id=None):

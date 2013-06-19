@@ -8,8 +8,6 @@ from flask import g, redirect, url_for, request, flash, abort
 from datetime import datetime
 from flask.ext import wtf
 from .audit import audit
-
-# TODO - do we wanna import from app?
 import app.model as m
 
 @app.before_request

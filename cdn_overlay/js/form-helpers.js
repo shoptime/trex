@@ -40,6 +40,7 @@
     });
 
     $('.trex-file-list-widget').each(function() {
+        var log = new Trex.Logger('file-upload');
         var $widget = $(this);
         var files = new (Backbone.Collection.extend({ model: Trex.FileListWidgetModel }))();
         if ($widget.find('input:hidden').val()) {
@@ -66,7 +67,7 @@
                 initialize: function() {
                     this.$el
                         .addClass(this.className)
-                        .html('<a class="close">&times</a> <span class="filename"></span> <span class="size"></span><div class="progress progress-striped active"><div class="bar"></div></div><div class="label label-important">Upload failed</div>')
+                        .html('<a class="close">&times</a> <span class="filename"></span> <span class="size"></span><div class="progress progress-striped active"><div class="bar"></div></div><div class="uploading"></div><div class="label label-important">Upload failed</div>')
                     ;
                     this.listenTo(this.model, 'change', this.render);
                     this.render();
@@ -77,9 +78,16 @@
                         .data('url', this.model.get('url'))
                         .toggleClass('linkable', !!this.model.get('url'))
                     ;
-                    this.$('.size').text('('+this.model.pretty_size()+')');
-                    this.$('.bar').css('width', this.model.get('progress')+'%');
-                    this.$('.progress').toggle(this.model.get('progress')<100);
+                    this.$('.size').toggle(!!this.model.get('size')).text('('+this.model.pretty_size()+')');
+                    if (this.model.get('progress') === 'unknown') {
+                        this.$('.progress').hide();
+                        this.$('.uploading').show();
+                    }
+                    else {
+                        this.$('.uploading').hide();
+                        this.$('.bar').css('width', this.model.get('progress')+'%');
+                        this.$('.progress').toggle(this.model.get('progress')<100);
+                    }
                     this.$('.label').toggle(!!this.model.get('error'));
                 },
                 remove_file: function(e) {
@@ -100,7 +108,7 @@
                 do_xhr_upload(e.target);
             }
             else {
-                console.error("Only support XHR for now");
+                do_iframe_upload(e.target);
             }
             $(this).val('');
         });
@@ -124,9 +132,8 @@
                 xhr.onreadystatechange = function() {
                     if (this.readyState == this.DONE) {
                         if (this.status == 200) {
-                            console.log('XHR file upload complete');
+                            log.d('XHR file upload complete');
                             var data = JSON.parse(this.response);
-                            console.log('Response data: ', data);
                             model.set(data);
                         }
                         else {
@@ -135,7 +142,7 @@
                     }
                 };
                 xhr.onabort = xhr.onerror = function() {
-                    console.error('XHR failed: ', this, arguments);
+                    log.e('XHR failed: ', this, arguments);
                     model.set('error', true);
                 };
                 xhr.upload.onprogress = function(e) {
@@ -143,6 +150,54 @@
                 };
                 xhr.send(file);
             });
+        }
+
+        function do_iframe_upload(file_input) {
+            log.d("Doing iframe upload");
+            var $file = $(file_input);
+            var filename = $file.val().replace(/^.*\\/, '');
+            var model = new Trex.FileListWidgetModel({
+                filename: filename,
+                progress: 'unknown'
+            });
+            model.set('id', model.cid);
+            var upload_id = 'trex-file-upload-' + model.cid;
+            var $form = $file.closest('form');
+            var $field_name = $('<input type="hidden" name="_trex_file_field_name">').val($file.attr('name')).appendTo($form);
+            var old_form_action = $form.attr('action');
+            var old_form_target = $form.attr('target');
+            $form
+                .attr('action', $widget.data('iframe-url'))
+                .attr('target', upload_id)
+            ;
+            var upload_complete = false;
+            var $iframe = $('<iframe></iframe>')
+                .hide()
+                .attr('id', upload_id)
+                .attr('name', upload_id)
+                .on('load', function() {
+                    $iframe.remove();
+                    $field_name.remove();
+                    if (!upload_complete) {
+                        model.set('error', true);
+                    }
+                })
+                .on('upload', function(e, file_info) {
+                    upload_complete = true;
+                    log.d("iframe upload complete");
+                    model.set(file_info);
+                })
+            ;
+            $('body').append($iframe);
+            $form.submit();
+            files.add(model);
+            $form
+                .attr('action', old_form_action)
+                .attr('target', old_form_target)
+            ;
+            if (!old_form_target) {
+                $form.removeAttr('target');
+            }
         }
     });
 
