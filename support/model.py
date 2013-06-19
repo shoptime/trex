@@ -119,27 +119,10 @@ class BaseAudit(Document):
         return docs
 
 
-class SessionExpired(BaseException):
-    """
-    There's a session mentioned in the user cookie, but the entry has either been purged from the database or the entry
-    is explicitly expired.
-    """
-    pass
-
-class SessionLoggedOut(BaseException):
-    """
-    We found the session, but it had been logged out
-    """
-    pass
-
-
 class BaseIdentity(Document):
     """
     Base identity session for trex
     """
-    # QUESTION: Have user ID as part of the base?
-    # QUESTION: Have actor as part of the base?
-    # QUESTION: Add rotation for the key?
     meta = {
         'indexes': [('session_id',)],
         'abstract': True
