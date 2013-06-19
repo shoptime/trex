@@ -218,10 +218,13 @@ class BaseIdentity(Document):
         except ValueError:
             max_age = None
 
+        domain = settings.get('identity', 'domain')
+        if len(domain) == 0:
+            domain = None
         response.set_cookie(settings.get('identity','cookie_key'), self.session_id,
                             max_age=max_age,
                             path=settings.get('identity', 'path'),
-                            domain=settings.get('identity', 'domain'),
+                            domain=domain,
                             httponly=settings.get('identity', 'http_only'),
                             secure=settings.get('server', 'url').startswith('https:'))
 
