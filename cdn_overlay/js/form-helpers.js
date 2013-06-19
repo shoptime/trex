@@ -39,10 +39,64 @@
         }
     });
 
+    $.fn.trex_delayed_submit = function(message, cb) {
+        if (!this.length === 1 && this.filter('form').length === 1) {
+            throw new Error("This method only works on single form elements");
+        }
+        var $form = this;
+        var first_bind = false;
+        if (!$form.data('trex_delayed_submit')) {
+            $form.data('trex_delayed_submit', {
+                message: message,
+                callbacks: [],
+            });
+            first_bind = true;
+        }
+        var form_data = $form.data('trex_delayed_submit');
+        if (typeof(cb) === 'function') {
+            form_data.callbacks.push(cb);
+        }
+
+        if (first_bind) {
+            var pass = false;
+            $form.on('submit', function(e) {
+                if (pass) { return; }
+                e.preventDefault();
+
+                var $to_disable = $form.find('input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(.disabled), a:not(.disabled)');
+                var $primary_button = $form.find('.form-actions .btn:eq(0)');
+                $to_disable.prop('disabled', true).toggleClass('disabled');
+
+                var old_text = $primary_button.text();
+                $primary_button.text(form_data.message);
+
+                var list = _.map(form_data.callbacks, function(cb) { return cb(); });
+                $.when.apply($, list).then(
+                    function() {
+                        $to_disable.prop('disabled', false).toggleClass('disabled');
+                        $primary_button.text(old_text);
+                        pass = true;
+                        $form.submit();
+                    },
+                    function() {
+                        $to_disable.prop('disabled', false).toggleClass('disabled');
+                        $primary_button.text(old_text);
+                    }
+                );
+            });
+        }
+    };
+
     $('.trex-file-list-widget').each(function() {
         var log = new Trex.Logger('file-upload');
         var $widget = $(this);
-        var files = new (Backbone.Collection.extend({ model: Trex.FileListWidgetModel }))();
+        var files = new (Backbone.Collection.extend({
+            model: Trex.FileListWidgetModel,
+            uploads_complete: function() {
+                return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
+            },
+        }))();
+        window.f = files;
         if ($widget.find('input:hidden').val()) {
             _.each(JSON.parse($widget.find('input:hidden').val()), function(data) {
                 var model = new Trex.FileListWidgetModel(data);
@@ -53,9 +107,25 @@
                 files.add(model);
             });
         }
-        files.on('add remove change', function() {
+        var finished_uploads;
+        $widget.closest('form').trex_delayed_submit('Waiting for file uploads to finish ...', function() {
+            finished_uploads = $.Deferred();
+            if (files.uploads_complete()) {
+                finished_uploads.resolve();
+            }
+            return finished_uploads;
+        });
+        files.on('add remove change', function(model) {
             // Keep the javascript up to date
-            $widget.find('input:hidden').val(JSON.stringify(files));
+            $widget.find('input:hidden').val(JSON.stringify(files.where({error:false})));
+            if (finished_uploads && files.uploads_complete()) {
+                if (model.get('error')) {
+                    finished_uploads.reject();
+                }
+                else {
+                    finished_uploads.resolve();
+                }
+            }
         });
         var files_view = new Trex.ViewCollection({
             view: Backbone.View.extend({
