@@ -136,6 +136,7 @@ class Flask(flask.Flask):
         self.jinja_loader.searchpath.append(os.path.join(os.path.dirname(__file__), 'templates'))
 
         self.settings.read([
+            os.path.join(self.root_path, '..', 'trex', 'base.ini'),
             os.path.join(self.root_path, 'default.ini'),
             os.path.join(self.root_path, 'local.ini'),
         ])
