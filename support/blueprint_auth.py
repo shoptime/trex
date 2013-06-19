@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from trex.flask import app
 from trex.flask import AuthBlueprint, render_html
 from .. import auth
-from flask import g, redirect, url_for, request, session, flash, abort
+from flask import g, redirect, url_for, request, flash, abort
 from datetime import datetime
 from flask.ext import wtf
 from .audit import audit
@@ -22,9 +22,19 @@ def check_authentication(*args, **kwargs):
     if request.routing_exception:
         return
 
+    g.identity = m.Identity.from_request(request)
+
     g.user = None
-    if 'user_id' in session:
-        g.user = m.User.objects(id=session['user_id']).first()
+
+    if g.identity:
+        g.user = g.identity.actor
+
+@app.after_request
+def after_request(response):
+    if hasattr(g, 'identity'):
+        g.identity.save()
+        g.identity.set_cookie(response)
+    return response
 
 blueprint = AuthBlueprint('trex.auth', __name__, url_prefix='/auth')
 
@@ -51,7 +61,13 @@ def login():
         user = m.User.objects.get(email=form.email.data)
         user.last_login = datetime.utcnow()
         user.save()
-        session['user_id'] = user.id
+
+        # Credentials change
+        g.identity.rotate_session()
+
+        g.identity.actor = user
+        g.identity.real = user
+
         audit('User logged in: %s' % user.display_name, ['Authentication'], user=user)
         return redirect(return_to)
 
@@ -66,8 +82,11 @@ def login_as(user_id):
     except m.DoesNotExist:
         abort(404)
 
-    session['user_id_parent'] = g.user.id
-    session['user_id'] = user.id
+    # Credentials change
+    g.identity.rotate_session()
+    g.identity.actor = user
+    g.identity.real = g.user
+
     flash("Logged in as %s" % user.display_name)
     audit('Logged in as: %s' % user.display_name, ['Authentication', 'User Management'], documents=[user])
 
@@ -75,12 +94,15 @@ def login_as(user_id):
 
 @blueprint.route('/logout', auth=auth.login)
 def logout():
-    if 'user_id_parent' in session:
-        session['user_id'] = session.pop('user_id_parent')
-        audit('User ended log-in-as: %s' % g.user.display_name, ['Authentication', 'User Management'], user=m.User.objects.get(id=session['user_id']), documents=[g.user])
+    if g.identity and g.identity.real and g.identity.actor != g.identity.real:
+        # Credentials change
+        g.identity.rotate_session()
+
+        g.identity.actor = g.identity.real
         return_to = request.args.get('return_to') or url_for('trex.user_management.index')
+        audit('User ended log-in-as: %s' % g.user.display_name, ['Authentication', 'User Management'], user=g.identity.real, documents=[g.user])
     else:
-        session.pop('user_id', None)
+        g.identity.logout()
         audit('User logged out in: %s' % g.user.display_name, ['Authentication'])
         return_to = request.args.get('return_to') or url_for('index.index')
 
@@ -108,6 +130,8 @@ def change_password():
     if form.validate_on_submit():
         g.user.set_password(form.new_password.data)
         g.user.save()
+        # Credentials change
+        g.identity.rotate_session()
         audit('User changed password: %s' % g.user.display_name, ['Authentication'])
         return redirect(return_to)
 

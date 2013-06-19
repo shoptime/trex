@@ -13,7 +13,6 @@ import logging
 from werkzeug.datastructures import OrderedMultiDict
 from .support import ejson
 from .support import parser
-from .support.mongosession import MongoSessionInterface
 from .cdn import FlaskCDN
 from furl import furl
 import sys
@@ -135,8 +134,6 @@ class Flask(flask.Flask):
         self.request_class = DinoRequest
         # Add trex/templates to the jinja2 search path
         self.jinja_loader.searchpath.append(os.path.join(os.path.dirname(__file__), 'templates'))
-
-        self.session_interface = MongoSessionInterface()
 
         self.settings.read([
             os.path.join(self.root_path, 'default.ini'),
