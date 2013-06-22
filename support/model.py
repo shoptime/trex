@@ -136,7 +136,7 @@ def verify_session_id(s):
     if len(s) != 64:
         return False
 
-    if not re.match(r'[0-9a-f]+', s):
+    if not re.search(r'^[0-9a-f]+$', s):
         return False
 
     return True
