@@ -89,11 +89,15 @@ class Manager(script.Manager):
             return context
 
         @self.option('-w', '--wait', action='store_true', default=False, help='Wait for keypress on test failure')
-        def test(wait=False):
+        @self.option('-t', '--test', action='store', default=False, help='Execute specific test')
+        def test(wait=False, test=None):
             "Run the test suite"
             t = TestRunner(wait_after_exception=wait)
             t.configure_for_flask()
-            failed = t.run()
+            if test:
+                failed = t.run(test_list=[test])
+            else:
+                failed = t.run()
             if failed:
                 sys.exit(1)
 
