@@ -21,6 +21,7 @@ import re
 import traceback
 from jinja2.exceptions import TemplateNotFound
 import trex.support.model
+import trex.support.format
 
 app = None
 
@@ -150,15 +151,19 @@ class Flask(flask.Flask):
         self.jinja_env.filters['moment_stamp'] = lambda dt: dt.isoformat()+'Z'
         self.jinja_env.filters['textarea2html'] = lambda text: parser.textarea2html(text)
         self.jinja_env.filters['english_join'] = lambda items: ', '.join(items[0:-1]) + ' and ' + items[-1]
+
         def oxford_join(items):
             if len(items) == 1:
                 return items[0]
             if len(items) == 2:
                 return ' and '.join(items)
             return ', '.join(items[0:-1]) + ', and ' + items[-1]
+
         self.jinja_env.filters['oxford_join'] = oxford_join
 
         self.jinja_env.globals['hostname'] = os.uname()[1]
+
+        self.jinja_env.globals['format'] = trex.support.format
 
         FlaskExceptionReporter(self)
 
