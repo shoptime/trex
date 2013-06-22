@@ -61,12 +61,19 @@ class Manager(script.Manager):
                         return
 
                     app.logger.info("Building (%s changed)", event.src_path)
-                    subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
+                    try:
+                        subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
+                    except subprocess.CalledProcessError as e:
+                        app.logger.error("lessc exited with error code %d" % e.returncode)
 
             app.logger.info("Building")
-            subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
+            try:
+                subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
+            except subprocess.CalledProcessError as e:
+                app.logger.error( "lessc exited with error code %d" % e.returncode)
             observer.schedule(EventHandler(), path='.', recursive=True)
             observer.start()
+            app.logger.info("Began listening")
             try:
                 while True:
                     time.sleep(0.5)
