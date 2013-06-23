@@ -14,7 +14,7 @@
     <tbody>
     {% for entry in entries %}
         <tr>
-            <td>{{ entry.created }}</td>
+            <td><span class="trex-moment" data-moment="{{ entry.created | moment_stamp }}"></span></td>
             <td>
                 {% if entry.user %}
                 {{ entry.user.display_name }}
