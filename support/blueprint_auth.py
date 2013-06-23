@@ -61,10 +61,7 @@ def login():
         user.save()
 
         # Credentials change
-        g.identity.rotate_session()
-
-        g.identity.actor = user
-        g.identity.real = user
+        g.identity.login(user)
 
         audit('User logged in: %s' % user.display_name, ['Authentication'], user=user)
         return redirect(return_to)
