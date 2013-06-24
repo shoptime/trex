@@ -9,6 +9,7 @@ from trex.support.mongoengine import LowerCaseEmailField
 from flask import flash, g, url_for
 import re
 import hashlib
+from . import token
 
 
 class InvalidRoleException(Exception):
@@ -84,7 +85,7 @@ class BaseUser(Document):
         return False
 
     def check_login(self, entered_password):
-        return self.check_password(entered_password)
+        return self.is_active and self.check_password(entered_password)
 
     def set_password(self, password):
         self.password = pcrypt.hash(password)
@@ -99,6 +100,11 @@ class BaseUser(Document):
         data = self.to_mongo()
         del data['password']
         return data
+
+class UserAccountRecovery(Document):
+    created = DateTimeField(required=True, default=datetime.utcnow)
+    user    = ReferenceField('User')
+    code    = StringField(required=True, unique=True, default=token.create_url_token)
 
 class BaseAudit(Document):
     meta = {

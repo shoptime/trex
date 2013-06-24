@@ -5,10 +5,11 @@ from trex.flask import app
 from trex.flask import AuthBlueprint, render_html
 from .. import auth
 from flask import g, redirect, url_for, request, flash, abort
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask.ext import wtf
 from .audit import audit
 import app.model as m
+from . import model as trex_model
 
 @app.before_request
 def check_authentication(*args, **kwargs):
@@ -122,6 +123,67 @@ def change_password():
         g.identity.changed_credentials()
         audit('User changed password: %s' % g.user.display_name, ['Authentication'])
         return redirect(return_to)
+
+    return dict(form=form)
+
+@blueprint.route('/lost-password', methods=['GET', 'POST'], auth=auth.public)
+@render_html('trex/auth/lost_password.jinja2')
+def lost_password():
+    class Form(wtf.Form):
+        email = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
+
+    form = Form()
+
+    if form.validate_on_submit():
+        user = m.User.active(email=form.email.data.lower()).first()
+        if user:
+            ar = trex_model.UserAccountRecovery(user=user)
+            ar.save()
+            # TODO - send the user an email here
+            audit('User requested password reset: %s' % form.email.data, ['Authentication'], [ar])
+        return redirect(url_for('.lost_password_sent'))
+
+    return dict(form=form)
+
+@blueprint.route('/lost-password-sent', methods=['GET', 'POST'], auth=auth.public)
+@render_html('trex/auth/lost_password_sent.jinja2')
+def lost_password_sent():
+    class Form(wtf.Form):
+        code = wtf.TextField('Recovery code', [wtf.Required()])
+
+    form = Form()
+
+    if form.validate_on_submit():
+        return redirect(url_for('.recover_password', code=form.code.data))
+
+    return dict(form=form)
+
+@blueprint.route('/recover-password/<code>', methods=['GET', 'POST'], auth=auth.public)
+@render_html('trex/auth/recover_password.jinja2')
+def recover_password(code):
+    valid_after = datetime.utcnow() - timedelta(hours=1)
+    try:
+        ar = trex_model.UserAccountRecovery.objects.get(code=code, created__gte=valid_after)
+    except m.DoesNotExist:
+        flash("Unrecognised or unacceptable code. It may have timed out. Please check your code, or reset your account again", category="error")
+        return redirect(url_for('.lost_password_sent'))
+
+    class Form(wtf.Form):
+        new_password = wtf.PasswordField('New password', [wtf.Required(), wtf.Length(min=6)])
+        confirm_password = wtf.PasswordField('Confirm password', [
+            wtf.Required(),
+            wtf.EqualTo('new_password', message='Passwords must match'),
+        ])
+
+    form = Form()
+
+    if form.validate_on_submit():
+        ar.user.set_password(form.new_password.data)
+        ar.user.save()
+        audit('User reset password: %s' % ar.user.display_name, ['Authentication'], [ar.user, ar], user=ar.user)
+        g.identity.login(ar.user)
+        flash("Your password has been successfully reset")
+        return redirect(url_for('index.index'))
 
     return dict(form=form)
 
