@@ -29,13 +29,13 @@
                 <a class="btn btn-small" href="{{ url_for('.edit', user_id=user.id) }}"><i class="icon-cog"></i> edit</a>
                 <button
                     class="btn btn-small btn-danger trex-post-confirm"
-                    data-href="{{ url_for('.delete', user_id=user.id) }}"
-                    data-title="Confirm remove user"
-                    data-body="Are you sure you want to remove {{ user.email }}"
-                    data-confirm-label="Remove user"
+                    data-href="{{ url_for('.deactivate', user_id=user.id) }}"
+                    data-title="Confirm deactivate user"
+                    data-body="Are you sure you want to deactivate {{ user.email }}"
+                    data-confirm-label="Deactivate user"
                     data-confirm-label-class="btn-danger"
                 >
-                    <i class="icon-white icon-remove"></i> remove
+                    <i class="icon-white icon-remove"></i> deactivate
                 </button>
                 <button
                     class="btn btn-small btn-inverse trex-post-confirm"

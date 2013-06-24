@@ -49,14 +49,14 @@ def login():
         password = wtf.PasswordField('Password', [wtf.Required()])
 
         def validate_email(form, field):
-            user = m.User.objects(email=form.email.data).first()
+            user = m.User.active(email=form.email.data).first()
             if not user or not user.check_login(form.password.data):
                 raise wtf.ValidationError("Invalid email or password")
 
     form = Form()
 
     if form.validate_on_submit():
-        user = m.User.objects.get(email=form.email.data)
+        user = m.User.active.get(email=form.email.data)
         user.last_login = datetime.utcnow()
         user.save()
 
@@ -73,7 +73,7 @@ def login_as(user_id):
     return_to = request.args.get('return_to') or url_for('index.index')
 
     try:
-        user = m.User.objects.get(id=user_id)
+        user = m.User.active.get(id=user_id)
     except m.DoesNotExist:
         abort(404)
 

@@ -16,7 +16,7 @@ blueprint = AuthBlueprint('trex.user_management', __name__, url_prefix='/admin/u
 @render_html('trex/user_management/index.jinja2')
 def index():
     return dict(
-        users=m.User.objects(),
+        users=m.User.active(),
     )
 
 @blueprint.route('/add', methods=['GET', 'POST'], endpoint='add', auth=auth.has_flag('trex.user_management'))
@@ -25,7 +25,7 @@ def index():
 def edit(user_id=None):
     if user_id:
         try:
-            user = m.User.objects.get(id=user_id)
+            user = m.User.active.get(id=user_id)
         except m.DoesNotExist:
             abort(404)
     else:
@@ -53,22 +53,24 @@ def edit(user_id=None):
 
     return dict(form=form)
 
-@blueprint.route('/<user_id>/delete', methods=['POST'], auth=auth.has_flag('trex.user_management'))
-def delete(user_id):
+@blueprint.route('/<user_id>/deactivate', methods=['POST'], auth=auth.has_flag('trex.user_management'))
+def deactivate(user_id):
     try:
-        user = m.User.objects.get(id=user_id)
+        user = m.User.active.get(id=user_id)
     except m.DoesNotExist:
         abort(404)
 
-    user.delete()
-    audit("Deleted user %s" % user.display_name, ['User Management'])
+    user.is_active = False
+    user.password = None
+    user.save()
+    audit("Deactivated user %s" % user.display_name, ['User Management'], [user])
 
     return redirect(url_for('.index'))
 
 @blueprint.route('/<user_id>/reset-password', methods=['POST'], auth=auth.has_flag('trex.user_management'))
 def reset_password(user_id):
     try:
-        user = m.User.objects.get(id=user_id)
+        user = m.User.active.get(id=user_id)
     except m.DoesNotExist:
         abort(404)
 

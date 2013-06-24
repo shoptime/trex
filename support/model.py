@@ -26,6 +26,11 @@ class BaseUser(Document):
     created      = DateTimeField(required=True, default=datetime.utcnow)
     last_login   = DateTimeField()
     role         = StringField(required=True, default='user')
+    is_active    = BooleanField(required=True, default=True)
+
+    @queryset_manager
+    def active(cls, queryset):
+        return queryset.filter(is_active=True)
 
     @classmethod
     def roles(cls):
