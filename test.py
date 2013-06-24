@@ -103,6 +103,21 @@ class TestRunner:
         if not self.configured:
             raise Exception("TestRunner was not configured before run() was called")
 
+        if test_list:
+            for test_name in test_list:
+                ok = False
+                for test_case in self.test_cases:
+                    if test_case.__class__.__name__ == test_name:
+                        ok = True
+                        break
+
+                if not ok:
+                    sys.stderr.write("The test case '%s' does not exist\n" % test_name)
+                    self._shutdown()
+                    return 1
+
+            sys.stderr.write("Only testing the following cases: %s\n" % ', '.join(test_list))
+
         # Big try block to make sure we shut down the server if anything goes
         # wrong.
         failed = 0
