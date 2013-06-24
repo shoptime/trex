@@ -50,7 +50,7 @@ class BaseUser(Document):
             developer = dict(
                 label       = 'Developer',
                 description = 'Site developer',
-                flags       = ['trex.user_management'],
+                flags       = ['trex.user_management', 'trex.audit_log'],
                 level       = 100,
             ),
         )
