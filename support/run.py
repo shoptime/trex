@@ -96,7 +96,7 @@ class Manager(script.Manager):
             return context
 
         @self.option('-w', '--wait', action='store_true', default=False, help='Wait for keypress on test failure')
-        @self.option('-t', '--test', action='store', default=False, help='Execute specific test')
+        @self.option('-t', '--test', action='store', default=[], help='Execute specific test')
         def test(wait=False, test=None):
             "Run the test suite"
             t = TestRunner(wait_after_exception=wait)
