@@ -22,7 +22,7 @@ crontab crontab
 # Compile static stuff
 app compile_static
 
-supervisorctl update
+[ -f supervisord.conf ] && supervisorctl update
 
 # Reload!
 touch site.wsgi
