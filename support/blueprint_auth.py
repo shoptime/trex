@@ -31,8 +31,8 @@ def check_authentication(*args, **kwargs):
 @app.after_request
 def after_request(response):
     if hasattr(g, 'identity'):
-        g.identity.save()
         g.identity.set_cookie(response)
+        g.identity.save()
     return response
 
 blueprint = AuthBlueprint('trex.auth', __name__, url_prefix='/auth')
