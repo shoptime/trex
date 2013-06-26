@@ -113,6 +113,11 @@ class DependentSelectField(wtf.SelectField):
         kwargs['data-select-text'] = self.select_text
         return super(DependentSelectField, self).__call__(*args, **kwargs)
 
+class ChosenSelectField(wtf.SelectField):
+    def __call__(self, **kwargs):
+        kwargs['class'] = 'trex-chosen-select-field'
+        return super(ChosenSelectField, self).__call__(**kwargs)
+
 class FileListWidget(object):
     def __call__(self, field, **kwargs):
         data = dict(

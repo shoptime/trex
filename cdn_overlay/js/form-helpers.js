@@ -310,4 +310,6 @@
     $('.trex-date-field').each(function() {
         $(this).datepicker({format: "yyyy-mm-dd"});
     });
+
+    $('.trex-chosen-select-field').chosen();
 })(jQuery);
