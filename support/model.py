@@ -6,16 +6,26 @@ from datetime import datetime, timedelta
 import os
 from trex.support import pcrypt
 from trex.support.mongoengine import LowerCaseEmailField
-from flask import flash, g, url_for
+from flask import flash, g, url_for, abort
 import re
 import hashlib
 from . import token
 
+class BaseDocument(Document):
+    meta = dict(abstract=True)
+
+    @classmethod
+    def get_404(cls, *args, **kwargs):
+        """Identical to cls.objects.get(...) except raises a flask 404 instead of mongoengine DoesNotExist"""
+        try:
+            return cls.objects.get(*args, **kwargs)
+        except DoesNotExist:
+            abort(404)
 
 class InvalidRoleException(Exception):
     pass
 
-class BaseUser(Document):
+class BaseUser(BaseDocument):
     meta = {
         'indexes': [('email',)],
         'abstract': True,
@@ -101,12 +111,12 @@ class BaseUser(Document):
         del data['password']
         return data
 
-class UserAccountRecovery(Document):
+class UserAccountRecovery(BaseDocument):
     created = DateTimeField(required=True, default=datetime.utcnow)
     user    = ReferenceField('User')
     code    = StringField(required=True, unique=True, default=token.create_url_token)
 
-class BaseAudit(Document):
+class BaseAudit(BaseDocument):
     meta = {
         'ordering': ['-created'],
         'abstract': True,
@@ -159,7 +169,7 @@ def default_expiry():
     return datetime.utcnow()+timedelta(seconds=settings.getint('identity', 'expiry'))
 
 
-class BaseIdentity(Document):
+class BaseIdentity(BaseDocument):
     """
     Base identity session for trex
     """
