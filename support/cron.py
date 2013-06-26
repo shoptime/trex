@@ -35,7 +35,7 @@ class CronJob(object):
         ))
         app.logger.addHandler(file_handler)
 
-    def run():
+    def run(self):
         raise NotImplementedError("Need to implement CronJob.run()")
 
     def _check_timeouts(self):
