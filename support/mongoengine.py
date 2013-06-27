@@ -1,13 +1,53 @@
 from __future__ import absolute_import
-from mongoengine import EmailField
+import mongoengine
 from flask import request, abort
+from . import quantum
+from datetime import datetime
 
-class LowerCaseEmailField(EmailField):
+class LowerCaseEmailField(mongoengine.EmailField):
     def to_mongo(self, *args, **kwargs):
         return super(self.__class__, self).to_mongo(*args, **kwargs).lower()
 
     def prepare_query_value(self, *args, **kwargs):
         return super(self.__class__, self).prepare_query_value(*args, **kwargs).lower()
+
+class QuantumField(mongoengine.fields.BaseField):
+    """A Quantum field.
+
+    Uses the trex.support.quantum library. Stores raw datetimes in mongo
+    (always as UTC)
+    """
+
+    def validate(self, value):
+        new_value = self.to_mongo(value)
+        if not isinstance(new_value, datetime):
+            self.error(u'cannot parse quantum "%s"' % value)
+
+    def to_mongo(self, value):
+        if value is None:
+            return value
+        if isinstance(value, quantum.Quantum):
+            return value.as_utc()
+
+        if not isinstance(value, basestring):
+            return None
+
+        try:
+            return quantum.parse(value, format='%Y-%m-%d %H:%M:%S').as_utc()
+        except ValueError:
+            try:
+                return quantum.parse(value, format='%Y-%m-%d %H:%M').as_utc()
+            except ValueError:
+                try:
+                    return quantum.parse(value, format='%Y-%m-%d').as_utc()
+                except ValueError:
+                    return None
+
+    def to_python(self, value):
+        return quantum.Quantum(value, 'UTC')
+
+    def prepare_query_value(self, op, value):
+        return self.to_mongo(value)
 
 def serve_file(document, field, index=None, set_filename=True):
     from app import app
