@@ -97,8 +97,8 @@ class BaseUser(BaseDocument):
     def check_login(self, entered_password):
         return self.is_active and self.check_password(entered_password)
 
-    def set_password(self, password):
-        self.password = pcrypt.hash(password)
+    def set_password(self, password, rounds=10001):
+        self.password = pcrypt.hash(password, rounds)
 
     def check_password(self, entered_password):
         return pcrypt.verify(entered_password, self.password)

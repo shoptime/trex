@@ -8,14 +8,14 @@ myself.
 
 from passlib.hash import pbkdf2_sha512 as pb
 
-def hash(cleartext):
+def hash(cleartext, rounds=10001):
     """
     Hash using PBKDF2 scheme over SHA-512
 
     :param cleartext:
     :return: hash string
     """
-    return pb.encrypt(cleartext, rounds=10001)
+    return pb.encrypt(cleartext, rounds=rounds)
 
 def verify(cleartext, ciphertext):
     """
