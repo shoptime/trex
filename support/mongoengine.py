@@ -32,17 +32,6 @@ class QuantumField(mongoengine.fields.BaseField):
         if not isinstance(value, basestring):
             return None
 
-        try:
-            return quantum.parse(value, format='%Y-%m-%d %H:%M:%S').as_utc()
-        except ValueError:
-            try:
-                return quantum.parse(value, format='%Y-%m-%d %H:%M').as_utc()
-            except ValueError:
-                try:
-                    return quantum.parse(value, format='%Y-%m-%d').as_utc()
-                except ValueError:
-                    return None
-
     def to_python(self, value):
         return quantum.Quantum(value, 'UTC')
 
