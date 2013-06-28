@@ -14,6 +14,7 @@ passlib
 premailer
 pycrypto
 pymongo
+python-dateutil
 python-postmark
 pytz
 requests
