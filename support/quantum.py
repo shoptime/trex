@@ -120,7 +120,7 @@ class Quantum(object):
         return "<%s(%s, %s)>" % (self.__class__.__name__, self.dt, self.tz)
 
     def __str__(self):
-        return "%s (%s)" % (self.dt, self.tz)
+        return "%s (%s)" % (self.as_local(), self.tz)
 
     def at(self, timezone):
         """Returns a new Quantum object with the applied timezone"""
