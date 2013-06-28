@@ -17,7 +17,7 @@ find . -name '*.pyc' -delete
 trex/bin/install-deps.sh
 
 # Install crontab
-crontab crontab
+[ -f crontab ] && crontab crontab
 
 # Compile static stuff
 app compile_static
