@@ -93,16 +93,18 @@ class Flask(flask.Flask):
     in_test_mode = False
 
     def assert_valid_config(self):
-        for section in ['server', 'mongo']:
+        for section in ['app', 'server', 'mongo']:
             assert self.settings.has_section(section), "Section [%s] doesn't exist in config" % section
         for option in ['host', 'port', 'debug', 'url', 'enable_csrf']:
             assert option in self.settings.options('server'), "Option %s exists in [server] section" % option
 
-        assert 'url' in self.settings.options('mongo'), "Option url exists in [mongo] section"
+        assert 'url' in self.settings.options('mongo'), "Option 'url' exists in [mongo] section"
         mongo_url = furl(self.settings.get('mongo', 'url'))
         assert mongo_url.scheme == 'mongodb', "mongo.url is a valid mongodb:// url: %s" % mongo_url
         assert len(mongo_url.path.segments) == 1, "mongo.url %s has a database set" % mongo_url
         assert mongo_url.path.segments[0] != '', "mongo.url %s has a database set" % mongo_url
+
+        assert 'name' in self.settings.options('app'), "Option 'name' exists in [app] section"
 
 
     def switch_to_test_mode(self):

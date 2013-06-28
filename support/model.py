@@ -116,6 +116,20 @@ class UserAccountRecovery(BaseDocument):
     user    = ReferenceField('User')
     code    = StringField(required=True, unique=True, default=token.create_url_token)
 
+    def send_recovery_email(self):
+        from trex.support import mail
+        from app import app
+        mail.send(
+            to        = self.user.email,
+            subject   = 'Password reset email for %s' % app.settings.get('app', 'name'),
+            text_body = "Hi,\n\nYou can reset your password by clicking on this link:\n %(direct_url)s\n\nOr, you can use the code %(code)s at this link: %(url)s\n\n--\n%(app_name)s" % dict(
+                code       = self.code,
+                direct_url = url_for('trex.auth.recover_password', _external=True, code=self.code),
+                url        = url_for('trex.auth.lost_password_sent', _external=True),
+                app_name   = app.settings.get('app', 'name'),
+            )
+        )
+
 class BaseAudit(BaseDocument):
     meta = {
         'ordering': ['-created'],

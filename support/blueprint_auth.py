@@ -138,7 +138,7 @@ def lost_password():
         if user:
             ar = trex_model.UserAccountRecovery(user=user)
             ar.save()
-            # TODO - send the user an email here
+            ar.send_recovery_email()
             audit('User requested password reset: %s' % form.email.data, ['Authentication'], [ar])
         return redirect(url_for('.lost_password_sent'))
 
