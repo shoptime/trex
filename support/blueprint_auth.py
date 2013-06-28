@@ -32,7 +32,6 @@ def check_authentication(*args, **kwargs):
 def after_request(response):
     if hasattr(g, 'identity'):
         g.identity.set_cookie(response)
-        g.identity.save()
     return response
 
 blueprint = AuthBlueprint('trex.auth', __name__, url_prefix='/auth')
@@ -182,6 +181,7 @@ def recover_password(code):
         ar.user.save()
         audit('User reset password: %s' % ar.user.display_name, ['Authentication'], [ar.user, ar], user=ar.user)
         g.identity.login(ar.user)
+        g.identity.changed_credentials()
         flash("Your password has been successfully reset")
         return redirect(url_for('index.index'))
 
