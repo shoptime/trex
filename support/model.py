@@ -166,12 +166,46 @@ settings = None
 
 
 def default_expiry():
-    return datetime.utcnow()+timedelta(seconds=settings.getint('identity', 'expiry'))
+    return datetime.utcnow()+timedelta(seconds=settings.getint('identity', 'activity_timeout'))
 
 
 class BaseIdentity(BaseDocument):
     """
     Base identity session for trex
+
+    This Identity Session system is intended to address all the standard conditions associated with an identity session.
+
+    It can be used for general session actions as well, but its primary purpose is different and some actions may prove
+    to cause issues versus normal session store.
+
+    Standard session functions
+
+    * Generates secure session tokens of suitable cryptographic strength and randomness
+    * Stores specified session data
+    * Expires session after a given amount of inactivity, and after a specified absolute time
+    * Defends the session by using appropriate settings on the cookie, including HTTPS-Only for HTTPS sites
+
+    Extended identity session functions
+
+    * Provides explicit handlers for credential-changing operations such as login/logout
+    * Rotates session IDs on credential change
+    * Handles the concept of "su" natively
+    * Offers global-logout for logging out all sessions by a given user
+    * Correctly performs global logout on conditions such as password change
+
+    Possible further features:
+
+    * Puffers to provide assist against certain types of TLS attack
+    * Rotation of session ID after a certain amount of time
+    * Verify no-cache of session credentials
+    * Explicit config permit of fields that survive credential transition
+    * Integrated audit or notify for error conditions such as manipulated session ID
+    * Set index to perform automatic removal of expired sessions
+
+    References:
+
+    * https://www.owasp.org/index.php/Session_Management_Cheat_Sheet
+
     """
     meta = {
         'indexes': [('session_id',)],
@@ -228,8 +262,11 @@ class BaseIdentity(BaseDocument):
         """
         Set the cookie with the current session
         """
+        # Ensure we're setting the cookie matching the stored session
+        self.save()
+
         # Update expiry so session stays valid
-        self.set_expiry(settings.getint('identity', 'expiry'))
+        self.set_expiry(settings.getint('identity', 'activity_timeout'))
 
         # QUESTION: autorotate after given time?
 
@@ -259,17 +296,26 @@ class BaseIdentity(BaseDocument):
         """
         Check whether this session is expired
         """
+        # Has the session passed its activity expiry?
         if self.expires > datetime.utcnow():
             return False
+
+        # What about its final session expiry?
+        if self.created + timedelta(seconds=settings.getint('identity.session_timeout')) < datetime.utcnow():
+            return False
+
         return True
 
     def login(self, user):
         """
         Log this session in as user
         """
+        # These rotates should probably wipe everything except fields specified by config, in order to prevent info
+        # leak across contexts.
         self.actor = user
         self.real = user
         self.rotate_session()
+        self.save()
 
     def su(self, user):
         """
@@ -277,6 +323,7 @@ class BaseIdentity(BaseDocument):
         """
         self.actor = user
         self.rotate_session()
+        self.save()
 
     def unsu(self):
         """
@@ -284,6 +331,7 @@ class BaseIdentity(BaseDocument):
         """
         self.actor = self.real
         self.rotate_session()
+        self.save()
 
     def logout(self):
         """
@@ -292,13 +340,17 @@ class BaseIdentity(BaseDocument):
         self.actor = None
         self.real = None
         self.rotate_session()
+        self.save()
 
     def changed_credentials(self):
         """
         Log out all other sessions for this user, rotate
         """
         self.rotate_session()
+        self.save()
+
         for session in self.__class__.objects(real=self.real):
             if session != self:
                 session.actor = None
                 session.real = None
+                session.save()
