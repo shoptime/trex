@@ -26,11 +26,9 @@ class QuantumField(mongoengine.fields.BaseField):
     def to_mongo(self, value):
         if value is None:
             return value
+
         if isinstance(value, quantum.Quantum):
             return value.as_utc()
-
-        if not isinstance(value, basestring):
-            return None
 
     def to_python(self, value):
         return quantum.Quantum(value, 'UTC')
