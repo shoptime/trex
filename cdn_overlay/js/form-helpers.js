@@ -311,5 +311,12 @@
         $(this).datepicker({format: "yyyy-mm-dd"});
     });
 
-    $('.trex-chosen-select-field').chosen();
+    if ( $('.trex-chosen-select-field').length ) {
+        if ( _.isFunction($.fn.chosen) ) {
+            $('.trex-chosen-select-field').chosen();
+        }
+        else {
+            Trex.log.d("You have objects with the trex-chosen-select-field class, but you have not loaded cdn('trex/js/form-chosen.js')");
+        }
+    }
 })(jQuery);
