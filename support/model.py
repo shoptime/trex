@@ -228,6 +228,7 @@ class BaseIdentity(BaseDocument):
 
     created = DateTimeField(required=True, default=datetime.utcnow)
     session_id = StringField(required=True, default=generate_session_id)
+    csrf_token = StringField(required=True, default=generate_session_id)
     expires = DateTimeField(required=True, default=default_expiry)
     real = ReferenceField('User')
     actor = ReferenceField('User')
@@ -235,11 +236,15 @@ class BaseIdentity(BaseDocument):
 
     def rotate_session(self):
         """
-        Rotate the session ID. Could do this by logging out existing if we cared about using the session table as an
-        audit but we don't.
+        Rotate the session ID and CSRF token
         """
         self.session_id = generate_session_id()
+        self.csrf_token = generate_session_id()
         return self
+
+    def reset_csrf(self):
+        self.csrf_token = generate_session_id()
+        self.save()
 
     @classmethod
     def from_request(cls, request):
@@ -293,7 +298,7 @@ class BaseIdentity(BaseDocument):
         domain = settings.get('identity', 'domain')
         if len(domain) == 0:
             domain = None
-        response.set_cookie(settings.get('identity','cookie_key'), self.session_id,
+        response.set_cookie(settings.get('identity', 'cookie_key'), self.session_id,
                             max_age=max_age,
                             path=settings.get('identity', 'path'),
                             domain=domain,
@@ -315,7 +320,7 @@ class BaseIdentity(BaseDocument):
             return False
 
         # What about its final session expiry?
-        if self.created + timedelta(seconds=settings.getint('identity.session_timeout')) < datetime.utcnow():
+        if self.created + timedelta(seconds=settings.getint('identity', 'session_timeout')) < datetime.utcnow():
             return False
 
         return True

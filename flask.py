@@ -167,16 +167,14 @@ class Flask(flask.Flask):
 
         self.jinja_env.globals['format'] = trex.support.format
 
-        FlaskExceptionReporter(self)
+        def csrf_token():
+            if flask.g.identity:
+                return flask.g.identity.csrf_token
+            return ''
 
-        if self.settings.getboolean('server', 'enable_csrf'):
-            self.csrf = SeaSurf(self)
-            self.csrf_token = self.csrf._get_token
-        else:
-            def nothing():
-                return ''
-            self.csrf_token = nothing
-            self.jinja_env.globals['csrf_token'] = nothing
+        self.jinja_env.globals['csrf_token'] = csrf_token
+
+        FlaskExceptionReporter(self)
 
         FlaskCDN(self)
 
@@ -244,13 +242,6 @@ class Flask(flask.Flask):
     def wsgi_app(self, environ, start_response):
         if self.config.get('PREFERRED_URL_SCHEME'):
             environ['wsgi.url_scheme'] = self.config['PREFERRED_URL_SCHEME']
-
-        if 'allow_no_referer' in self.settings.options('server') and self.settings.getboolean('server', 'allow_no_referer'):
-            # SeaSurf does a referer check when using https. Sometimes no referer
-            # is set (e.g. iOS application making AJAX requests). In these cases,
-            # we fake a referer
-            if 'HTTP_REFERER' not in environ and environ.get('wsgi.url_scheme') == 'https' and environ.get('REQUEST_METHOD') == 'POST':
-                environ['HTTP_REFERER'] = self.settings.get('server', 'url') + '/__csrf_fix__'
 
         return super(Flask, self).wsgi_app(environ, start_response)
 

@@ -28,6 +28,21 @@ def check_authentication(*args, **kwargs):
     if g.identity:
         g.user = g.identity.actor
 
+    if not request.method in ['GET', 'HEAD']:
+        # Check for CSRF token
+        csrf_token = request.form.get('_csrf_token')
+        if not csrf_token:
+            csrf_token = request.headers.get('X-CSRFToken')
+
+        if not csrf_token or csrf_token != g.identity.csrf_token:
+            # Refuse submit
+            flash("Please try again")
+            # Reset CSRF to prevent discovery attacks
+            g.identity.reset_csrf()
+
+            # WARNING: Possible risk of using ?key=val to bypass url-based limiters on /foo/:key
+            return redirect(url_for(request.endpoint, **request.args))
+
 @app.after_request
 def after_request(response):
     if hasattr(g, 'identity'):
