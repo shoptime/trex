@@ -30,6 +30,12 @@ class Manager(script.Manager):
             self.app.run()
 
         @self.command
+        def testserver():
+            "Run the development server using test mode"
+            self.app.switch_to_test_mode()
+            self.app.run()
+
+        @self.command
         def compile_static():
             "Compile static files"
 
