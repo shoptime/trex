@@ -41,7 +41,7 @@ def check_authentication(*args, **kwargs):
             g.identity.reset_csrf()
 
             # WARNING: Possible risk of using ?key=val to bypass url-based limiters on /foo/:key
-            return redirect(url_for(request.endpoint, **request.args))
+            return redirect(request.url)
 
 @app.after_request
 def after_request(response):
