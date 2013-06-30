@@ -168,7 +168,7 @@ class Flask(flask.Flask):
         self.jinja_env.globals['format'] = trex.support.format
 
         def csrf_token():
-            if flask.g.identity:
+            if hasattr(flask.g, 'identity'):
                 return flask.g.identity.csrf_token
             return ''
 
