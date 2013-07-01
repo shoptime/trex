@@ -281,11 +281,11 @@ class BaseIdentity(BaseDocument):
         """
         Set the cookie with the current session
         """
-        # Ensure we're setting the cookie matching the stored session
-        self.save()
-
         # Update expiry so session stays valid
         self.set_expiry(settings.getint('identity', 'activity_timeout'))
+
+        # Ensure we're setting the cookie matching the stored session
+        self.save()
 
         # QUESTION: autorotate after given time?
 
