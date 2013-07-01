@@ -322,6 +322,9 @@ class WebElementSet(object):
     def parent(self):
         return self.find('xpath:..', selector_desc='parent')
 
+    def next(self):
+        return self.find('xpath:following-sibling::*[1]', selector_desc='next')
+
     def __getitem__(self, index):
         return self.new(self.elements[index], selector="[%d]" % index)
 
