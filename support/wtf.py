@@ -10,6 +10,7 @@ from app import app
 from .mongoengine import QuantumField
 from . import token, ejson, quantum
 import json
+import pytz
 
 class AttrDict(dict):
     def __init__(self, **kwargs):
@@ -63,6 +64,34 @@ class BootstrapRadioInput(wtf.Input):
         return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 class DateField(wtf.DateField):
+    def __init__(self, label='', validators=None, timezone=None, **kwargs):
+        if not timezone:
+            raise ValueError("Must specify a timezone for %s.%s" % (self.__class__.__module__, self.__class__.__name__))
+        if isinstance(timezone, basestring):
+            timezone = pytz.timezone(timezone)
+
+        if not (timezone == pytz.utc or isinstance(timezone, pytz.tzinfo.DstTzInfo)):
+            raise ValueError("Not a valid timezone object: %s" % timezone)
+
+        self.timezone = timezone
+
+        super(DateField, self).__init__(label, validators, **kwargs)
+
+    def _value(self):
+        if self.raw_data:
+            return ' '.join(self.raw_data)
+        else:
+            return self.data and self.data.at(self.timezone).as_local().strftime(self.format) or ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            date_str = ' '.join(valuelist)
+            try:
+                self.data = quantum.parse(date_str, timezone=self.timezone, format=self.format)
+            except ValueError:
+                self.data = None
+                raise ValueError(self.gettext('Not a valid datetime value'))
+
     def __call__(self, *args, **kwargs):
         kwargs['class'] = 'trex-date-field'
         return super(DateField, self).__call__(*args, **kwargs)
