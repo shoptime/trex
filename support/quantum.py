@@ -1,9 +1,5 @@
 # coding: utf-8
 
-# Requires
-#   python-dateutil
-#   pytz
-
 # TODO - some sort of .replace() support
 
 from __future__ import absolute_import
@@ -50,6 +46,18 @@ def parse(datestring, timezone=None, format='%Y-%m-%dT%H:%M:%S', relaxed=False):
 
     return Quantum(convert_timezone(dt, timezone, 'UTC'), timezone)
 
+def from_date(dt, timezone=None):
+    if not timezone:
+        timezone = default_timezone()
+
+    return Quantum(convert_timezone(datetime(dt.year, dt.month, dt.day), timezone, 'UTC'), timezone)
+
+def from_datetime(dt, timezone=None):
+    if not timezone:
+        timezone = default_timezone()
+
+    return Quantum(convert_timezone(dt, timezone, 'UTC'), timezone)
+
 def convert_timezone(dt, from_timezone, to_timezone):
     if isinstance(from_timezone, basestring):
         from_timezone = pytz.timezone(from_timezone)
@@ -83,6 +91,8 @@ class Quantum(object):
         self._tz = value
 
     def __init__(self, dt, tz):
+        if not isinstance(dt, datetime):
+            raise ValueError("First argument to Quantum must be a datetime")
         self.dt = dt
         self.tz = tz
 

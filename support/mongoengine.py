@@ -31,6 +31,8 @@ class QuantumField(mongoengine.fields.BaseField):
             return value.as_utc()
 
     def to_python(self, value):
+        if isinstance(value, quantum.Quantum):
+            return value
         return quantum.Quantum(value, 'UTC')
 
     def prepare_query_value(self, op, value):
