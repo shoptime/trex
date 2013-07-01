@@ -2,14 +2,14 @@
 
 from __future__ import absolute_import
 from mongoengine import *
-from datetime import datetime, timedelta
+from .mongoengine import QuantumField
 import os
 from trex.support import pcrypt
 from trex.support.mongoengine import LowerCaseEmailField
 from flask import flash, g, url_for, abort
 import re
 import hashlib
-from . import token
+from . import token, quantum
 
 class BaseDocument(Document):
     meta = dict(abstract=True)
@@ -34,8 +34,8 @@ class BaseUser(BaseDocument):
     email        = LowerCaseEmailField(required=True, unique=True)
     display_name = StringField(required=True)
     password     = StringField()
-    created      = DateTimeField(required=True, default=datetime.utcnow)
-    last_login   = DateTimeField()
+    created      = QuantumField(required=True, default=quantum.now)
+    last_login   = QuantumField()
     role         = StringField(required=True, default='user')
     is_active    = BooleanField(required=True, default=True)
 
@@ -112,7 +112,7 @@ class BaseUser(BaseDocument):
         return data
 
 class UserAccountRecovery(BaseDocument):
-    created = DateTimeField(required=True, default=datetime.utcnow)
+    created = QuantumField(required=True, default=quantum.now)
     user    = ReferenceField('User')
     code    = StringField(required=True, unique=True, default=token.create_url_token)
 
@@ -136,7 +136,7 @@ class BaseAudit(BaseDocument):
         'abstract': True,
     }
 
-    created     = DateTimeField(required=True, default=datetime.utcnow)
+    created     = QuantumField(required=True, default=quantum.now)
     user        = ReferenceField('User')
     tags        = ListField(StringField(), required=True)
     description = StringField(required=True)
@@ -180,7 +180,7 @@ settings = None
 
 
 def default_expiry():
-    return datetime.utcnow()+timedelta(seconds=settings.getint('identity', 'activity_timeout'))
+    return quantum.now().add(seconds=settings.getint('identity', 'activity_timeout'))
 
 
 class BaseIdentity(BaseDocument):
@@ -226,10 +226,10 @@ class BaseIdentity(BaseDocument):
         'abstract': True
     }
 
-    created = DateTimeField(required=True, default=datetime.utcnow)
+    created = QuantumField(required=True, default=quantum.now)
     session_id = StringField(required=True, default=generate_session_id)
     csrf_token = StringField(required=True, default=generate_session_id)
-    expires = DateTimeField(required=True, default=default_expiry)
+    expires = QuantumField(required=True, default=default_expiry)
     real = ReferenceField('User')
     actor = ReferenceField('User')
     logged_out = BooleanField(required=True, default=False)
@@ -309,18 +309,18 @@ class BaseIdentity(BaseDocument):
         """
         Set the expiry time to N seconds from now
         """
-        self.expires = datetime.utcnow()+timedelta(seconds=seconds_from_now)
+        self.expires = quantum.now().add(seconds=seconds_from_now)
 
     def is_expired(self):
         """
         Check whether this session is expired
         """
         # Has the session passed its activity expiry?
-        if self.expires > datetime.utcnow():
+        if self.expires > quantum.now():
             return False
 
         # What about its final session expiry?
-        if self.created + timedelta(seconds=settings.getint('identity', 'session_timeout')) < datetime.utcnow():
+        if self.created.add(seconds=settings.getint('identity', 'session_timeout')) < quantum.now():
             return False
 
         return True

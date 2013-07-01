@@ -6,14 +6,15 @@ import os
 import sys
 import time
 import traceback
-from datetime import datetime, timedelta
-from mongoengine import Document, StringField, DateTimeField, IntField, DynamicDocument
+from mongoengine import Document, StringField, IntField, DynamicDocument
 import mongoengine
+from .mongoengine import QuantumField
+from . import quantum
 
 class CronLock(Document):
     name     = StringField(unique=True, required=True)
-    started  = DateTimeField(required=True, default=datetime.utcnow)
-    expires  = DateTimeField(required=True)
+    started  = QuantumField(required=True, default=quantum.now)
+    expires  = QuantumField(required=True)
     hostname = StringField(required=True)
     pid      = IntField(required=True)
 
@@ -39,7 +40,7 @@ class CronJob(object):
         raise NotImplementedError("Need to implement CronJob.run()")
 
     def _check_timeouts(self):
-        old_job = CronLock.objects(name=self.__class__.__name__, expires__lt=datetime.utcnow()).first()
+        old_job = CronLock.objects(name=self.__class__.__name__, expires__lt=quantum.now()).first()
         if old_job:
             old_job.delete()
             raise TimeoutException("%s timed out, forcing lock removal")
@@ -57,7 +58,7 @@ class CronJob(object):
             try:
                 lock = CronLock(
                     name = self.__class__.__name__,
-                    expires = datetime.utcnow() + timedelta(seconds=self.timeout),
+                    expires = quantum.now().add(seconds=self.timeout),
                     hostname = os.uname()[1],
                     pid = os.getpid(),
                 )
@@ -115,14 +116,14 @@ class QueuedCronJob(CronJob):
         raise NotImplementedError("Need to implement QueuedCronJob.process_job()")
 
     def lock_job(self, job):
-        job.started        = datetime.utcnow()
+        job.started        = quantum.now()
         job.locked_by_host = os.uname()[1]
         job.locked_by_pid  = os.getpid()
         job.progress       = 1
         job.save(safe=True)
 
     def unlock_job(self, job):
-        job.finished       = datetime.utcnow()
+        job.finished       = quantum.now()
         job.locked_by_host = None
         job.locked_by_pid  = None
         job.progress       = 100
@@ -134,12 +135,12 @@ class CronJobQueue(DynamicDocument):
     }
 
     type           = StringField(required=True)
-    created        = DateTimeField(required=True, default=datetime.utcnow)
-    started        = DateTimeField()
+    created        = QuantumField(required=True, default=quantum.now)
+    started        = QuantumField()
     locked_by_host = StringField()
     locked_by_pid  = IntField()
     progress       = IntField(default=0)
-    finished       = DateTimeField()
+    finished       = QuantumField()
 
     @staticmethod
     def enqueue(type, **kwargs):
@@ -159,8 +160,7 @@ class CronJobQueue(DynamicDocument):
 class remove_old_file_uploads(CronJob):
     def run(self):
         from trex.support.wtf import Upload
-        from datetime import datetime, timedelta
-        cut_off = datetime.utcnow() - timedelta(hours=24)
+        cut_off = quantum.now().subtract(hours=24)
         for upload in Upload.objects(created__lte=cut_off):
             upload.delete()
 

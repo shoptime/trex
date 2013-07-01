@@ -5,11 +5,10 @@ from trex.flask import app
 from trex.flask import AuthBlueprint, render_html
 from .. import auth
 from flask import g, redirect, url_for, request, flash, abort
-from datetime import datetime, timedelta
 from flask.ext import wtf
 from .audit import audit
 import app.model as m
-from . import model as trex_model
+from . import quantum, model as trex_model
 
 @app.before_request
 def check_authentication(*args, **kwargs):
@@ -72,7 +71,7 @@ def login():
 
     if form.validate_on_submit():
         user = m.User.active.get(email=form.email.data)
-        user.last_login = datetime.utcnow()
+        user.last_login = quantum.now()
         user.save()
 
         # Credentials change
@@ -175,7 +174,7 @@ def lost_password_sent():
 @blueprint.route('/recover-password/<code>', methods=['GET', 'POST'], auth=auth.public)
 @render_html('trex/auth/recover_password.jinja2')
 def recover_password(code):
-    valid_after = datetime.utcnow() - timedelta(hours=1)
+    valid_after = quantum.now().subtract(hours=1)
     try:
         ar = trex_model.UserAccountRecovery.objects.get(code=code, created__gte=valid_after)
     except m.DoesNotExist:

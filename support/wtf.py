@@ -7,8 +7,8 @@ from flask import url_for, abort, request, g
 from ..flask import AuthBlueprint, render_json, render_html
 from app.support import auth
 from app import app
-from datetime import datetime
-from . import token, ejson
+from .mongoengine import QuantumField
+from . import token, ejson, quantum
 import json
 
 class AttrDict(dict):
@@ -151,7 +151,7 @@ class Upload(mongoengine.Document):
     user    = mongoengine.ReferenceField('User', required=True)
     file    = mongoengine.FileField(required=True, collection_name='trex.upload')
     data    = mongoengine.DictField()
-    created = mongoengine.DateTimeField(required=True, default=datetime.utcnow)
+    created = QuantumField(required=True, default=quantum.now)
     token   = mongoengine.StringField(required=True, default=token.create_url_token)
 
     def delete(self):
