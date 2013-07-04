@@ -3,6 +3,8 @@
     window.Trex = new Trex();
     Trex = Trex.prototype;
 
+    Trex.Templates = {};
+
     Trex.Logger = function() { this.init.apply(this, arguments); };
     (function(cls) {
         cls.tag = '';

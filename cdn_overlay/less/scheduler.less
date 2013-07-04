@@ -1,0 +1,119 @@
+.trex-scheduler {
+    @trexSchedulerHourHeight: 40px;
+    .trex-scheduler-scrollable {
+        max-height: 500px;
+        overflow-x: hidden;
+        overflow-y: scroll;
+    }
+    table {
+        table-layout: fixed;
+        border-collapse: collapse;
+        width: 100%;
+
+        .trex-scheduler-time {
+            width: 60px;
+        }
+
+        th, td {
+            padding: 0;
+            vertical-align: top;
+        }
+
+        thead {
+            th.trex-scheduler-pad {
+                width: 15px;
+            }
+            .trex-scheduler-today {
+                color: @errorText;
+            }
+        }
+
+        tbody {
+            tr.trex-scheduler-marker-row {
+                td {
+                    height: 0;
+                    position: relative;
+                    >div {
+                        position: absolute;
+                        width: 100%;
+                        top: 0;
+                        left: 0;
+                        >div {
+                            height: @trexSchedulerHourHeight;
+                            >div {
+                                border-bottom: 1px dotted #ddd;
+                                border-top: 1px solid #ddd;
+                                height: @trexSchedulerHourHeight/2;
+                            }
+                        }
+                    }
+                }
+            }
+            tr.trex-scheduler-event-row {
+                .trex-scheduler-today>div {
+                    background-color: rgba(255,200,200,0.5);
+                }
+                td.trex-scheduler-time {
+                    text-align: right;
+                    color: #555;
+                    div {
+                        box-sizing: border-box;
+                        border-top: 1px solid #ddd;
+                        height: @trexSchedulerHourHeight;
+                        padding-right: 4px;
+                    }
+                }
+                td {
+                    //position: relative;
+                    >div {
+                        height: 24 * @trexSchedulerHourHeight;
+                        border-left: 1px solid #ddd;
+                        position: relative;
+                        //position: absolute;
+                        //top: 0;
+                        //right: 0;
+                        //bottom: 0;
+                        //left: 0;
+                        >.trex-scheduler-span {
+                            position: absolute;
+                            z-index: 2;
+                            margin: 0;
+                            padding: 1px 2px;
+
+                            width: 97%;
+
+                            box-sizing: border-box;
+                            background-color: rgb(136,221,136);
+                            border: 1px solid #555;
+                            .border-radius(3px);
+                            &.trex-scheduler-dragging {
+                                .opacity(80);
+                                width: 100%;
+                            }
+                            .time {
+                                font-weight: bold;
+                                font-size: 10px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .trex-scheduler-handle {
+        display: none;
+        position: absolute;
+        cursor: row-resize;
+        bottom: 0;
+        width: 100%;
+        height: 7px;
+        line-height: 8px;
+        font-size: 12px;
+        text-align: center;
+    }
+    &.trex-scheduler-draggable {
+        .trex-scheduler-span:hover {
+            .trex-scheduler-handle { display: block; }
+        }
+    }
+}

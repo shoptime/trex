@@ -1,0 +1,37 @@
+<div class="trex-scheduler-info pull-right"></div>
+<div class="btn-toolbar">
+    <button data-action="today" class="btn">Today</button>
+    <div class="btn-group">
+        <button data-action="prev-week" class="btn"><i class="icon-chevron-left"></i> Prev</button>
+        <button data-action="next-week" class="btn">Next <i class="icon-chevron-right"></i></button>
+    </div>
+</div>
+<table>
+    <thead>
+        <tr>
+            <th class="trex-scheduler-time"></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th class="trex-scheduler-pad"></th>
+        </tr>
+    </thead>
+</table>
+<div class="trex-scheduler-scrollable">
+    <table>
+        <tbody>
+            <tr class="trex-scheduler-marker-row">
+                <td class="trex-scheduler-time"></td>
+                <td colspan="7"><div>{% for i in range(24) %}<div><div></div></div>{% endfor %}</div></td>
+            </tr>
+            <tr class="trex-scheduler-event-row">
+                <td class="trex-scheduler-time"></td>
+                {% for i in range(7) %}<td><div></div></td>{% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
