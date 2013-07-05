@@ -25,4 +25,4 @@ app compile_static
 [ -f supervisord.conf ] && [[ -x bin/supervisorctl ]] && supervisorctl update
 
 # Reload!
-touch site.wsgi
+app wsgi_reload

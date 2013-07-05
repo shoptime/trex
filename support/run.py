@@ -14,6 +14,8 @@ import inspect
 import importlib
 import datetime
 import subprocess
+import requests
+from furl import furl
 
 class Manager(script.Manager):
     def __init__(self, *args, **kwargs):
@@ -34,6 +36,15 @@ class Manager(script.Manager):
             "Run the development server using test mode"
             self.app.switch_to_test_mode()
             self.app.run()
+
+        @self.command
+        def wsgi_reload():
+            "Reloads the site for production deployment"
+            # Touch the WSGI file
+            os.utime(os.path.join(self.app.root_path, '..', 'site.wsgi'), None)
+            # Hit the site to actually trigger the reload
+            r = requests.get('http://localhost/', headers={'Host': furl(self.app.settings.get('server', 'url')).host})
+            r.raise_for_status()
 
         @self.command
         def compile_static():
