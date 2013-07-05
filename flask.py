@@ -95,7 +95,7 @@ class Flask(flask.Flask):
     def assert_valid_config(self):
         for section in ['app', 'server', 'mongo']:
             assert self.settings.has_section(section), "Section [%s] doesn't exist in config" % section
-        for option in ['host', 'port', 'debug', 'url', 'enable_csrf']:
+        for option in ['host', 'port', 'debug', 'url']:
             assert option in self.settings.options('server'), "Option %s exists in [server] section" % option
 
         assert 'url' in self.settings.options('mongo'), "Option 'url' exists in [mongo] section"
