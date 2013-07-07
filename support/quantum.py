@@ -3,6 +3,7 @@
 # TODO - some sort of .replace() support
 
 from __future__ import absolute_import
+import calendar
 from datetime import datetime
 import dateutil.parser
 import dateutil.relativedelta
@@ -57,6 +58,12 @@ def from_datetime(dt, timezone=None):
         timezone = default_timezone()
 
     return Quantum(convert_timezone(dt, timezone, 'UTC'), timezone)
+
+def from_unix(timestamp, timezone=None):
+    if not timezone:
+        timezone = default_timezone()
+
+    return Quantum(datetime.utcfromtimestamp(timestamp), timezone)
 
 def convert_timezone(dt, from_timezone, to_timezone):
     if isinstance(from_timezone, basestring):
@@ -145,6 +152,9 @@ class Quantum(object):
     def as_local(self):
         """Returns a representation of this Quantum as a naive datetime"""
         return convert_timezone(self.dt, 'UTC', self.tz)
+
+    def as_unix(self):
+        return calendar.timegm(self.as_utc().timetuple()) + float(self.as_utc().microsecond)/1000000
 
     def add(self, years=0, months=0, days=0, hours=0, minutes=0, seconds=0, microseconds=0):
         rd = dateutil.relativedelta.relativedelta(years=years, months=months, days=days, hours=hours, minutes=minutes, seconds=seconds, microseconds=microseconds)
