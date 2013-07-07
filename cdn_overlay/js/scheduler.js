@@ -10,6 +10,7 @@
                 hourHeight: 40, // How high is an hour in pixels
                 minuteResolution: 30, // When dragging, what should be snapped to
                 canDragEvents: true, // Can you move/resize events?
+                defaultColor: '#d96666', // Any valid CSS color (used as background)
                 // Formats for various parts of the UI (all in moment.js format strings)
                 dateFormat: 'ddd Do',
                 timeFormat: 'ha',
@@ -82,13 +83,13 @@
 
             initialMinute = Math.round(initialMinute/self.opt.minuteResolution)*self.opt.minuteResolution;
             var start = self.opt.startWeek.clone().add(column, 'days').add(initialMinute, 'minutes');
-            var end = start.clone().add(self.opt.minimumEventLength, 'minutes')
+            var end = start.clone().add(self.opt.minimumEventLength, 'minutes');
             var min_minute = end.diff(end.clone().startOf('day'), 'minutes', true);
             var new_event = new Trex.Scheduler.Event({
                 start: start,
                 end: end,
                 dragging: true,
-                color: '#888',
+                color: self.opt.defaultColor
             });
             var view = this.event_views[new_event.cid] = new Trex.Scheduler.SpanView({
                 model: new_event,
@@ -153,6 +154,7 @@
             if (m.day() > this.opt.firstDayOfWeek) {
                 return m.clone().startOf('day').subtract('days', m.day() - this.opt.firstDayOfWeek);
             }
+            return m.clone().startOf('day');
         },
         render: function() {
             if (!this.rendered_week || !this.rendered_week.isSame(this.opt.startWeek)) {
@@ -434,7 +436,7 @@
             this.$el.css({
                 top: start_hours * this.scheduler.opt.hourHeight,
                 height: duration_hours * this.scheduler.opt.hourHeight,
-                backgroundColor: this.model.get('color'),
+                backgroundColor: (this.model.get('color') || this.scheduler.opt.defaultColor),
                 zIndex: zindex,
                 width: width + '%',
                 left: left + '%',
@@ -447,7 +449,6 @@
     Trex.Scheduler.Event = Backbone.Model.extend({
         constructor: Trex.Scheduler.Event,
         defaults: {
-            color: '#d96666', // Any valid CSS color (used as background)
             dragging: false,
             // Deltas for minutes/days used while dragging
             start_dm: 0,
@@ -482,6 +483,14 @@
         },
         duration: function() {
             return this.end() - this.start();
+        },
+        toJSON: function() {
+            var data = Backbone.Model.prototype.toJSON.apply(this, arguments);
+            delete data.start_dm;
+            delete data.end_dm;
+            delete data.day_delta;
+            delete data.dragging;
+            return data;
         },
     });
 
