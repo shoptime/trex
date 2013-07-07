@@ -13,6 +13,7 @@ import imp
 import inspect
 import importlib
 import datetime
+from . import quantum
 import subprocess
 import requests
 from furl import furl
@@ -102,8 +103,7 @@ class Manager(script.Manager):
         def make_context():
             context = dict(
                 app       = self.app,
-                datetime  = datetime.datetime,
-                timedelta = datetime.timedelta,
+                quantum   = quantum,
             )
             try:
                 context['m'] = importlib.import_module('app.model', 'app')
