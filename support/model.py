@@ -180,7 +180,7 @@ settings = None
 
 
 def default_expiry():
-    return quantum.now().add(seconds=settings.getint('identity', 'activity_timeout'))
+    return quantum.now('UTC').add(seconds=settings.getint('identity', 'activity_timeout'))
 
 
 class BaseIdentity(BaseDocument):
