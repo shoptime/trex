@@ -97,22 +97,14 @@ class Quantum(object):
             return override_timezone[-1]
         return self._tz
 
-    @tz.setter
-    def tz(self, value):
-        if value is None:
-            self._tz = None
-            return
-
-        self._tz = get_timezone(value)
-
     def __init__(self, dt, tz=None):
         if not isinstance(dt, datetime):
             raise ValueError("First argument to Quantum must be a datetime")
         self.dt = dt
         if tz is None:
-            self.tz = None
+            self._tz = None
         else:
-            self.tz = tz
+            self._tz = get_timezone(tz)
 
     def _check_comparison_type(self, other):
         if not isinstance(other, Quantum):
@@ -183,6 +175,40 @@ class Quantum(object):
         if self.tz is None:
             raise QuantumException("Can't manipulate a Quantum that has no timezone set")
         return self.add(years=-years, months=-months, days=-days, hours=-hours, minutes=-minutes, seconds=-seconds, microseconds=-microseconds)
+
+    def start_of(self, period, first_day_of_week=1):
+        valid_periods = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year']
+        if self.tz is None:
+            raise QuantumException("Can't manipulate a Quantum that has no timezone set")
+        if period not in valid_periods:
+            raise ValueError("Invalid period for Quantum.start_of: %s" % period)
+
+        local_dt = self.as_local()
+        for p in valid_periods:
+            if p == 'second':
+                local_dt = local_dt.replace(microsecond=0)
+            if p == 'minute':
+                local_dt = local_dt.replace(second=0)
+            if p == 'hour':
+                local_dt = local_dt.replace(minute=0)
+            if p == 'day':
+                local_dt = local_dt.replace(hour=0)
+            if p == 'month':
+                local_dt = local_dt.replace(day=1)
+            if p == 'year':
+                local_dt = local_dt.replace(month=1)
+            if p == period:
+                break
+
+        new = Quantum(convert_timezone(local_dt, self.tz, 'UTC'), self.tz)
+
+        if period == 'week':
+            if local_dt.isoweekday() < first_day_of_week:
+                new = new.subtract(days = 7 - first_day_of_week + local_dt.isoweekday())
+            if local_dt.isoweekday() > first_day_of_week:
+                new = new.subtract(days = local_dt.isoweekday() - first_day_of_week)
+
+        return new
 
     def format_short(self):
         return self.as_local().strftime("%-e %b %Y %H:%M")
