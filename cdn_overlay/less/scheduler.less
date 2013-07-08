@@ -111,9 +111,7 @@
         font-size: 12px;
         text-align: center;
     }
-    &.trex-scheduler-draggable {
-        .trex-scheduler-span:hover {
-            .trex-scheduler-handle { display: block; }
-        }
-    }
+    .trex-scheduler-span:hover .trex-scheduler-handle { display: block; }
+    &.trex-scheduler-notdraggable .trex-scheduler-span:hover .trex-scheduler-handle { display: none; }
+    .trex-scheduler-span.trex-scheduler-notdraggable:hover .trex-scheduler-handle { display: none; }
 }

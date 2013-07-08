@@ -9,6 +9,8 @@
             return {
                 firstDayOfWeek: 1, // 0 = Sunday, 1 = Monday, ...
                 startWeek: now(), // A moment that is in the week we want to display
+                minWeek: null, // A moment that is in the earliest week navigatable by the user
+                maxWeek: null, // A moment that is in the latest week navigatable by the user
                 startHour: now().startOf('hour').hour(7), // A moment representing how far to pre-scroll the display
                 minimumEventLength: 30, // What is the shortest an event can be?
                 hourHeight: 40, // How high is an hour in pixels
@@ -22,6 +24,10 @@
                 spanFormat: 'h:mma',
                 // Handlers for various UI interactions
                 newEventHandler: null,
+                // This is used in place of openEventView (takes exactly the
+                // same args) but is responsible for creating the appropriate
+                // view.
+                openEventHandler: null,
                 openEventView: Trex.Scheduler.SampleEventView,
             }
         },
@@ -50,13 +56,16 @@
             }
         },
         open_event: function(evt, e) {
-            if (typeof(this.opt.openEventView) === 'function') {
-                if (this.current_open_event) {
-                    this.current_open_event.remove();
-                }
-                var view = this.event_views[evt.cid];
-                var x = e ? (e.pageX||e.originalEvent.pageX) : view.$el.position().left + view.$el.width()/2;
-                var y = e ? (e.pageY||e.originalEvent.pageY) : view.$el.position().top + view.$el.height()/2;
+            if (this.current_open_event) {
+                this.current_open_event.remove();
+            }
+            var view = this.event_views[evt.cid];
+            var x = e ? (e.pageX||e.originalEvent.pageX) : view.$el.position().left + view.$el.width()/2;
+            var y = e ? (e.pageY||e.originalEvent.pageY) : view.$el.position().top + view.$el.height()/2;
+            if (typeof(this.opt.openEventHandler) === 'function') {
+                this.current_open_event = this.opt.openEventHandler({model:evt, x:x, y:y});
+            }
+            else if (typeof(this.opt.openEventView) === 'function') {
                 this.current_open_event = new this.opt.openEventView({model:evt, x:x, y:y});
             }
         },
@@ -69,6 +78,11 @@
             if (this.current_open_event) {
                 this.current_open_event.remove();
                 delete this.current_open_event;
+                return;
+            }
+
+            if (typeof(this.opt.newEventHandler) !== 'function') {
+                // Can't create new events without a handler
                 return;
             }
 
@@ -118,10 +132,23 @@
                     .off('mouseup keydown', done)
                 ;
                 var do_save = e.type == 'mouseup';
-                view.remove();
                 if (do_save) {
-                    new_event.set('dragging', false);
-                    self.model.add(new_event);
+                    var new_event_ready = $.Deferred();
+
+                    $.when(new_event_ready).then(
+                        function() {
+                            // resolved (saving the new event)
+                            view.remove();
+                            new_event.set('dragging', false);
+                            self.model.add(new_event);
+                        },
+                        function() {
+                            // rejected (discarding the new event)
+                            view.remove();
+                        }
+                    );
+
+                    self.opt.newEventHandler(new_event_ready, new_event);
                 }
             };
 
@@ -134,11 +161,19 @@
         initialize: function(opt) {
             this.opt = _.extend({}, this.default_options(), opt);
             this.opt.startWeek = this.startOfWeek(this.opt.startWeek);
+            if (this.opt.minWeek) {
+                this.opt.minWeek = this.startOfWeek(this.opt.minWeek);
+            }
+            if (this.opt.maxWeek) {
+                this.opt.maxWeek = this.startOfWeek(this.opt.maxWeek);
+            }
 
             if (!this.model) {
                 this.model = new Trex.Scheduler.Events();
             }
-            // TODO, ensure this.model is what we expect
+            if (!(this.model instanceof Trex.Scheduler.Events)) {
+                throw new Error("Model must be an instance of Trex.Scheduler.Events");
+            }
             this.$el.addClass(this.className).html(Trex.Templates.scheduler);
             this.$event_columns = this.$('.trex-scheduler-event-row td:not(.trex-scheduler-time) div');
             this.event_views = {};
@@ -164,7 +199,7 @@
             if (!this.rendered_week || !this.rendered_week.isSame(this.opt.startWeek)) {
                 this.render_frame();
             }
-            this.$el.toggleClass('trex-scheduler-draggable', this.opt.canDragEvents);
+            this.$el.toggleClass('trex-scheduler-notdraggable', !this.opt.canDragEvents);
             this.reset();
         },
         render_frame: function() {
@@ -194,6 +229,17 @@
                 hour.add('hours', 1);
             };
             this.rendered_week = this.opt.startWeek.clone();
+
+            var enable_prev = !this.opt.minWeek || this.opt.minWeek.isBefore(this.opt.startWeek);
+            var enable_next = !this.opt.maxWeek || this.opt.maxWeek.isAfter(this.opt.startWeek);
+            this.$('.btn-toolbar button[data-action="prev-week"]').prop('disabled', !enable_prev);
+            this.$('.btn-toolbar button[data-action="next-week"]').prop('disabled', !enable_next);
+            if (enable_prev || enable_next) {
+                this.$('.btn-toolbar button[data-action]').show();
+            }
+            if (!enable_prev && !enable_next) {
+                this.$('.btn-toolbar button[data-action]').hide();
+            }
         },
         event_column_for: function(date) {
             var diff = date.diff(this.opt.startWeek, 'days');
@@ -315,20 +361,28 @@
         events: {
             'mousedown': 'start_drag',
             'mousedown .trex-scheduler-handle': 'start_drag',
+            'click': 'open_event',
         },
         open_event: function(e) {
             e.preventDefault();
+            if (this.temporary_no_open) {
+                this.temporary_no_open = false;
+                return;
+            }
             this.scheduler.open_event(this.model, e);
         },
         start_drag: function(e) {
-            if (!this.scheduler.opt.canDragEvents) {
+            if (e.which!=1) {
                 return;
             }
-            if (e.which!=1) {
+            if (!this.scheduler.opt.canDragEvents) {
                 return;
             }
             e.preventDefault();
             e.stopPropagation();
+            if (!this.model.get('canDrag')) {
+                return;
+            }
 
             if (this.scheduler.current_open_event) {
                 this.scheduler.current_open_event.remove();
@@ -394,9 +448,10 @@
                     .off('mouseup keydown', done)
                 ;
                 if (e.type == 'mouseup' && !mouse_has_moved) {
-                    self.open_event(e);
                     return;
                 }
+                // Don't open the event after a drag
+                self.temporary_no_open = true;
                 var do_save = e.type == 'mouseup';
                 var new_attrs = {
                     dragging: false,
@@ -428,6 +483,7 @@
             var end = this.model.end();
             var start_hours = start.diff(start.clone().startOf('day'), 'hours', true);
             var duration_hours = end.diff(start, 'hours', true);
+            this.$el.toggleClass('trex-scheduler-notdraggable', !this.model.get('canDrag'));
             this.$el.toggleClass('trex-scheduler-dragging', this.model.get('dragging'));
             var width = this.slot_count == 1 ? 97 : (97 / this.slot_count)*1.5;
             var left = this.slot_number == 0 ? 0 : (97 - width) * (this.slot_number / (this.slot_count-1));
@@ -435,8 +491,6 @@
             if (this.model.get('dragging')) {
                 zindex = 100;
             }
-            this.$el.attr('data-s', this.slot_number);
-            this.$el.attr('data-c', this.slot_count);
             this.$el.css({
                 top: start_hours * this.scheduler.opt.hourHeight,
                 height: duration_hours * this.scheduler.opt.hourHeight,
@@ -453,6 +507,8 @@
     Trex.Scheduler.Event = Backbone.Model.extend({
         constructor: Trex.Scheduler.Event,
         defaults: {
+            canDrag: true,
+            canOpen: true,
             dragging: false,
             // Deltas for minutes/days used while dragging
             start_dm: 0,
@@ -504,8 +560,43 @@
         model: Trex.Scheduler.Event,
     });
 
-    Trex.Scheduler.SampleEventView = function() { Backbone.View.apply(this, arguments); };
-    Trex.Scheduler.SampleEventView = Backbone.View.extend({
+    Trex.Scheduler.EventViewBase = function() { Backbone.View.apply(this, arguments); };
+    Trex.Scheduler.EventViewBase = Backbone.View.extend({
+        constructor: Trex.Scheduler.EventViewBase,
+        log: new Trex.Logger('scheduler-event-view'),
+        width: 300,
+        initialize: function(opt) {
+            this.$content = $('<div></div>');
+            this.$el
+                .css({
+                    position: 'absolute',
+                    top: opt.y,
+                    left: opt.x,
+                    width: this.width + 'px',
+                    marginLeft: -(this.width/2) + 'px',
+                })
+                .appendTo('body')
+                .popover({
+                    content: this.$content,
+                    trigger: 'manual',
+                    html: true,
+                    placement: 'top',
+                    container: this.$el,
+                })
+            ;
+            this.render();
+        },
+        render: function() {
+            this.$el.popover('show');
+        },
+        remove: function(opt) {
+            this.$el.popover('destroy');
+            Backbone.View.prototype.remove.apply(this, arguments);
+        },
+    });
+
+    Trex.Scheduler.SampleEventView = function() { Trex.Scheduler.EventViewBase.apply(this, arguments); };
+    Trex.Scheduler.SampleEventView = Trex.Scheduler.EventViewBase.extend({
         constructor: Trex.Scheduler.SampleEventView,
         log: new Trex.Logger('scheduler-sample-event-view'),
         events: {
@@ -516,34 +607,12 @@
             },
         },
         initialize: function(opt) {
-            this.log.d('initialized: ', opt);
-            var $content = $('<div><button class="btn">delete</button></div>');
-            var title = this.model.start().format('h:mma') + '-' + this.model.end().format('h:mma');
-            this.$el
-                .css({
-                    position: 'absolute',
-                    top: opt.y,
-                    left: opt.x,
-                    width: '300px',
-                    marginLeft: '-150px',
-                })
-                .appendTo('body')
-                    .popover({
-                        title: title,
-                        content: $content,
-                        trigger: 'manual',
-                        html: true,
-                        placement: 'top',
-                        container: this.$el,
-                    })
-                .popover('show')
-            ;
+            Trex.Scheduler.EventViewBase.prototype.initialize.apply(this, arguments);
+            this.render();
         },
-        remove: function(opt) {
-            this.log.d('view destroy');
-            this.$el.popover('destroy');
-            Backbone.View.prototype.remove.apply(this, arguments);
+        render: function() {
+            this.$content.html('<button class="btn">remove</button>');
+            Trex.Scheduler.EventViewBase.prototype.render.apply(this, arguments);
         },
-    })
-
+    });
 })(document, window, Backbone, jQuery, _);
