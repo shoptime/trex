@@ -426,6 +426,9 @@ class WebElementSet(object):
         except NoSuchElementException:
             self.context.failure('%s (%s)' % (message, 'no such option'))
             return
+        except IndexError:
+            self.context.failure('%s (%s)' % (message, 'no such option'))
+            return
         return self
 
     @require_one_element
