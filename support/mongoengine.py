@@ -33,7 +33,7 @@ class QuantumField(mongoengine.fields.BaseField):
     def to_python(self, value):
         if isinstance(value, quantum.Quantum):
             return value
-        return quantum.Quantum(value, 'UTC')
+        return quantum.Quantum(value)
 
     def prepare_query_value(self, op, value):
         return self.to_mongo(value)

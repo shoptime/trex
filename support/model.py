@@ -309,7 +309,7 @@ class BaseIdentity(BaseDocument):
         """
         Set the expiry time to N seconds from now
         """
-        self.expires = quantum.now().add(seconds=seconds_from_now)
+        self.expires = quantum.now('UTC').add(seconds=seconds_from_now)
 
     def is_expired(self):
         """
@@ -320,7 +320,7 @@ class BaseIdentity(BaseDocument):
             return False
 
         # What about its final session expiry?
-        if self.created.add(seconds=settings.getint('identity', 'session_timeout')) < quantum.now():
+        if self.created.at('UTC').add(seconds=settings.getint('identity', 'session_timeout')) < quantum.now('UTC'):
             return False
 
         return True
