@@ -11,20 +11,26 @@ import pytz
 
 override_timezone = []
 
+class QuantumException(Exception):
+    pass
+
 def default_timezone():
     if len(override_timezone):
         return override_timezone[-1]
-    return pytz.utc
+    return None
+
+def get_timezone(tz):
+    if isinstance(tz, basestring):
+        tz = pytz.timezone(tz)
+
+    if not (tz == pytz.utc or isinstance(tz, pytz.tzinfo.DstTzInfo)):
+        raise ValueError("Not a valid timezone object: %s" % tz)
+
+    return tz
 
 class timezone(object):
     def __init__(self, timezone):
-        if isinstance(timezone, basestring):
-            timezone = pytz.timezone(timezone)
-
-        if not (timezone == pytz.utc or isinstance(timezone, pytz.tzinfo.DstTzInfo)):
-            raise ValueError("Not a valid timezone object: %s" % timezone)
-
-        self.tz = timezone
+        self.tz = get_timezone(timezone)
 
     def __enter__(self):
         override_timezone.append(self.tz)
@@ -40,6 +46,10 @@ def now(timezone=None):
 def parse(datestring, timezone=None, format='%Y-%m-%dT%H:%M:%S', relaxed=False):
     if not timezone:
         timezone = default_timezone()
+
+    if not timezone:
+        raise QuantumException("Can't parse without a valid timezone")
+
     if relaxed:
         dt = dateutil.parser.parse(datestring, ignoretz=True, dayfirst=True)
     else:
@@ -51,11 +61,17 @@ def from_date(dt, timezone=None):
     if not timezone:
         timezone = default_timezone()
 
+    if not timezone:
+        raise QuantumException("Can't parse without a valid timezone")
+
     return Quantum(convert_timezone(datetime(dt.year, dt.month, dt.day), timezone, 'UTC'), timezone)
 
 def from_datetime(dt, timezone=None):
     if not timezone:
         timezone = default_timezone()
+
+    if not timezone:
+        raise QuantumException("Can't parse without a valid timezone")
 
     return Quantum(convert_timezone(dt, timezone, 'UTC'), timezone)
 
@@ -66,14 +82,8 @@ def from_unix(timestamp, timezone=None):
     return Quantum(datetime.utcfromtimestamp(timestamp), timezone)
 
 def convert_timezone(dt, from_timezone, to_timezone):
-    if isinstance(from_timezone, basestring):
-        from_timezone = pytz.timezone(from_timezone)
-    if isinstance(to_timezone, basestring):
-        to_timezone = pytz.timezone(to_timezone)
-    if not (from_timezone == pytz.utc or isinstance(from_timezone, pytz.tzinfo.DstTzInfo)):
-        raise ValueError("Invalid from_timezone: %s" % from_timezone)
-    if not (to_timezone == pytz.utc or isinstance(to_timezone, pytz.tzinfo.DstTzInfo)):
-        raise ValueError("Invalid to_timezone: %s" % to_timezone)
+    from_timezone = get_timezone(from_timezone)
+    to_timezone = get_timezone(to_timezone)
     return from_timezone.localize(dt).astimezone(to_timezone).replace(tzinfo=None)
 
 class Quantum(object):
@@ -89,19 +99,20 @@ class Quantum(object):
 
     @tz.setter
     def tz(self, value):
-        if isinstance(value, basestring):
-            value = pytz.timezone(value)
+        if value is None:
+            self._tz = None
+            return
 
-        if not (value == pytz.utc or isinstance(value, pytz.tzinfo.DstTzInfo)):
-            raise ValueError("Not a valid timezone object: %s" % value)
+        self._tz = get_timezone(value)
 
-        self._tz = value
-
-    def __init__(self, dt, tz):
+    def __init__(self, dt, tz=None):
         if not isinstance(dt, datetime):
             raise ValueError("First argument to Quantum must be a datetime")
         self.dt = dt
-        self.tz = tz
+        if tz is None:
+            self.tz = None
+        else:
+            self.tz = tz
 
     def _check_comparison_type(self, other):
         if not isinstance(other, Quantum):
@@ -134,9 +145,11 @@ class Quantum(object):
         return self.dt >= other.dt
 
     def __repr__(self):
-        return "<%s(%s, %s)>" % (self.__class__.__name__, self.dt, self.tz)
+        return "<%s(%s, %s)>" % (self.__class__.__name__, self.dt, (self.tz or 'no timezone'))
 
     def __str__(self):
+        if self.tz is None:
+            return "%s (no timezone)" % self.as_utc()
         return "%s (%s)" % (self.as_local(), self.tz)
 
     def at(self, timezone):
@@ -151,18 +164,24 @@ class Quantum(object):
 
     def as_local(self):
         """Returns a representation of this Quantum as a naive datetime"""
+        if self.tz is None:
+            raise QuantumException("Can't represent a Quantum as local time without a timezone")
         return convert_timezone(self.dt, 'UTC', self.tz)
 
     def as_unix(self):
         return calendar.timegm(self.as_utc().timetuple()) + float(self.as_utc().microsecond)/1000000
 
     def add(self, years=0, months=0, days=0, hours=0, minutes=0, seconds=0, microseconds=0):
+        if self.tz is None:
+            raise QuantumException("Can't manipulate a Quantum that has no timezone set")
         rd = dateutil.relativedelta.relativedelta(years=years, months=months, days=days, hours=hours, minutes=minutes, seconds=seconds, microseconds=microseconds)
         local_dt = self.as_local()
         local_dt += rd
         return Quantum(convert_timezone(local_dt, self.tz, 'UTC'), self.tz)
 
     def subtract(self, years=0, months=0, days=0, hours=0, minutes=0, seconds=0, microseconds=0):
+        if self.tz is None:
+            raise QuantumException("Can't manipulate a Quantum that has no timezone set")
         return self.add(years=-years, months=-months, days=-days, hours=-hours, minutes=-minutes, seconds=-seconds, microseconds=-microseconds)
 
     def format_short(self):
