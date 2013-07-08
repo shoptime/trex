@@ -5,17 +5,31 @@
 
     Trex.Templates = {};
 
-    moment.fn.toJSON = function() {
-        return { $ltime: this.format('YYYY-MM-DDTHH:mm:ss.SSS') };
-    };
-    Trex.parse_json = function(str) {
-        return JSON.parse(str, Trex.parse_json.reviver);
+    Trex.json_decode = function(str) {
+        return JSON.parse(str, Trex.json_decode.reviver);
     };
 
-    Trex.parse_json.reviver = function(k, v) {
+    Trex.json_decode.reviver = function(k, v) {
         if (v instanceof Object && '$ltime' in v) {
             return moment(v.$ltime);
         }
+        return v;
+    };
+
+    Trex.json_encode = function(obj) {
+        return JSON.stringify(obj, Trex.json_encode.replacer);
+    };
+
+    Trex.json_encode.replacer = function(k, v) {
+        if (k === '') {
+            return v;
+        }
+        var original_v = this[k];
+
+        if (moment.isMoment(original_v)) {
+            return { $ltime: original_v.format('YYYY-MM-DDTHH:mm:ss.SSS') };
+        }
+
         return v;
     };
 

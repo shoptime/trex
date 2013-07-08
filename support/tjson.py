@@ -17,7 +17,7 @@ def dumps(obj, timezone=None, **kwargs):
                 raise quantum.QuantumException("Can't JSON serialize quantums without a timezone specified")
             if o.tz and o.tz != timezone:
                 raise ValueError("Trying to JSON serialize a quantum that already has a different timezone: %s" % o)
-            return { '$ltime': o.at(timezone).as_local().isoformat() }
+            return { '$ltime': o.at(timezone).as_local().strftime('%Y-%m-%dT%H:%M:%S.%f') }
 
         raise TypeError(repr(o) + " is not JSON serializable")
 
