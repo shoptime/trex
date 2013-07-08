@@ -39,3 +39,18 @@ def has_role(role):
     has_role_cache[role] = check_role
 
     return check_role
+
+is_role_cache = {}
+def is_role(role):
+    if role in is_role_cache:
+        return is_role_cache[role]
+
+    def check_role(*args, **kwargs):
+        if not g.user:
+            return redirect(url_for('trex.auth.login', return_to = request.url))
+        if not g.user.is_role(role):
+            return abort(403)
+
+    is_role_cache[role] = check_role
+
+    return check_role
