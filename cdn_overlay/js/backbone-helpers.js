@@ -5,6 +5,20 @@
 
     Trex.Templates = {};
 
+    moment.fn.toJSON = function() {
+        return { $ltime: this.format('YYYY-MM-DDTHH:mm:ss.SSS') };
+    };
+    Trex.parse_json = function(str) {
+        return JSON.parse(str, Trex.parse_json.reviver);
+    };
+
+    Trex.parse_json.reviver = function(k, v) {
+        if (v instanceof Object && '$ltime' in v) {
+            return moment(v.$ltime);
+        }
+        return v;
+    };
+
     Trex.Logger = function() { this.init.apply(this, arguments); };
     (function(cls) {
         cls.tag = '';

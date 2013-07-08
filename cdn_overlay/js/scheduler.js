@@ -1,11 +1,15 @@
 (function(document, window, Backbone, jQuery, _) {
+    function now() {
+        return moment();
+    }
+
     Trex.Scheduler = function() { Backbone.View.apply(this, arguments); };
     Trex.Scheduler = Backbone.View.extend({
         default_options: function() {
             return {
                 firstDayOfWeek: 1, // 0 = Sunday, 1 = Monday, ...
-                startWeek: moment(), // A moment that is in the week we want to display
-                startHour: moment().startOf('hour').hour(7), // A moment representing how far to pre-scroll the display
+                startWeek: now(), // A moment that is in the week we want to display
+                startHour: now().startOf('hour').hour(7), // A moment representing how far to pre-scroll the display
                 minimumEventLength: 30, // What is the shortest an event can be?
                 hourHeight: 40, // How high is an hour in pixels
                 minuteResolution: 30, // When dragging, what should be snapped to
@@ -40,7 +44,7 @@
                     this.render();
                     break;
                 case 'today':
-                    this.opt.startWeek = this.startOfWeek(moment());
+                    this.opt.startWeek = this.startOfWeek(now());
                     this.render();
                     break;
             }
@@ -173,7 +177,7 @@
             var day = self.opt.startWeek.clone();
             this.$('thead tr th').not('.trex-scheduler-time, .trex-scheduler-pad').each(function() {
                 $(this).text(day.format(self.opt.dateFormat));
-                if (day.isSame(moment().startOf('day'))) {
+                if (day.isSame(now().startOf('day'))) {
                     $(this).addClass('trex-scheduler-today');
                     todayIndex = $(this).index();
                 }
@@ -183,7 +187,7 @@
                 this.$('tbody .trex-scheduler-event-row td').eq(todayIndex).addClass('trex-scheduler-today');
             }
             var $timeContainer = this.$('tbody .trex-scheduler-event-row .trex-scheduler-time').empty();
-            var hour = moment().startOf('day');
+            var hour = now().startOf('day');
             var stop = hour.clone().endOf('day');
             while (hour.isBefore(stop)) {
                 $timeContainer.append($('<div></div>').text(hour.format(self.opt.timeFormat)));
