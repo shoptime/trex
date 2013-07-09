@@ -150,6 +150,9 @@
 
                     self.opt.newEventHandler(new_event_ready, new_event);
                 }
+                else {
+                    view.remove();
+                }
             };
 
             $(document).on('mousemove', mousemove);
