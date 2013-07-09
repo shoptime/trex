@@ -106,6 +106,12 @@ class Quantum(object):
         else:
             self._tz = get_timezone(tz)
 
+    def __hash__(self):
+        dt = self.as_utc()
+        if self.tz:
+            dt = dt.replace(tzinfo=self.tz)
+        return dt.__hash__()
+
     def _check_comparison_type(self, other):
         if not isinstance(other, Quantum):
             raise TypeError("Expected a Quantum object for comparison")
