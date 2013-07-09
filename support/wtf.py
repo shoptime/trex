@@ -13,9 +13,15 @@ import json
 import pytz
 
 class AttrDict(dict):
-    def __init__(self, **kwargs):
+    def __init__(self, _proxy=None, **kwargs):
         self.__dict__ = self
+        self._proxy = _proxy
         self.update(kwargs)
+
+    def __getattr__(self, name):
+        if self._proxy:
+            return getattr(self._proxy, name)
+        raise AttributeError
 
 class BareListWidget(object):
     """
