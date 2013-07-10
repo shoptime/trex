@@ -1,8 +1,9 @@
 (function($) {
     var can_do_xhr_upload = window.File && window.FileList && window.FileReader && (new XMLHttpRequest()).upload;
+    var log = new Trex.Logger('trex-form');
 
-    Trex.FileListWidgetModel = function() {};
-    Trex.FileListWidgetModel = Backbone.Model.extend({
+    Trex.FileUploadModel = function() {};
+    Trex.FileUploadModel = Backbone.Model.extend({
         defaults: {
             progress: 0,
             error: false
@@ -38,6 +39,102 @@
             return data;
         }
     });
+
+    function do_xhr_upload(url, file_input, collection) {
+        var models = [];
+        _.each(file_input.files, function(file) {
+            var model = new Trex.FileUploadModel();
+            model.set({
+                id: model.cid,
+                filename: file.name,
+                size: file.size,
+                mime: file.type
+            });
+            models.push(model);
+            if (collection) {
+                collection.add(model);
+            }
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('X-CSRFToken', $('html').data('csrf-token'));
+            xhr.setRequestHeader('X-FileName', model.get('filename')),
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Content-Type', model.get('mime'));
+            xhr.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    if (this.status == 200) {
+                        log.d('XHR file upload complete');
+                        var data = JSON.parse(this.response);
+                        model.set(data);
+                    }
+                    else {
+                        model.set('error', true);
+                    }
+                }
+            };
+            xhr.onabort = xhr.onerror = function() {
+                log.e('XHR failed: ', this, arguments);
+                model.set('error', true);
+            };
+            xhr.upload.onprogress = function(e) {
+                model.set('progress', e.loaded / e.total * 100);
+            };
+            xhr.send(file);
+        });
+        return models;
+    }
+
+    function do_iframe_upload(url, file_input, collection) {
+        log.d("Doing iframe upload");
+        var $file = $(file_input);
+        var filename = $file.val().replace(/^.*\\/, '');
+        var model = new Trex.FileUploadModel({
+            filename: filename,
+            progress: 'unknown'
+        });
+        model.set('id', model.cid);
+        var upload_id = 'trex-file-upload-' + model.cid;
+        var $form = $file.closest('form');
+        var $field_name = $('<input type="hidden" name="_trex_file_field_name">').val($file.attr('name')).appendTo($form);
+        var old_form_action = $form.attr('action');
+        var old_form_target = $form.attr('target');
+        $form
+            .attr('action', url)
+            .attr('target', upload_id)
+        ;
+        var upload_complete = false;
+        var $iframe = $('<iframe></iframe>')
+            .hide()
+            .attr('id', upload_id)
+            .attr('name', upload_id)
+            .on('load', function() {
+                $iframe.remove();
+                $field_name.remove();
+                if (!upload_complete) {
+                    model.set('error', true);
+                }
+            })
+            .on('upload', function(e, file_info) {
+                upload_complete = true;
+                log.d("iframe upload complete");
+                model.set(file_info);
+            })
+        ;
+        $('body').append($iframe);
+        $form.submit();
+        if (collection) {
+            collection.add(model);
+        }
+        $form
+            .attr('action', old_form_action)
+            .attr('target', old_form_target)
+        ;
+        if (!old_form_target) {
+            $form.removeAttr('target');
+        }
+        return [model];
+    }
+
 
     $.fn.trex_delayed_submit = function(message, cb) {
         if (!this.length === 1 && this.filter('form').length === 1) {
@@ -88,18 +185,16 @@
     };
 
     $('.trex-file-list-widget').each(function() {
-        var log = new Trex.Logger('file-upload');
         var $widget = $(this);
         var files = new (Backbone.Collection.extend({
-            model: Trex.FileListWidgetModel,
+            model: Trex.FileUploadModel,
             uploads_complete: function() {
                 return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
             },
         }))();
-        window.f = files;
         if ($widget.find('input:hidden').val()) {
             _.each(JSON.parse($widget.find('input:hidden').val()), function(data) {
-                var model = new Trex.FileListWidgetModel(data);
+                var model = new Trex.FileUploadModel(data);
                 model.set({
                     id: model.cid,
                     progress: 100
@@ -175,100 +270,124 @@
 
         $widget.on('change.trexFileListWidget', 'input[type=file]', function(e) {
             if (can_do_xhr_upload) {
-                do_xhr_upload(e.target);
+                do_xhr_upload($widget.data('xhr-url'), e.target, files);
             }
             else {
-                do_iframe_upload(e.target);
+                do_iframe_upload($widget.data('iframe-url'), e.target, files);
             }
             $(this).val('');
         });
+    });
 
-        function do_xhr_upload(file_input) {
-            _.each(file_input.files, function(file) {
-                var model = new Trex.FileListWidgetModel();
-                model.set({
-                    id: model.cid,
-                    filename: file.name,
-                    size: file.size,
-                    mime: file.type
-                });
-                files.add(model);
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', $widget.data('xhr-url'), true);
-                xhr.setRequestHeader('X-CSRFToken', $('html').data('csrf-token'));
-                xhr.setRequestHeader('X-FileName', model.get('filename')),
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                xhr.setRequestHeader('Content-Type', model.get('mime'));
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == this.DONE) {
-                        if (this.status == 200) {
-                            log.d('XHR file upload complete');
-                            var data = JSON.parse(this.response);
-                            model.set(data);
-                        }
-                        else {
-                            model.set('error', true);
-                        }
-                    }
-                };
-                xhr.onabort = xhr.onerror = function() {
-                    log.e('XHR failed: ', this, arguments);
-                    model.set('error', true);
-                };
-                xhr.upload.onprogress = function(e) {
-                    model.set('progress', e.loaded / e.total * 100);
-                };
-                xhr.send(file);
+    $('.trex-image-widget').each(function() {
+        var $widget = $(this);
+        var files = new (Backbone.Collection.extend({
+            model: Trex.FileUploadModel,
+            uploads_complete: function() {
+                return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
+            },
+        }))();
+        // TODO - REMOVE THIS HACK
+        window.f = files;
+        if ($widget.find('input:hidden').val()) {
+            var model = new Trex.FileUploadModel(JSON.parse($widget.find('input:hidden').val()));
+            model.set({
+                id: model.cid,
+                progress: 100
             });
-        }
-
-        function do_iframe_upload(file_input) {
-            log.d("Doing iframe upload");
-            var $file = $(file_input);
-            var filename = $file.val().replace(/^.*\\/, '');
-            var model = new Trex.FileListWidgetModel({
-                filename: filename,
-                progress: 'unknown'
-            });
-            model.set('id', model.cid);
-            var upload_id = 'trex-file-upload-' + model.cid;
-            var $form = $file.closest('form');
-            var $field_name = $('<input type="hidden" name="_trex_file_field_name">').val($file.attr('name')).appendTo($form);
-            var old_form_action = $form.attr('action');
-            var old_form_target = $form.attr('target');
-            $form
-                .attr('action', $widget.data('iframe-url'))
-                .attr('target', upload_id)
-            ;
-            var upload_complete = false;
-            var $iframe = $('<iframe></iframe>')
-                .hide()
-                .attr('id', upload_id)
-                .attr('name', upload_id)
-                .on('load', function() {
-                    $iframe.remove();
-                    $field_name.remove();
-                    if (!upload_complete) {
-                        model.set('error', true);
-                    }
-                })
-                .on('upload', function(e, file_info) {
-                    upload_complete = true;
-                    log.d("iframe upload complete");
-                    model.set(file_info);
-                })
-            ;
-            $('body').append($iframe);
-            $form.submit();
             files.add(model);
-            $form
-                .attr('action', old_form_action)
-                .attr('target', old_form_target)
-            ;
-            if (!old_form_target) {
-                $form.removeAttr('target');
-            }
         }
+        var finished_uploads;
+        $widget.closest('form').trex_delayed_submit('Waiting for file uploads to finish ...', function() {
+            finished_uploads = $.Deferred();
+            if (files.uploads_complete()) {
+                finished_uploads.resolve();
+            }
+            return finished_uploads;
+        });
+        files.on('add remove change reset', function() {
+            // Keep the javascript up to date
+            var model = files.where({error:false})[0];
+            $widget.find('input:hidden').val(model ? JSON.stringify(model) : '');
+
+            if (finished_uploads && files.uploads_complete()) {
+                if (model.get('error')) {
+                    finished_uploads.reject();
+                }
+                else {
+                    finished_uploads.resolve();
+                }
+            }
+        });
+        var view = new (Backbone.View.extend({
+            el: $widget,
+            model: files.first(),
+            initialize: function(opt) {
+                this.opt = _.extend({
+                    width: parseInt($widget.find('.thumbnail').data('width'), 10),
+                    height: parseInt($widget.find('.thumbnail').data('height'), 10),
+                }, opt);
+                if (this.model) {
+                    this.listenTo(this.model, 'change', this.render);
+                }
+                this.render();
+            },
+            change_model: function(new_model) {
+                this.stopListening(this.model);
+                this.model = new_model;
+                this.listenTo(this.model, 'change', this.render);
+                this.render();
+            },
+            render: function() {
+                if (this.model) {
+                    if (this.model.get('url')) {
+                        this.$('.uploading').css('display', 'none');
+                        this.$('.thumbnail').html('<img>').find('img')
+                            .css({
+                                maxWidth: this.opt.width-10,
+                                maxHeight: this.opt.height-10,
+                                verticalAlign: 'center',
+                            })
+                            .attr('src', this.model.get('url'))
+                        ;
+                    }
+                    else {
+                        this.$('.uploading').css('display', 'inline-block');
+                        this.$('.thumbnail')
+                            .html('<span><span>Loading</span></span>')
+                            .find('>span').css({
+                                width: this.opt.width,
+                                height: this.opt.height,
+                            })
+                        ;
+                    }
+                }
+                else {
+                    this.$('.uploading').css('display', 'none');
+                    this.$('.thumbnail')
+                        .html('<span><span>No image</span></span>')
+                        .find('>span').css({
+                            width: this.opt.width,
+                            height: this.opt.height,
+                        })
+                    ;
+                }
+            },
+        }))();
+        window.v = view;
+
+        $widget.on('change.trexImageWidget', 'input[type=file]', function(e) {
+            var model;
+            if (can_do_xhr_upload) {
+                model = do_xhr_upload($widget.data('xhr-url'), e.target)[0];
+            }
+            else {
+                model = do_iframe_upload($widget.data('iframe-url'), e.target)[0];
+            }
+            files.reset(model);
+            view.change_model(model);
+            $(this).val('');
+        });
     });
 
     $('.trex-dependent-select-field').each(function() {

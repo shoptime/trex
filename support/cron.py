@@ -58,7 +58,7 @@ class CronJob(object):
             try:
                 lock = CronLock(
                     name = self.__class__.__name__,
-                    expires = quantum.now().add(seconds=self.timeout),
+                    expires = quantum.now('UTC').add(seconds=self.timeout),
                     hostname = os.uname()[1],
                     pid = os.getpid(),
                 )
@@ -77,7 +77,7 @@ class CronJob(object):
             self.app.logger.info('%s completed (%.2f secs)', self.__class__.__name__, run_time)
             if not sys.stdout.isatty():
                 time.sleep(max(0, 15 - run_time))
-        except Exception, e:
+        except Exception:
             self.app.logger.error(traceback.format_exc())
 
         context.pop()
@@ -160,7 +160,7 @@ class CronJobQueue(DynamicDocument):
 class remove_old_file_uploads(CronJob):
     def run(self):
         from trex.support.wtf import Upload
-        cut_off = quantum.now().subtract(hours=24)
+        cut_off = quantum.now('UTC').subtract(hours=24)
         for upload in Upload.objects(created__lte=cut_off):
             upload.delete()
 

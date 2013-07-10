@@ -8,7 +8,7 @@ from ..flask import AuthBlueprint, render_json, render_html
 from app.support import auth
 from app import app
 from .mongoengine import QuantumField
-from . import token, ejson, quantum
+from . import token, ejson, quantum, tjson
 import json
 import pytz
 
@@ -202,6 +202,35 @@ class Upload(mongoengine.Document):
             url      = url_for('trex.upload.view', token=self.token)
         )
 
+    @classmethod
+    def copy_from(cls, document, field_name, for_user=None, data=None):
+        if not for_user:
+            for_user = g.user
+        if not data:
+            data = {}
+        field = document._fields[field_name]
+        is_list = False
+        if isinstance(field, mongoengine.ListField):
+            field = field.field
+            is_list = True
+        if not isinstance(field, mongoengine.FileField):
+            raise Exception("Can't copy uploads from non-FileFields")
+        if is_list:
+            raise NotImplementedError("Creating upload lists isn't yet implemented")
+        else:
+            upload = cls(
+                user = for_user,
+                data = data,
+            )
+            field_attr = getattr(document, field_name)
+            upload.file.put(
+                field_attr.get(),
+                content_type = field_attr.content_type,
+                filename = field_attr.filename,
+            )
+            upload.save()
+            return upload
+
     def copy_to(self, document, field_name):
         field = document._fields[field_name]
         is_list = False
@@ -209,7 +238,7 @@ class Upload(mongoengine.Document):
             field = field.field
             is_list = True
         if not isinstance(field, mongoengine.FileField):
-            raise Exception("Can't copy uploads to non FileFields")
+            raise Exception("Can't copy uploads to non-FileFields")
 
         if is_list:
             gfproxy = mongoengine.GridFSProxy(key=field_name, collection_name=field.collection_name)
@@ -245,6 +274,61 @@ class FileListField(wtf.Field):
                     self.data.append(upload)
         else:
             self.data = []
+
+class ImageWidget(object):
+    def __init__(self, width=120, height=120):
+        self.width = int(width)
+        self.height = int(height)
+
+    def __call__(self, field, **kwargs):
+        data = dict(
+            widget_args = wtf.widgets.html_params(**{
+                'class':'trex-image-widget',
+                'data-xhr-url': url_for('trex.upload.xhr'),
+                'data-iframe-url': url_for('trex.upload.iframe'),
+            }),
+            thumbnail_args = wtf.widgets.html_params(**{
+                'class': 'thumbnail',
+                'style': 'max-width: %dpx; max-height: %dpx' % (self.width, self.height),
+                'data-width': str(self.width),
+                'data-height': str(self.height),
+            }),
+            span_args = wtf.widgets.html_params(**{
+                'style': 'width: %dpx; height: %dpx' % (self.width, self.height),
+            }),
+            input_args = wtf.widgets.html_params(**{
+                'id': field.id,
+                'name': field.name,
+                'type': 'hidden',
+                'value': kwargs.get('value', field._value()),
+            }),
+            file_input_name = "%s_file_input" % field.name,
+        )
+
+        return wtf.widgets.HTMLString("""
+<div %(widget_args)s>
+    <span %(thumbnail_args)s><span %(span_args)s></span></span>
+    <a class="add-file btn">Upload Image <input name="%(file_input_name)s" type="file"></a>
+    <span class="uploading"></span>
+    <input %(input_args)s>
+</div>
+""" % data)
+
+class ImageField(wtf.Field):
+    widget = ImageWidget()
+
+    def _value(self):
+        if self.data:
+            return ejson.dumps(self.data)
+        else:
+            return ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            data = json.loads(valuelist[0])
+            self.data = Upload.objects(user=g.user, id=data['oid']).first()
+        else:
+            self.data = None
 
 
 blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
