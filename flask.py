@@ -71,6 +71,19 @@ def render_html(template=None, add_etag=False):
 
     return decorator(decorated)
 
+def render_upload():
+    def decorated(f, *args, **kwargs):
+        upload = f(*args, **kwargs)
+
+        if upload is None:
+            return flask.abort(404)
+
+        if not isinstance(upload, trex.support.model.TrexUpload):
+            raise Exception("Can't render upload from %s" % upload)
+
+        return trex.support.mongoengine.serve_file(upload, 'file')
+
+    return decorator(decorated)
 
 def render_json():
     def decorated(f, *args, **kwargs):

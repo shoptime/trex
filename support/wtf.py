@@ -8,6 +8,7 @@ from ..flask import AuthBlueprint, render_json, render_html
 from app.support import auth
 from app import app
 from .mongoengine import QuantumField
+from .model import TrexUpload
 from . import token, ejson, quantum, tjson
 import json
 import pytz
@@ -178,83 +179,6 @@ class FileListWidget(object):
 </div>
 """ % data)
 
-class Upload(mongoengine.Document):
-    meta = dict(
-        collection = 'trex.upload',
-        indexes    = [('token',)],
-    )
-    user    = mongoengine.ReferenceField('User', required=True)
-    file    = mongoengine.FileField(required=True, collection_name='trex.upload')
-    data    = mongoengine.DictField()
-    created = QuantumField(required=True, default=quantum.now)
-    token   = mongoengine.StringField(required=True, default=token.create_url_token)
-
-    def delete(self):
-        self.file.delete()
-        super(Upload, self).delete()
-
-    def to_ejson(self):
-        return dict(
-            oid      = self.id,
-            filename = self.file.filename,
-            size     = self.file.length,
-            mime     = self.file.content_type,
-            url      = url_for('trex.upload.view', token=self.token)
-        )
-
-    @classmethod
-    def copy_from(cls, document, field_name, for_user=None, data=None):
-        if not for_user:
-            for_user = g.user
-        if not data:
-            data = {}
-        field = document._fields[field_name]
-        is_list = False
-        if isinstance(field, mongoengine.ListField):
-            field = field.field
-            is_list = True
-        if not isinstance(field, mongoengine.FileField):
-            raise Exception("Can't copy uploads from non-FileFields")
-        if is_list:
-            raise NotImplementedError("Creating upload lists isn't yet implemented")
-        else:
-            upload = cls(
-                user = for_user,
-                data = data,
-            )
-            field_attr = getattr(document, field_name)
-            upload.file.put(
-                field_attr.get(),
-                content_type = field_attr.content_type,
-                filename = field_attr.filename,
-            )
-            upload.save()
-            return upload
-
-    def copy_to(self, document, field_name):
-        field = document._fields[field_name]
-        is_list = False
-        if isinstance(field, mongoengine.ListField):
-            field = field.field
-            is_list = True
-        if not isinstance(field, mongoengine.FileField):
-            raise Exception("Can't copy uploads to non-FileFields")
-
-        if is_list:
-            gfproxy = mongoengine.GridFSProxy(key=field_name, collection_name=field.collection_name)
-            gfproxy.put(
-                self.file.get(),
-                content_type = self.file.content_type,
-                filename = self.file.filename,
-            )
-            getattr(document, field_name).append(gfproxy)
-        else:
-            getattr(document, field_name).put(
-                self.file.get(),
-                content_type = self.file.content_type,
-                filename = self.file.filename,
-            )
-
 class FileListField(wtf.Field):
     widget = FileListWidget()
 
@@ -269,7 +193,7 @@ class FileListField(wtf.Field):
             data = json.loads(valuelist[0])
             self.data = []
             for upload_data in data:
-                upload = Upload.objects(user=g.user, id=upload_data['oid']).first()
+                upload = TrexUpload.objects(user=g.user, id=upload_data['oid']).first()
                 if upload:
                     self.data.append(upload)
         else:
@@ -326,7 +250,7 @@ class ImageField(wtf.Field):
     def process_formdata(self, valuelist):
         if valuelist:
             data = json.loads(valuelist[0])
-            self.data = Upload.objects(user=g.user, id=data['oid']).first()
+            self.data = TrexUpload.objects(user=g.user, id=data['oid']).first()
         else:
             self.data = None
 
@@ -336,7 +260,7 @@ blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
 @blueprint.route('/xhr', methods=['POST'], endpoint='xhr', auth=auth.login)
 @render_json()
 def upload_xhr():
-    upload = Upload(user=g.user)
+    upload = TrexUpload(user=g.user)
     upload.file.put(
         request.data,
         content_type = request.content_type,
@@ -353,7 +277,7 @@ def upload_xhr():
 @blueprint.route('/iframe', methods=['POST'], endpoint='iframe', auth=auth.login)
 @render_html('trex/upload/upload_iframe.jinja2')
 def upload_iframe():
-    upload = Upload(user=g.user)
+    upload = TrexUpload(user=g.user)
 
     file = request.files[request.form['_trex_file_field_name']]
     if not file:
@@ -378,7 +302,7 @@ def upload_iframe():
 @blueprint.route('/view/<token>', methods=['GET'], endpoint='view', auth=auth.login)
 def upload_view(token):
     try:
-        upload = Upload.objects.get(user=g.user, token=token)
+        upload = TrexUpload.objects.get(user=g.user, token=token)
     except mongoengine.DoesNotExist:
         abort(404)
 

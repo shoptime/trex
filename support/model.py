@@ -373,3 +373,97 @@ class BaseIdentity(BaseDocument):
                 session.actor = None
                 session.real = None
                 session.save()
+
+class TrexUpload(BaseDocument):
+    meta = dict(
+        collection = 'trex.upload',
+        indexes    = [('token',)],
+    )
+    user      = ReferenceField('User', required=True)
+    file      = FileField(required=True, collection_name='trex.upload')
+    data      = DictField()
+    created   = QuantumField(required=True, default=quantum.now)
+    token     = StringField(required=True, default=token.create_url_token)
+    preserved = BooleanField(required=True, default=False)
+
+    def delete(self):
+        self.file.delete()
+        super(TrexUpload, self).delete()
+
+    def to_ejson(self):
+        return dict(
+            oid      = self.id,
+            filename = self.file.filename,
+            size     = self.file.length,
+            mime     = self.file.content_type,
+            url      = url_for('trex.upload.view', token=self.token)
+        )
+
+    @classmethod
+    def copy_from(cls, document, field_name, for_user=None, data=None):
+        if not for_user:
+            for_user = g.user
+        if not data:
+            data = {}
+        field = document._fields[field_name]
+        is_list = False
+        if isinstance(field, ListField):
+            field = field.field
+            is_list = True
+        if not isinstance(field, FileField):
+            raise Exception("Can't copy uploads from non-FileFields")
+        if is_list:
+            raise NotImplementedError("Creating upload lists isn't yet implemented")
+        else:
+            upload = cls(
+                user = for_user,
+                data = data,
+            )
+            field_attr = getattr(document, field_name)
+            upload.file.put(
+                field_attr.get(),
+                content_type = field_attr.content_type,
+                filename = field_attr.filename,
+            )
+            upload.save()
+            return upload
+
+    def update_reference(self, document, field_name):
+        field = document._fields[field_name]
+        if not isinstance(field, ReferenceField):
+            raise Exception("Can't update reference on non-reference field")
+        existing = getattr(document, field_name)
+        if existing and existing != self:
+            existing.release()
+        setattr(document, field_name, self)
+        self.preserve()
+
+    def preserve(self):
+        self.update(set__preserved=True)
+
+    def release(self):
+        self.update(set__preserved=False)
+
+    def copy_to(self, document, field_name):
+        field = document._fields[field_name]
+        is_list = False
+        if isinstance(field, ListField):
+            field = field.field
+            is_list = True
+        if not isinstance(field, FileField):
+            raise Exception("Can't copy uploads to non-FileFields")
+
+        if is_list:
+            gfproxy = GridFSProxy(key=field_name, collection_name=field.collection_name)
+            gfproxy.put(
+                self.file.get(),
+                content_type = self.file.content_type,
+                filename = self.file.filename,
+            )
+            getattr(document, field_name).append(gfproxy)
+        else:
+            getattr(document, field_name).put(
+                self.file.get(),
+                content_type = self.file.content_type,
+                filename = self.file.filename,
+            )
