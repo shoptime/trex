@@ -105,7 +105,18 @@ class BaseUser(BaseDocument):
         return pcrypt.verify(entered_password, self.password)
 
     def notify_password_reset(self, new_password):
-        flash("Password for %s is: %s" % (self.email, new_password))
+        from trex.support import mail
+        from app import app
+        mail.send(
+            to        = self.email,
+            subject   = 'Your password on %s was reset' % app.settings.get('app', 'name'),
+            text_body = "Hi,\n\nYou have a new password on %(app_name)s. Your login details are:\n\nEmail: %(email)s\nPassword: %(password)s\n\n--\n%(app_name)s" % dict(
+                app_name = app.settings.get('app', 'name'),
+                email    = self.email,
+                password = new_password,
+            )
+        )
+        flash("Password emailed to %s" % self.email)
 
     def to_ejson(self):
         data = self.to_mongo()
