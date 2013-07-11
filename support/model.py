@@ -10,6 +10,7 @@ from flask import flash, g, url_for, abort
 import re
 import hashlib
 from . import token, quantum
+import mimetypes
 
 class BaseDocument(Document):
     meta = dict(abstract=True)
@@ -427,6 +428,24 @@ class TrexUpload(BaseDocument):
             )
             upload.save()
             return upload
+
+    @classmethod
+    def from_file(cls, filename, for_user=None, data=None):
+        if not for_user:
+            for_user = g.user
+        if not data:
+            data = {}
+        upload = cls(
+            user = for_user,
+            data = data,
+        )
+        upload.file.put(
+            open(filename, 'r'),
+            content_type = mimetypes.guess_type(filename)[0],
+            filename     = os.path.basename(filename),
+        )
+        upload.save()
+        return upload
 
     def update_reference(self, document, field_name):
         field = document._fields[field_name]
