@@ -136,7 +136,13 @@ class Flask(flask.Flask):
         self.init_application()
 
     def switch_to_wsgi_mode(self):
-        log_filename = os.path.abspath(os.path.join(self.root_path, '..', 'logs', 'application.log'))
+        self.log_to_file('application.log')
+        self.log_to_papertrail('app')
+        self.logger.debug('Switched to WSGI mode')
+
+
+    def log_to_file(self, filename):
+        log_filename = os.path.abspath(os.path.join(self.root_path, '..', 'logs', filename))
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(logging.Formatter(
