@@ -137,7 +137,6 @@ class Flask(flask.Flask):
 
     def switch_to_wsgi_mode(self):
         self.log_to_file('application.log')
-        self.log_to_papertrail('app')
         self.logger.debug('Switched to WSGI mode')
 
 
