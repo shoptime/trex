@@ -106,7 +106,7 @@ class Flask(flask.Flask):
     in_test_mode = False
 
     def assert_valid_config(self):
-        for section in ['app', 'server', 'mongo']:
+        for section in ['app', 'server', 'mongo', 'notify']:
             assert self.settings.has_section(section), "Section [%s] doesn't exist in config" % section
         for option in ['host', 'port', 'debug', 'url']:
             assert option in self.settings.options('server'), "Option %s exists in [server] section" % option
@@ -118,6 +118,11 @@ class Flask(flask.Flask):
         assert mongo_url.path.segments[0] != '', "mongo.url %s has a database set" % mongo_url
 
         assert 'name' in self.settings.options('app'), "Option 'name' exists in [app] section"
+
+        assert 'enabled' in self.settings.options('notify')
+        if self.settings.getboolean('notify', 'enabled'):
+            assert 'url' in self.settings.options('notify'), "URL not set in [notify] section"
+            assert 'channel' in self.settings.options('notify'), "channel not set in [notify] section"
 
 
     def switch_to_test_mode(self):
