@@ -118,6 +118,7 @@ class Flask(flask.Flask):
         assert mongo_url.path.segments[0] != '', "mongo.url %s has a database set" % mongo_url
 
         assert 'name' in self.settings.options('app'), "Option 'name' exists in [app] section"
+        assert 'slug' in self.settings.options('app'), "Option 'slug' exists in [app] section"
 
         assert 'enabled' in self.settings.options('notify')
         if self.settings.getboolean('notify', 'enabled'):
@@ -197,7 +198,7 @@ class Flask(flask.Flask):
 
         self.jinja_env.globals['csrf_token'] = csrf_token
 
-        FlaskExceptionReporter(self)
+        self.exception_reporter = FlaskExceptionReporter(self)
 
         FlaskCDN(self)
 
@@ -306,14 +307,18 @@ def _exception_handler(app, exception):
         last_frame = data['traceback'][-1]
         file = last_frame[0]
         line = last_frame[1]
-        notify.error('instantpredict.com', data['type'], '%s at %s:%s' % (data['value'], file, line))
+        notify.error(app.settings.get('app', 'slug'), data['type'], '%s at %s:%s' % (data['value'], file, line))
     except:
-        notify.error('instantpredict.com', data['type'], '%s (no file/line info available)' % data['value'])
+        notify.error(app.settings.get('app', 'slug'), data['type'], '%s (no file/line info available)' % data['value'])
 
 
 class FlaskExceptionReporter(object):
     def __init__(self, app=None):
-        flask.got_request_exception.connect(_exception_handler)
+        self.reporter = _exception_handler
+        flask.got_request_exception.connect(self.invoke)
+
+    def invoke(self, app, exception):
+        self.reporter(app, exception)
 
 
 """Extends flask.Blueprint to add in declarative authentication handling for endpoints.
