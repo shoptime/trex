@@ -119,7 +119,7 @@ class Manager(script.Manager):
             t = TestRunner(wait_after_exception=wait)
             t.configure_for_flask()
             if test:
-                failed = t.run(test_list=[test])
+                failed = t.run(test_list=[t.strip() for t in test.split(',')])
             else:
                 failed = t.run()
             if failed:
