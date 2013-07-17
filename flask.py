@@ -61,6 +61,13 @@ def render_html(template=None, add_etag=False):
         status  = response.get('_status', 200)
         headers = response.get('_headers', {})
 
+        default_headers = {
+            'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+            'Expires': 'Sat, 01 Jan 2000 00:00:00 GMT',
+            'Pragma': 'no-cache',
+        }
+        headers = dict(default_headers.items() + headers.items())
+
         if add_etag:
             etag = md5.new(out.encode('utf-8')).hexdigest()
             if 'If-None-Match' in flask.request.headers and flask.request.headers['If-None-Match'] == etag:
@@ -85,7 +92,7 @@ def render_upload():
 
     return decorator(decorated)
 
-def render_json():
+def render_json(cachable=False):
     def decorated(f, *args, **kwargs):
         response = f(*args, **kwargs)
 
@@ -94,6 +101,12 @@ def render_json():
 
         http_response = flask.Response(ejson.dumps(response), 200)
         http_response.content_type = 'application/json'
+
+        if cachable == False:
+            http_response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+            http_response.headers.set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+            http_response.headers.set('Pragma', 'no-cache')
+
         return http_response
     return decorator(decorated)
 
