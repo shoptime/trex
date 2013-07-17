@@ -110,7 +110,7 @@ def render_json(cachable=False):
         return http_response
     return decorator(decorated)
 
-class DinoRequest(flask.Request):
+class TrexRequest(flask.Request):
     parameter_storage_class = OrderedMultiDict
 
 class Flask(flask.Flask):
@@ -172,7 +172,7 @@ class Flask(flask.Flask):
     def __init__(self, *args, **kwargs):
         super(Flask, self).__init__(*args, **kwargs)
 
-        self.request_class = DinoRequest
+        self.request_class = TrexRequest
         # Add trex/templates to the jinja2 search path
         self.jinja_loader.searchpath.append(os.path.join(os.path.dirname(__file__), 'templates'))
 
