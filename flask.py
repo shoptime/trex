@@ -183,14 +183,36 @@ class Flask(flask.Flask):
         ])
 
         self.assert_valid_config()
+        self.init_jinja()
+        self.exception_reporter = FlaskExceptionReporter(self)
 
+        FlaskCDN(self)
+
+        trex.support.model.settings = self.settings
+
+        self.init_application()
+
+    def init_jinja(self):
         self.select_jinja_autoescape = True
 
-        self.jinja_env.filters['tojson'] = lambda o: ejson.dumps(o)
-        self.jinja_env.filters['moment_stamp'] = lambda dt: dt.isoformat()+'Z'
-        self.jinja_env.filters['textarea2html'] = lambda text: parser.textarea2html(text)
-        self.jinja_env.filters['english_join'] = lambda items: ', '.join(items[0:-1]) + ' and ' + items[-1]
+        # Filters
+        @self.template_filter()
+        def tojson(o):
+            return ejson.dumps(o)
 
+        @self.template_filter()
+        def moment_stamp(dt):
+            return '%sZ' % dt.isoformat()
+
+        @self.template_filter()
+        def textarea2html(text):
+            return parser.textarea2html(text)
+
+        @self.template_filter()
+        def english_join(items):
+            return ', '.join(items[0:-1]) + ' and ' + items[-1]
+
+        @self.template_filter()
         def oxford_join(items):
             if len(items) == 1:
                 return items[0]
@@ -198,10 +220,8 @@ class Flask(flask.Flask):
                 return ' and '.join(items)
             return ', '.join(items[0:-1]) + ', and ' + items[-1]
 
-        self.jinja_env.filters['oxford_join'] = oxford_join
-
+        # Globals (note: from 0.10, we will be able to use @self.template_global())
         self.jinja_env.globals['hostname'] = os.uname()[1]
-
         self.jinja_env.globals['format'] = trex.support.format
 
         def csrf_token():
@@ -210,14 +230,6 @@ class Flask(flask.Flask):
             return ''
 
         self.jinja_env.globals['csrf_token'] = csrf_token
-
-        self.exception_reporter = FlaskExceptionReporter(self)
-
-        FlaskCDN(self)
-
-        trex.support.model.settings = self.settings
-
-        self.init_application()
 
     def init_application(self):
         self.debug = self.settings.getboolean('server', 'debug')
