@@ -240,6 +240,12 @@ class Flask(flask.Flask):
             self.config['SESSION_COOKIE_SECURE'] = True
             self.config['PREFERRED_URL_SCHEME'] = 'https'
 
+            # See https://en.wikipedia.org/wiki/Strict_Transport_Security
+            def add_hsts_header(response):
+                response.headers.set('Strict-Transport-Security', 'max-age=31536000')
+                return response
+            self.after_request(add_hsts_header)
+
         mongo_url = furl(self.settings.get('mongo', 'url'))
         mongo_db = mongo_url.path.segments[0]
 
