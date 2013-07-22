@@ -24,6 +24,21 @@ class AttrDict(dict):
             return getattr(self._proxy, name)
         raise AttributeError
 
+def country_choices():
+    country_names = dict(pytz.country_names)
+    country_names['GS'] = 'South Georgia' # no South Sandwich Islands for you!
+    return [('', '-- select --')] + country_names.items()
+
+def timezone_dependent_choices():
+    choices = dict()
+    for country_code, timezone_list in pytz.country_timezones.items():
+        choices[country_code] = []
+        for tz in timezone_list:
+            choices[country_code].append((tz, tz))
+
+    return choices
+
+
 class BareListWidget(object):
     """
     Renders a list of fields with no supporting markup
