@@ -161,7 +161,7 @@ class BaseAudit(BaseDocument):
                 docs.append(dict(
                     url   = url_for('trex.user_management.edit', user_id=doc.id),
                     label = doc.display_name,
-                    type  = 'user',
+                    type  = '%s user' % doc.role,
                 ))
 
         return docs

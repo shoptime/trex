@@ -31,7 +31,11 @@
             <td>
                 <ul>
                 {% for doc in entry.linkable_documents() %}
+                    {% if doc.url %}
                     <li><a href="{{ doc.url }}">{{ doc.label }}</a> <span class="muted">({{ doc.type }})</span></li>
+                    {% else %}
+                    <li>{{ doc.label }} <span class="muted">({{ doc.type }})</span></li>
+                    {% endif %}
                 {% endfor %}
                 </ul>
             </td>
