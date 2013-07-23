@@ -216,6 +216,23 @@ class Quantum(object):
 
         return new
 
+    def strftime(self, format):
+        local_dt = self.as_local()
+        result   = local_dt.strftime(format)
+
+        suffix_placeholder = '{TH}'
+        if result.find(suffix_placeholder) != -1:
+            day = local_dt.day
+
+            if 4 <= day <= 20 or 24 <= day <= 30:
+                suffix = 'th'
+            else:
+                suffix = ['st', 'nd', 'rd'][day % 10 - 1]
+
+            result = result.replace(suffix_placeholder, suffix)
+
+        return result
+
     def format_short(self):
         return self.as_local().strftime("%-e %b %Y %H:%M")
 
