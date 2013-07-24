@@ -5,6 +5,7 @@ import flask
 from flask.ext.seasurf import SeaSurf
 import os.path
 from ConfigParser import ConfigParser
+import codecs
 import md5
 import warnings
 import pymongo
@@ -176,11 +177,9 @@ class Flask(flask.Flask):
         # Add trex/templates to the jinja2 search path
         self.jinja_loader.searchpath.append(os.path.join(os.path.dirname(__file__), 'templates'))
 
-        self.settings.read([
-            os.path.join(self.root_path, '..', 'trex', 'base.ini'),
-            os.path.join(self.root_path, 'default.ini'),
-            os.path.join(self.root_path, 'local.ini'),
-        ])
+        self.settings.readfp(codecs.open(os.path.join(self.root_path, '..', 'trex', 'base.ini'), 'r', 'utf8'))
+        self.settings.readfp(codecs.open(os.path.join(self.root_path, 'default.ini'), 'r', 'utf8'))
+        self.settings.readfp(codecs.open(os.path.join(self.root_path, 'local.ini'), 'r', 'utf8'))
 
         self.assert_valid_config()
         self.init_jinja()
