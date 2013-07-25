@@ -82,12 +82,12 @@ def login():
 
     return dict(form=form)
 
-@blueprint.route('/login-as/<user_id>', methods=['POST'], auth=auth.has_flag('trex.user_management_login_as'))
-def login_as(user_id):
+@blueprint.route('/login-as/<user_token>', methods=['POST'], auth=auth.has_flag('trex.user_management_login_as'))
+def login_as(user_token):
     return_to = request.args.get('return_to') or url_for('index.index')
 
     try:
-        user = m.User.active.get(id=user_id)
+        user = m.User.active.get(token=user_token)
     except m.DoesNotExist:
         abort(404)
 

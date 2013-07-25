@@ -28,10 +28,11 @@ class InvalidRoleException(Exception):
 
 class BaseUser(BaseDocument):
     meta = {
-        'indexes': [('email',)],
+        'indexes': [('email',), ('token',)],
         'abstract': True,
     }
 
+    token        = StringField(required=True, unique=True, default=token.create_url_token)
     email        = LowerCaseEmailField(required=True, unique=True)
     display_name = StringField(required=True)
     password     = StringField()
@@ -159,7 +160,7 @@ class BaseAudit(BaseDocument):
         for doc in self.documents:
             if isinstance(doc, BaseUser) and hasattr(g, 'user') and g.user.has_flag('trex.user_management'):
                 docs.append(dict(
-                    url   = url_for('trex.user_management.edit', user_id=doc.id),
+                    url   = url_for('trex.user_management.edit', user_token=doc.token),
                     label = doc.display_name,
                     type  = '%s user' % doc.role,
                 ))

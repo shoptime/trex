@@ -25,10 +25,10 @@
             <td>never</td>
             {% endif %}
             <td>
-                <a class="btn btn-small" href="{{ url_for('.edit', user_id=user.id) }}"><i class="icon-cog"></i> edit</a>
+                <a class="btn btn-small" href="{{ url_for('.edit', user_token=user.token) }}"><i class="icon-cog"></i> edit</a>
                 <button
                     class="btn btn-small btn-danger trex-post-confirm"
-                    data-href="{{ url_for('.deactivate', user_id=user.id) }}"
+                    data-href="{{ url_for('.deactivate', user_token=user.token) }}"
                     data-title="Confirm deactivate user"
                     data-body="Are you sure you want to deactivate {{ user.email }}"
                     data-confirm-label="Deactivate user"
@@ -38,7 +38,7 @@
                 </button>
                 <button
                     class="btn btn-small btn-inverse trex-post-confirm"
-                    data-href="{{ url_for('.reset_password', user_id=user.id) }}"
+                    data-href="{{ url_for('.reset_password', user_token=user.token) }}"
                     data-title="Confirm password reset"
                     data-body="This will generate a new password for {{ user.email }} and email it to them"
                     data-confirm-label="Reset password"
@@ -54,7 +54,7 @@
                 {% if g.user.has_flag('trex.user_management_login_as') and g.user != user %}
                 <button
                     class="btn btn-small trex-post-confirm"
-                    data-href="{{ url_for('trex.auth.login_as', user_id=user.id) }}"
+                    data-href="{{ url_for('trex.auth.login_as', user_token=user.token) }}"
                     data-title="Confirm log in as"
                     data-body="This will log you in as {{ user.email }}. Are you sure you wish to proceed?"
                     data-confirm-label="Log in"

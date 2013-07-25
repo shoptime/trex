@@ -20,12 +20,12 @@ def index():
     )
 
 @blueprint.route('/add', methods=['GET', 'POST'], endpoint='add', auth=auth.has_flag('trex.user_management'))
-@blueprint.route('/<user_id>/edit', methods=['GET', 'POST'], auth=auth.has_flag('trex.user_management'))
+@blueprint.route('/<user_token>/edit', methods=['GET', 'POST'], auth=auth.has_flag('trex.user_management'))
 @render_html('trex/user_management/edit.jinja2')
-def edit(user_id=None):
-    if user_id:
+def edit(user_token=None):
+    if user_token:
         try:
-            user = m.User.active.get(id=user_id)
+            user = m.User.active.get(token=user_token)
         except m.DoesNotExist:
             abort(404)
     else:
@@ -45,7 +45,7 @@ def edit(user_id=None):
         user.email = form.email.data
         user.role = form.role.data
         user.save()
-        if user_id:
+        if user_token:
             audit("Updated user %s" % user.display_name, ['User Management'], [user])
         else:
             audit("Added user %s" % user.display_name, ['User Management'], [user])
@@ -53,10 +53,10 @@ def edit(user_id=None):
 
     return dict(form=form)
 
-@blueprint.route('/<user_id>/deactivate', methods=['POST'], auth=auth.has_flag('trex.user_management'))
-def deactivate(user_id):
+@blueprint.route('/<user_token>/deactivate', methods=['POST'], auth=auth.has_flag('trex.user_management'))
+def deactivate(user_token):
     try:
-        user = m.User.active.get(id=user_id)
+        user = m.User.active.get(token=user_token)
     except m.DoesNotExist:
         abort(404)
 
@@ -67,10 +67,10 @@ def deactivate(user_id):
 
     return redirect(url_for('.index'))
 
-@blueprint.route('/<user_id>/reset-password', methods=['POST'], auth=auth.has_flag('trex.user_management'))
-def reset_password(user_id):
+@blueprint.route('/<user_token>/reset-password', methods=['POST'], auth=auth.has_flag('trex.user_management'))
+def reset_password(user_token):
     try:
-        user = m.User.active.get(id=user_id)
+        user = m.User.active.get(token=user_token)
     except m.DoesNotExist:
         abort(404)
 
