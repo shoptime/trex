@@ -125,7 +125,7 @@ class TestRunner:
         try:
             # Do some stuff
             browser = Remote(
-                self.selenium_server_url,
+                self.selenium_server_url.encode('ascii'),
                 desired_capabilities = {
                     'browserName': self.selenium_browser,
                 },
