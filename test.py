@@ -405,7 +405,7 @@ class WebElementSet(object):
         if message is None:
             message = "Select: %s value=%s" % (self, value)
         try:
-            self.select(self.find('option[value="%s"]' % value))
+            self.select(value)
             self.context.ok(message)
         except WebElementExpectedOneElement:
             self.context.failure("%s (Expected 1 element, got %d)" % (message, len(self.elements)))
@@ -839,6 +839,22 @@ class TestBase(object):
         self.ok('Opened: %s' % message)
         self.url_is(uri)
 
+    def endpoint_is(self, endpoint, message=None):
+        """
+        Verify that the current page is the specified flask endpoint.
+
+        This will only work for pages using @render_html
+
+        @param endpoint: endpoitnt o match
+        @type endpoint: str
+        @param message: Message to display
+        @type message: str
+        """
+        if message is None:
+            message = 'Current endpoint is: %s' % endpoint
+
+        self.find('html').attr_is('id', 'endpoint-%s' % endpoint.replace('.', '-'))
+
     def url_is(self, uri, message=None):
         """
         Verify the current URI is as given
@@ -913,6 +929,7 @@ _helpers = [
     'get',
     'get_ok',
     'url_is',
+    'endpoint_is',
     'url_like',
     'screenshot',
 ]
