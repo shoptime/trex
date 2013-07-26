@@ -12,6 +12,7 @@ from .model import TrexUpload
 from . import token, ejson, quantum, tjson
 import json
 import pytz
+import operator
 
 class AttrDict(dict):
     def __init__(self, _proxy=None, **kwargs):
@@ -27,7 +28,7 @@ class AttrDict(dict):
 def country_choices():
     country_names = dict(pytz.country_names)
     country_names['GS'] = 'South Georgia' # no South Sandwich Islands for you!
-    return [('', '-- select --')] + country_names.items()
+    return [('', '-- select --')] + sorted(country_names.items(), key=operator.itemgetter(1))
 
 def timezone_dependent_choices():
     choices = dict()
@@ -35,6 +36,7 @@ def timezone_dependent_choices():
         choices[country_code] = []
         for tz in timezone_list:
             choices[country_code].append((tz, tz))
+        choices[country_code].sort(key=operator.itemgetter(0))
 
     return choices
 
