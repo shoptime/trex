@@ -9,6 +9,7 @@
         table-layout: fixed;
         border-collapse: collapse;
         width: 100%;
+        border-bottom: 1px solid #ddd;
 
         .trex-scheduler-time {
             width: 60px;
@@ -32,18 +33,20 @@
             tr.trex-scheduler-marker-row {
                 td {
                     height: 0;
-                    position: relative;
                     >div {
-                        position: absolute;
-                        width: 100%;
-                        top: 0;
-                        left: 0;
+                        position: relative;
                         >div {
-                            height: @trexSchedulerHourHeight;
+                            position: absolute;
+                            width: 100%;
+                            top: 0;
+                            left: 0;
                             >div {
-                                border-bottom: 1px dotted #ddd;
-                                border-top: 1px solid #ddd;
-                                height: @trexSchedulerHourHeight/2;
+                                height: @trexSchedulerHourHeight;
+                                >div {
+                                    border-bottom: 1px dotted #ddd;
+                                    border-top: 1px solid #ddd;
+                                    height: @trexSchedulerHourHeight/2;
+                                }
                             }
                         }
                     }
@@ -57,7 +60,7 @@
                     text-align: right;
                     color: #555;
                     div {
-                        box-sizing: border-box;
+                        .box-sizing(border-box);
                         border-top: 1px solid #ddd;
                         height: @trexSchedulerHourHeight;
                         padding-right: 4px;
@@ -85,7 +88,7 @@
                             overflow: hidden;
                             text-overflow: ellipsis;
 
-                            box-sizing: border-box;
+                            .box-sizing(border-box);
                             background-color: rgb(136,221,136);
                             border: 1px solid #555;
                             .border-radius(3px);
