@@ -111,8 +111,9 @@ class BaseUser(BaseDocument):
         mail.send(
             to        = self.email,
             subject   = 'Your password on %s was reset' % app.settings.get('app', 'name'),
-            text_body = "Hi,\n\nYou have a new password on %(app_name)s. Your login details are:\n\nEmail: %(email)s\nPassword: %(password)s\n\n--\n%(app_name)s" % dict(
+            text_body = "Hi,\n\nYou have a new password on %(app_name)s. Your login details are:\n\nEmail: %(email)s\nPassword: %(password)s\n\nYou can log in at: %(app_url)s\n\n--\n%(app_name)s" % dict(
                 app_name = app.settings.get('app', 'name'),
+                app_url  = url_for('index.index', _external=True),
                 email    = self.email,
                 password = new_password,
             )
