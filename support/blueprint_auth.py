@@ -174,7 +174,7 @@ def lost_password_sent():
 @blueprint.route('/recover-password/<code>', methods=['GET', 'POST'], auth=auth.public)
 @render_html('trex/auth/recover_password.jinja2')
 def recover_password(code):
-    valid_after = quantum.now().subtract(hours=1)
+    valid_after = quantum.now('UTC').subtract(hours=1)
     try:
         ar = trex_model.UserAccountRecovery.objects.get(code=code, created__gte=valid_after)
     except m.DoesNotExist:
