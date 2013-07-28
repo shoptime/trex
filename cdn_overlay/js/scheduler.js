@@ -1,4 +1,4 @@
-(function(document, window, Backbone, jQuery, _) {
+(function(document, window, Backbone, $, _) {
     function now() {
         return moment();
     }
@@ -28,25 +28,25 @@
                 // same args) but is responsible for creating the appropriate
                 // view.
                 openEventHandler: null,
-                openEventView: Trex.Scheduler.SampleEventView,
-            }
+                openEventView: Trex.Scheduler.SampleEventView
+            };
         },
         className: 'trex-scheduler',
         log: new Trex.Logger('scheduler'),
         events: {
             'click .btn-toolbar button[data-action]': 'toolbar_handler',
             'mousedown .trex-scheduler-event-row td:not(.trex-scheduler-time)>div': 'start_drag',
-            'selectstart': function(e) { e.preventDefault(); }, // Stop IE from selecting text while dragging
+            'selectstart': function(e) { e.preventDefault(); } // Stop IE from selecting text while dragging
         },
         toolbar_handler: function(e) {
             var $button = $(e.currentTarget);
             switch ($button.data('action')) {
                 case 'next-week':
-                    this.opt.startWeek.add('weeks', 1)
+                    this.opt.startWeek.add('weeks', 1);
                     this.render();
                     break;
                 case 'prev-week':
-                    this.opt.startWeek = this.opt.startWeek.subtract('weeks', 1)
+                    this.opt.startWeek.subtract('weeks', 1);
                     this.render();
                     break;
                 case 'today':
@@ -111,7 +111,7 @@
             });
             var view = this.event_views[new_event.cid] = new Trex.Scheduler.SpanView({
                 model: new_event,
-                scheduler: self,
+                scheduler: self
             });
             self.$event_columns.eq(column).append(view.$el);
 
@@ -230,7 +230,7 @@
             while (hour.isBefore(stop)) {
                 $timeContainer.append($('<div></div>').text(hour.format(self.opt.timeFormat)));
                 hour.add('hours', 1);
-            };
+            }
             this.rendered_week = this.opt.startWeek.clone();
 
             var enable_prev = !this.opt.minWeek || this.opt.minWeek.isBefore(this.opt.startWeek);
@@ -263,7 +263,7 @@
             if (!$column) { return; }
             var view = this.event_views[evt.cid] = new Trex.Scheduler.SpanView({
                 model: evt,
-                scheduler: this,
+                scheduler: this
             });
             $column.append(view.$el);
             this.balance_date(evt.date());
@@ -353,7 +353,7 @@
                     view.render();
                 }
             }, this);
-        },
+        }
     });
 
     Trex.Scheduler.SpanView = function() { Backbone.View.apply(this, arguments); };
@@ -364,7 +364,7 @@
         events: {
             'mousedown': 'start_drag',
             'mousedown .trex-scheduler-handle': 'start_drag',
-            'click': 'open_event',
+            'click': 'open_event'
         },
         open_event: function(e) {
             e.preventDefault();
@@ -460,8 +460,8 @@
                     dragging: false,
                     start_dm: 0,
                     end_dm: 0,
-                    day_delta: 0,
-                }
+                    day_delta: 0
+                };
                 if (do_save) {
                     new_attrs.start = self.model.start();
                     new_attrs.end = self.model.end();
@@ -489,7 +489,7 @@
             this.$el.toggleClass('trex-scheduler-notdraggable', !this.model.get('canDrag'));
             this.$el.toggleClass('trex-scheduler-dragging', this.model.get('dragging'));
             var width = this.slot_count == 1 ? 97 : (97 / this.slot_count)*1.5;
-            var left = this.slot_number == 0 ? 0 : (97 - width) * (this.slot_number / (this.slot_count-1));
+            var left = this.slot_number ? 0 : (97 - width) * (this.slot_number / (this.slot_count-1));
             var zindex = this.slot_number + 5;
             if (this.model.get('dragging')) {
                 zindex = 100;
@@ -500,10 +500,10 @@
                 backgroundColor: (this.model.get('color') || this.scheduler.opt.defaultColor),
                 zIndex: zindex,
                 width: width + '%',
-                left: left + '%',
+                left: left + '%'
             });
             this.$('.time').text(start.format(this.scheduler.opt.spanFormat) + '-' + end.format(this.scheduler.opt.spanFormat));
-        },
+        }
     });
 
     Trex.Scheduler.Event = function() { Backbone.Model.apply(this, arguments); };
@@ -516,7 +516,7 @@
             // Deltas for minutes/days used while dragging
             start_dm: 0,
             end_dm: 0,
-            day_delta: 0,
+            day_delta: 0
         },
         start: function() {
             var start = this.get('start').clone();
@@ -554,13 +554,13 @@
             delete data.day_delta;
             delete data.dragging;
             return data;
-        },
+        }
     });
 
     Trex.Scheduler.Events = function() { Backbone.Collection.apply(this, arguments); };
     Trex.Scheduler.Events = Backbone.Collection.extend({
         constructor: Trex.Scheduler.Events,
-        model: Trex.Scheduler.Event,
+        model: Trex.Scheduler.Event
     });
 
     Trex.Scheduler.EventViewBase = function() { Backbone.View.apply(this, arguments); };
@@ -576,7 +576,7 @@
                     top: opt.y,
                     left: opt.x,
                     width: this.width + 'px',
-                    marginLeft: -(this.width/2) + 'px',
+                    marginLeft: -(this.width/2) + 'px'
                 })
                 .appendTo('body')
                 .popover({
@@ -584,7 +584,7 @@
                     trigger: 'manual',
                     html: true,
                     placement: 'top',
-                    container: this.$el,
+                    container: this.$el
                 })
             ;
             this.render();
@@ -595,7 +595,7 @@
         remove: function(opt) {
             this.$el.popover('destroy');
             Backbone.View.prototype.remove.apply(this, arguments);
-        },
+        }
     });
 
     Trex.Scheduler.SampleEventView = function() { Trex.Scheduler.EventViewBase.apply(this, arguments); };
@@ -607,7 +607,7 @@
                 e.preventDefault();
                 this.log.d("Removing event");
                 this.model.collection.remove(this.model);
-            },
+            }
         },
         initialize: function(opt) {
             Trex.Scheduler.EventViewBase.prototype.initialize.apply(this, arguments);
@@ -616,6 +616,6 @@
         render: function() {
             this.$content.html('<button class="btn">remove</button>');
             Trex.Scheduler.EventViewBase.prototype.render.apply(this, arguments);
-        },
+        }
     });
 })(document, window, Backbone, jQuery, _);
