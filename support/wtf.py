@@ -88,7 +88,7 @@ class BootstrapRadioInput(wtf.Input):
         return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 class DateField(wtf.DateField):
-    def __init__(self, label='', validators=None, timezone=None, **kwargs):
+    def __init__(self, label='', validators=None, timezone=None, default_mode='day', **kwargs):
         if not timezone:
             raise ValueError("Must specify a timezone for %s.%s" % (self.__class__.__module__, self.__class__.__name__))
         if isinstance(timezone, basestring):
@@ -98,6 +98,7 @@ class DateField(wtf.DateField):
             raise ValueError("Not a valid timezone object: %s" % timezone)
 
         self.timezone = timezone
+        self.default_mode = default_mode
 
         super(DateField, self).__init__(label, validators, **kwargs)
 
@@ -118,6 +119,10 @@ class DateField(wtf.DateField):
 
     def __call__(self, *args, **kwargs):
         kwargs['class'] = 'trex-date-field'
+        if self.default_mode == 'month':
+            kwargs['data-viewmode'] = 1
+        elif self.default_mode == 'year':
+            kwargs['data-viewmode'] = 2
         return super(DateField, self).__call__(*args, **kwargs)
 
 class RadioField(wtf.RadioField):
