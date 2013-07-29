@@ -855,6 +855,9 @@ class TestBase(object):
 
         self.find('html').attr_is('id', 'endpoint-%s' % endpoint.replace('.', '-'))
 
+    def endpoint(self):
+        return self.find('html').attr('id').replace('endpoint-', '').replace('-', '.')
+
     def url_is(self, uri, message=None):
         """
         Verify the current URI is as given
