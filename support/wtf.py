@@ -8,7 +8,7 @@ from ..flask import AuthBlueprint, render_json, render_html
 from app.support import auth
 from app import app
 from .mongoengine import QuantumField
-from .model import TrexUpload
+from .model import TrexUpload, TrexUploadTemporaryAccess
 from . import token, ejson, quantum, tjson
 import json
 import pytz
@@ -264,10 +264,23 @@ class ImageField(wtf.Field):
         else:
             return ''
 
+    def process(self, *args, **kwargs):
+        super(ImageField, self).process(*args, **kwargs)
+        if isinstance(self.data, TrexUpload) and g.user and self.data.user != g.user:
+            # Provide temporary access to the upload for this user (so they can
+            # view the existing image)
+            TrexUploadTemporaryAccess(upload=self.data, user=g.user).save()
+
+
     def process_formdata(self, valuelist):
         if valuelist:
             data = json.loads(valuelist[0])
-            self.data = TrexUpload.objects(user=g.user, id=data['oid']).first()
+            if isinstance(self.object_data, TrexUpload) and str(self.object_data.id) == data['oid']:
+                # Even if we don't own this one, it was provided as the form
+                # default, so we'll let the user pass it through untouched.
+                self.data = self.object_data
+            else:
+                self.data = TrexUpload.objects(user=g.user, id=data['oid']).first()
         else:
             self.data = None
 
@@ -316,12 +329,13 @@ def upload_iframe():
         )
     )
 
-@blueprint.route('/view/<token>', methods=['GET'], endpoint='view', auth=auth.login)
+@blueprint.route('/view/<token>', methods=['GET'], endpoint='view', auth=auth.public)
 def upload_view(token):
-    try:
-        upload = TrexUpload.objects.get(user=g.user, token=token)
-    except mongoengine.DoesNotExist:
-        abort(404)
+    upload = TrexUpload.get_404(token=token)
+
+    if upload.user != g.user:
+        if TrexUploadTemporaryAccess.objects(upload=upload, user=g.user).first() is None:
+            abort(404)
 
     if 'If-None-Match' in request.headers and request.headers['If-None-Match'] == upload.token:
         return app.response_class('', 304)

@@ -499,3 +499,27 @@ class TrexUpload(BaseDocument):
                 content_type = self.file.content_type,
                 filename = self.file.filename,
             )
+
+class TrexUploadTemporaryAccess(BaseDocument):
+    """
+    This class provides non-owner access to TrexUpload objects temporarily.
+
+    For example, if an admin needs to edit a user's profile, they would need to
+    be able to see the existing profile image on the form, this mechanism
+    allows that.
+
+    It is used automatically by the trex wtf widgets
+    """
+    meta = dict(
+        collection = 'trex.upload.temporary_access',
+    )
+
+    # Slightly creative hack to get expireAfterSeconds index support
+    @classmethod
+    def ensure_indexes(cls, *args, **kwargs):
+        super(TrexUploadTemporaryAccess, cls).ensure_indexes(*args, **kwargs)
+        cls._get_collection().ensure_index('created', expireAfterSeconds=60)
+
+    created = QuantumField(required=True, default=quantum.now)
+    upload  = ReferenceField('TrexUpload', required=True, reverse_delete_rule=CASCADE)
+    user    = ReferenceField('User', required=True)
