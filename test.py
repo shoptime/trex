@@ -720,7 +720,7 @@ class TestBase(object):
             return self.ok(message)
 
         self.failure(message)
-        self.diag("Got: %s\nExpected: %s" % (got, expected), indent=1)
+        self.diag("     Got: %s\nExpected: %s" % (got, expected), indent=1)
 
     def isnt_equal(self, got, expected, message=None):
         """
@@ -737,7 +737,7 @@ class TestBase(object):
             return self.ok(message)
 
         self.failure(message)
-        self.diag("Got: %s\nExpected: %s" % (got, expected), indent=1)
+        self.diag("     Got: %s\nExpected: %s" % (got, expected), indent=1)
 
     def is_like(self, got, regexp, message=None):
         """
@@ -752,14 +752,14 @@ class TestBase(object):
         """
         if got is None:
             self.failure(message)
-            self.diag("Got: %s\nExpected: %s" % ('<None>', regexp), indent=1)
+            self.diag("     Got: %s\nExpected: %s" % ('<None>', regexp), indent=1)
             return
 
         if re.search(regexp, got):
             return self.ok(message)
 
         self.failure(message)
-        self.diag("Got: %s\nExpected: %s" % (got, regexp), indent=1)
+        self.diag("     Got: %s\nExpected: %s" % (got, regexp), indent=1)
 
     def isnt_like(self, got, regexp, message=None):
         """
@@ -774,14 +774,14 @@ class TestBase(object):
         """
         if got is None:
             self.failure(message)
-            self.diag("Got: %s\nExpected: %s" % ('<None>', regexp), indent=1)
+            self.diag("     Got: %s\nExpected: %s" % ('<None>', regexp), indent=1)
             return
 
         if not re.search(regexp, got):
             return self.ok(message)
 
         self.failure(message)
-        self.diag("Got: %s\nExpected: %s" % (got, regexp), indent=1)
+        self.diag("     Got: %s\nExpected: %s" % (got, regexp), indent=1)
 
     def done(self):
         """
