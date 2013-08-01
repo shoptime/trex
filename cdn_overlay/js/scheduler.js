@@ -489,7 +489,7 @@
             this.$el.toggleClass('trex-scheduler-notdraggable', !this.model.get('canDrag'));
             this.$el.toggleClass('trex-scheduler-dragging', this.model.get('dragging'));
             var width = this.slot_count == 1 ? 97 : (97 / this.slot_count)*1.5;
-            var left = this.slot_number ? 0 : (97 - width) * (this.slot_number / (this.slot_count-1));
+            var left = this.slot_number === 0 ? 0 : (97 - width) * (this.slot_number / (this.slot_count-1));
             var zindex = this.slot_number + 5;
             if (this.model.get('dragging')) {
                 zindex = 100;
