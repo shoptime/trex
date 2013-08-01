@@ -22,6 +22,8 @@ class Pager():
     def calculate(self):
         self.first_page = 1
         self.last_page = int ( ( self.total - 1 ) / self.per_page ) + 1
+        if self.last_page == 0:
+            self.last_page = 1
         self.first_visible_item = (self.page-1) * self.per_page + 1
         self.last_visible_item = self.page * self.per_page
         if self.last_visible_item > self.total:
