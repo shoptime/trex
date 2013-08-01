@@ -16,7 +16,7 @@
                 hourHeight: 40, // How high is an hour in pixels
                 minuteResolution: 30, // When dragging, what should be snapped to
                 canDragEvents: true, // Can you move/resize events?
-                defaultColor: '#d96666', // Any valid CSS color (used as background)
+                defaultType: 'default', // Becomes the "type" of all new events
                 // Formats for various parts of the UI (all in moment.js format strings)
                 dateFormat: 'ddd Do',
                 timeFormat: 'ha',
@@ -107,7 +107,7 @@
                 start: start,
                 end: end,
                 dragging: true,
-                color: self.opt.defaultColor
+                type: self.opt.defaultType
             });
             var view = this.event_views[new_event.cid] = new Trex.Scheduler.SpanView({
                 model: new_event,
@@ -494,14 +494,17 @@
             if (this.model.get('dragging')) {
                 zindex = 100;
             }
-            this.$el.css({
-                top: start_hours * this.scheduler.opt.hourHeight,
-                height: duration_hours * this.scheduler.opt.hourHeight,
-                backgroundColor: (this.model.get('color') || this.scheduler.opt.defaultColor),
-                zIndex: zindex,
-                width: width + '%',
-                left: left + '%'
-            });
+            this.$el
+                .removeClass(_.filter((this.$el.attr('class')||'').split(/\s+/), function(cls) { return cls.match(/^trex-scheduler-eventtype-/); }).join(' '))
+                .addClass('trex-scheduler-eventtype-' + this.model.get('type'))
+                .css({
+                    top: start_hours * this.scheduler.opt.hourHeight,
+                    height: duration_hours * this.scheduler.opt.hourHeight,
+                    zIndex: zindex,
+                    width: width + '%',
+                    left: left + '%'
+                })
+            ;
             this.$('.time').text(start.format(this.scheduler.opt.spanFormat) + '-' + end.format(this.scheduler.opt.spanFormat));
         }
     });

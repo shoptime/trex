@@ -81,24 +81,15 @@
                             position: absolute;
                             z-index: 2;
                             margin: 0;
-                            padding: 1px 2px;
 
                             width: 97%;
 
                             overflow: hidden;
-                            text-overflow: ellipsis;
 
                             .box-sizing(border-box);
-                            background-color: rgb(136,221,136);
-                            border: 1px solid #555;
-                            .border-radius(3px);
                             &.trex-scheduler-dragging {
                                 .opacity(80);
                                 width: 100%;
-                            }
-                            .time {
-                                font-weight: bold;
-                                font-size: 10px;
                             }
                         }
                     }
@@ -120,4 +111,16 @@
     .trex-scheduler-span:hover .trex-scheduler-handle { display: block; }
     &.trex-scheduler-notdraggable .trex-scheduler-span:hover .trex-scheduler-handle { display: none; }
     .trex-scheduler-span.trex-scheduler-notdraggable:hover .trex-scheduler-handle { display: none; }
+
+    .trex-scheduler-span {
+        padding: 1px 2px;
+        background-color: rgb(136,221,136);
+        border: 1px solid #555;
+        text-overflow: ellipsis;
+        .border-radius(3px);
+        .time {
+            font-weight: bold;
+            font-size: 10px;
+        }
+    }
 }
