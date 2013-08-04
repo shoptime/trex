@@ -38,6 +38,11 @@ def edit(user_token=None):
         email        = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
         role         = wtf.SelectField('Role', [wtf.Required()], choices=role_choices)
 
+        def validate_email(form, field):
+            existing = m.User.objects(email=field.data).first()
+            if existing and existing.token != user.token:
+                raise wtf.ValidationError("This email address is already used")
+
     form = Form(obj=user)
 
     if form.validate_on_submit():
