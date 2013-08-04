@@ -35,6 +35,7 @@ class TestRunner:
 
     configured           = False
     test_dir             = None
+    screenshot_dir       = None
     server_url           = None
     selenium_server_url  = None
     selenium_browser     = None
@@ -45,11 +46,14 @@ class TestRunner:
     def __init__(self, wait_after_exception=False):
         self.wait_after_exception = wait_after_exception
 
-    def configure(self, server_url, selenium_server_url, selenium_browser, test_dir):
+    def configure(self, server_url, selenium_server_url, selenium_browser, test_dir, screenshot_dir=None):
         self.server_url          = server_url
         self.selenium_server_url = selenium_server_url
         self.selenium_browser    = selenium_browser
         self.test_dir            = test_dir
+        self.screenshot_dir      = screenshot_dir
+        if not self.screenshot_dir:
+            self.screenshot_dir = self.test_dir
 
         self.test_cases = [ x(server_url, test_dir) for x in self._load_test_cases(test_dir) ]
 
@@ -80,6 +84,7 @@ class TestRunner:
             selenium_server_url = selenium_server_url,
             selenium_browser    = selenium_browser,
             test_dir            = os.path.join(app.root_path, 'test'),
+            screenshot_dir      = os.path.join(app.root_path, '..', 'logs'),
         )
 
         if not self.configured:
@@ -149,6 +154,7 @@ class TestRunner:
 
                 test_case.browser = browser
                 test_case.selenium_browser = self.selenium_browser
+                test_case.test_runner = self
                 if self.selenium_browser == 'firefox':
                     test_case.slowdown = .5
                 test_case.shared = shared_data
@@ -905,7 +911,7 @@ class TestBase(object):
         @type filename: str
         """
         try:
-            return self.browser.get_screenshot_as_file(os.path.join(self.test_dir, filename))
+            return self.browser.get_screenshot_as_file(os.path.join(self.test_runner.screenshot_dir, filename))
         except:
             self.diag("Could not take screenshot (some drivers do not support screenshots, or maybe the file couldn't be written)")
 
