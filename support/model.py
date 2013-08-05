@@ -236,7 +236,7 @@ class BaseIdentity(BaseDocument):
 
     """
     meta = {
-        'indexes': [('session_id',)],
+        'indexes': [('session_id',),('real',),],
         'abstract': True
     }
 
