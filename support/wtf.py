@@ -10,6 +10,7 @@ from app import app
 from .mongoengine import QuantumField
 from .model import TrexUpload, TrexUploadTemporaryAccess
 from . import token, ejson, quantum, tjson
+from datetime import date
 import json
 import pytz
 import operator
@@ -124,6 +125,130 @@ class DateField(wtf.DateField):
         elif self.default_mode == 'year':
             kwargs['data-viewmode'] = 2
         return super(DateField, self).__call__(*args, **kwargs)
+
+class SelectDateWidget(object):
+    def __call__(self, field, **kwargs):
+        data = dict(
+            widget_args = wtf.widgets.html_params(**{
+                'class':'trex-select-date-widget',
+            }),
+            day_select_args = wtf.widgets.html_params(**{
+                'id': '%s-day' % field.id,
+                'name': field.name,
+                'class': 'input-day',
+            }),
+            month_select_args = wtf.widgets.html_params(**{
+                'id': '%s-month' % field.id,
+                'name': field.name,
+                'class': 'input-month',
+            }),
+            year_select_args = wtf.widgets.html_params(**{
+                'id': '%s-year' % field.id,
+                'name': field.name,
+                'class': 'input-year',
+            }),
+            day_select_options = self.day_select_options(field),
+            month_select_options = self.month_select_options(field),
+            year_select_options = self.year_select_options(field),
+        )
+
+        return wtf.widgets.HTMLString("""
+<div %(widget_args)s>
+    <select %(day_select_args)s>
+        %(day_select_options)s
+    </select>
+    <select %(month_select_args)s>
+        %(month_select_options)s
+    </select>
+    <select %(year_select_args)s>
+        %(year_select_options)s
+    </select>
+</div>
+""" % data)
+
+    def day_select_options(self, field):
+        result = []
+
+        value = field._value()
+        for day in range(1, 32):
+            options = dict(value=str(day))
+            if value and value.day == day:
+                options['selected'] = True
+            result.append('<option %s>%s</option>' % (wtf.widgets.html_params(**options), str(day)))
+
+        return '\n'.join(result)
+
+    def month_select_options(self, field):
+        result = []
+
+        value = field._value()
+        for month in range(1, 13):
+            options = dict(value=str(month))
+            if value and value.month == month:
+                options['selected'] = True
+            result.append('<option %s>%s</option>' % (wtf.widgets.html_params(**options), quantum.from_date(date(year=2013, month=month, day=1), timezone='UTC').strftime('%B')))
+
+        return '\n'.join(result)
+
+    def year_select_options(self, field):
+        result = []
+
+        min = field.minyear
+        max = field.maxyear
+        default = field.defaultyear
+
+        value = field._value()
+        for year in range(min, max + 1):
+            options = dict(value=str(year))
+            if value:
+                if value.year == year:
+                    options['selected'] = True
+            else:
+                if default == year:
+                    options['selected'] = True
+            result.append('<option %s>%s</option>' % (wtf.widgets.html_params(**options), str(year)))
+
+        return '\n'.join(result)
+
+class SelectDateField(wtf.Field):
+    widget = SelectDateWidget()
+
+    def __init__(self, label='', validators=None, minyear=1970, maxyear=None, defaultyear=1980, **kwargs):
+        if maxyear == None:
+            maxyear = quantum.now('UTC').as_local().year
+
+        self.minyear = minyear
+        self.maxyear = maxyear
+        self.defaultyear = defaultyear
+
+        super(SelectDateField, self).__init__(label, validators, **kwargs)
+
+    def _value(self):
+        if self.raw_data:
+            return self._valuelist_to_date(self.raw_data)
+        else:
+            return self.data and self.data.at('UTC').as_local() or ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            try:
+                self.data = self._valuelist_to_date(valuelist)
+            except ValueError:
+                self.data = None
+                raise ValueError(self.gettext('Not a valid datetime value'))
+
+            if self.data.year > self.maxyear or self.data.year < self.minyear:
+                raise ValueError(self.gettext('Not a valid date'))
+
+    def _valuelist_to_date(self, valuelist):
+        if len(valuelist) != 3:
+            raise ValueError(self.gettext('Not a valid datetime value'))
+        date_str = '%s-%s-%s' % tuple(reversed(valuelist))
+        return quantum.parse(date_str, timezone='UTC', format='%Y-%m-%d').as_local()
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'trex-select-date-field'
+        return super(SelectDateField, self).__call__(*args, **kwargs)
 
 class RadioField(wtf.RadioField):
     widget = BareListWidget()
