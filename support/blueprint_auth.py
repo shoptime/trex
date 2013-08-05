@@ -201,7 +201,7 @@ def recover_password(code):
         g.identity.login(ar.user)
         g.identity.changed_credentials()
         flash("Your password has been successfully reset")
-        return redirect(url_for('index.index'))
+        return redirect(ar.user.default_after_login_url())
 
     return dict(form=form)
 
