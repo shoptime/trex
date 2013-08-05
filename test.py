@@ -160,7 +160,12 @@ class TestRunner:
                 test_case.shared = shared_data
                 test_case.banner()
                 _current_test_case = test_case
-                test_case.run()
+                if self.wait_after_exception:
+                    from ipdb import launch_ipdb_on_exception
+                    with launch_ipdb_on_exception():
+                        test_case.run()
+                else:
+                    test_case.run()
                 test_case.done()
                 _current_test_case = None
                 failed += test_case.failed
@@ -170,9 +175,6 @@ class TestRunner:
         except:
             failed += 1
             traceback.print_exc()
-            if self.wait_after_exception:
-                print "press <enter> to exit ..."
-                sys.stdin.readline()
 
         if browser:
             browser.quit()
