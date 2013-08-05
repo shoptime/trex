@@ -29,7 +29,7 @@
     accept-charset="utf-8"
     {% if id %}id="{{ id }}"{% endif %}
     >
-    <input type="hidden" name="_csrf_token" value="{{ g.identity.csrf_token }}">
+    <input type="hidden" name="_csrf_token" value="{{ g.identity.get_csrf() }}">
     {{ form.hidden_tag() }}
     {% for field in form %}
     {{ form_render_field(field) }}

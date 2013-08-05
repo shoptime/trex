@@ -11,6 +11,9 @@ import re
 import hashlib
 from . import token, quantum
 import mimetypes
+import random
+from itertools import izip, cycle
+import binascii
 
 class BaseDocument(Document):
     meta = dict(abstract=True)
@@ -187,6 +190,19 @@ def generate_session_id():
     return hashlib.sha256(hashlib.sha256(os.urandom(32)).digest()).hexdigest()
 
 
+def generate_puffer():
+        """
+        Provides a random-content, psuedo-random-length string to be placed in responses to prevent the application
+        from returning a predictable compressed length response.
+
+        The objective is to ensure that attacks that use the length of the response as an oracle for figuring out
+        matched text by compression face a more difficult task due to the ever-changing length of responses.
+
+        It does not resolve the issue, only mitigate it to the extent that many more tests are required to achieve
+        statistical certainty that a guess is correct.
+        """
+        return hashlib.sha256(hashlib.sha256(os.urandom(32)).digest()).hexdigest()[:random.randint(16,64)]
+
 def verify_session_id(s):
     """
     Check whether it's a valid session ID
@@ -199,12 +215,36 @@ def verify_session_id(s):
 
     return True
 
+def verify_csrf_token(s):
+    """
+    Check whether it's likely to be a valid CSRF token
+    """
+    if settings.getboolean('security', 'shadow_csrf'):
+        if len(s) != 128:
+            return False
+    else:
+        if len(s) != 64:
+            return False
+
+    if not re.search(r'^[0-9a-f]+$', s):
+        return False
+
+    return True
+
 settings = None
 
 
 def default_expiry():
     return quantum.now('UTC').add(seconds=settings.getint('identity', 'activity_timeout'))
 
+def xor_hex_string(s, key):
+    """
+    XOR a string using the given key string
+    """
+    s = bytearray(binascii.unhexlify(s))
+    key = bytearray(binascii.unhexlify(key))
+
+    return binascii.hexlify(''.join([chr(a ^ b) for (a, b) in izip(s, cycle(key))]))
 
 class BaseIdentity(BaseDocument):
     """
@@ -269,6 +309,34 @@ class BaseIdentity(BaseDocument):
         self.csrf_token = generate_session_id()
         self.save()
 
+    def get_csrf(self):
+        """
+        Return CSRF suitable for insertion into a response. May use shadowing
+        """
+        token = self.csrf_token
+        if settings.getboolean('security','shadow_csrf'):
+            shadow = generate_session_id()
+            return shadow + xor_hex_string(token, shadow)
+        return token
+
+    def check_csrf(self, s):
+        """
+        Check a (possibly shadowed) CSRF token
+        """
+        if not verify_csrf_token(s):
+            return False
+
+        s = s.decode('ascii')
+
+        if settings.getboolean('security','shadow_csrf'):
+            token_length = len(generate_session_id())
+            shadow = s[:token_length]
+            token = xor_hex_string(s[token_length:], shadow)
+        else:
+            token = s
+        return token == self.csrf_token
+
+
     @classmethod
     def from_request(cls, request):
         """
@@ -321,6 +389,15 @@ class BaseIdentity(BaseDocument):
         domain = settings.get('identity', 'domain')
         if len(domain) == 0:
             domain = None
+        if settings.getboolean('security', 'puffer_headers'):
+            # Set puffer cookie first, content is irrelevant
+            response.set_cookie(settings.get('identity', 'cookie_key')+'-puff', generate_puffer(),
+                            max_age=max_age,
+                            path=settings.get('identity', 'path'),
+                            domain=domain,
+                            httponly=settings.get('identity', 'http_only'),
+                            secure=settings.get('server', 'url').startswith('https:'))
+
         response.set_cookie(settings.get('identity', 'cookie_key'), self.session_id,
                             max_age=max_age,
                             path=settings.get('identity', 'path'),

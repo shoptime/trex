@@ -33,7 +33,7 @@ def check_authentication(*args, **kwargs):
         if not csrf_token:
             csrf_token = request.headers.get('X-CSRFToken')
 
-        if not csrf_token or csrf_token != g.identity.csrf_token:
+        if not csrf_token or not g.identity.check_csrf(csrf_token):
             # Refuse submit
             flash("Please try again")
             # Reset CSRF to prevent discovery attacks

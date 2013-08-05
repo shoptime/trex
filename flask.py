@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from decorator import decorator
 import flask
-from flask.ext.seasurf import SeaSurf
 import os.path
 from ConfigParser import ConfigParser
 import codecs
@@ -23,6 +22,9 @@ import traceback
 from jinja2.exceptions import TemplateNotFound
 import trex.support.model
 import trex.support.format
+import base64
+import hashlib
+import random
 
 app = None
 
@@ -219,13 +221,30 @@ class Flask(flask.Flask):
                 return ' and '.join(items)
             return ', '.join(items[0:-1]) + ', and ' + items[-1]
 
+        def puffer():
+            """
+            Provides a random-content, psuedo-random-length string to be placed in responses to prevent the application
+            from returning a predictable compressed length response.
+
+            The objective is to ensure that attacks that use the length of the response as an oracle for figuring out
+            matched text by compression face a more difficult task due to the ever-changing length of responses.
+
+            It does not resolve the issue, only mitigate it to the extent that many more tests are required to achieve
+            statistical certainty that a guess is correct.
+            """
+            if not app.settings.getboolean('security','puffer_response'):
+                return ''
+            return base64.b64encode(hashlib.sha256(hashlib.sha256(os.urandom(32)).digest()).digest())[:random.randint(16,32)]
+
         # Globals (note: from 0.10, we will be able to use @self.template_global())
         self.jinja_env.globals['hostname'] = os.uname()[1]
         self.jinja_env.globals['format'] = trex.support.format
+        self.jinja_env.globals['puffer'] = puffer
+
 
         def csrf_token():
             if hasattr(flask.g, 'identity'):
-                return flask.g.identity.csrf_token
+                return flask.g.identity.get_csrf()
             return ''
 
         self.jinja_env.globals['csrf_token'] = csrf_token
@@ -234,16 +253,26 @@ class Flask(flask.Flask):
         self.debug = self.settings.getboolean('server', 'debug')
         self.logger.setLevel(logging.DEBUG)
 
+        # When we replace flash, use this to remove wtform CSRF richard@
+        # self.config['CSRF_ENABLED'] = False
+
         if self.settings.get('server', 'url').startswith('https:'):
             self.logger.info("Detected SSL service URL, enabling secure cookies")
             self.config['SESSION_COOKIE_SECURE'] = True
             self.config['PREFERRED_URL_SCHEME'] = 'https'
 
-            # See https://en.wikipedia.org/wiki/Strict_Transport_Security
-            def add_hsts_header(response):
+            def add_security_headers(response):
+                # See https://en.wikipedia.org/wiki/Strict_Transport_Security
                 response.headers.set('Strict-Transport-Security', 'max-age=31536000')
+
+                if self.settings.get('security','frames') == 'deny':
+                    response.headers.set('X-Frame-Options','DENY')
+                elif self.settings.get('security', 'frames') == 'sameorigin':
+                    response.headers.set('X-Frame-Options','SAMEORIGIN')
+
                 return response
-            self.after_request(add_hsts_header)
+
+            self.after_request(add_security_headers)
 
         mongo_url = furl(self.settings.get('mongo', 'url'))
         mongo_db = mongo_url.path.segments[0]
