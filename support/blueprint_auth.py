@@ -53,10 +53,10 @@ blueprint = AuthBlueprint('trex.auth', __name__, url_prefix='/auth')
 @blueprint.route('/login', methods=['GET', 'POST'], auth=auth.public)
 @render_html('trex/auth/login.jinja2')
 def login():
-    return_to = request.args.get('return_to') or url_for('index.index')
+    return_to = request.args.get('return_to')
 
     if g.user:
-        return redirect(url_for('index.index'))
+        return redirect(g.user.default_after_login_url())
 
     class Form(wtf.Form):
         email = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
@@ -78,13 +78,15 @@ def login():
         g.identity.login(user)
 
         audit('User logged in: %s' % user.display_name, ['Authentication'], user=user)
-        return redirect(return_to)
+        if return_to:
+            return redirect(return_to)
+        return redirect(user.default_after_login_url())
 
     return dict(form=form)
 
 @blueprint.route('/login-as/<user_token>', methods=['POST'], auth=auth.has_flag('trex.user_management_login_as'))
 def login_as(user_token):
-    return_to = request.args.get('return_to') or url_for('index.index')
+    return_to = request.args.get('return_to')
 
     try:
         user = m.User.active.get(token=user_token)
@@ -96,7 +98,9 @@ def login_as(user_token):
     flash("Logged in as %s" % user.display_name)
     audit('Logged in as: %s' % user.display_name, ['Authentication', 'User Management'], documents=[user])
 
-    return redirect(return_to)
+    if return_to:
+        return redirect(return_to)
+    return redirect(user.default_after_login_url())
 
 @blueprint.route('/logout', auth=auth.login)
 def logout():
@@ -107,14 +111,14 @@ def logout():
     else:
         g.identity.logout()
         audit('User logged out in: %s' % g.user.display_name, ['Authentication'])
-        return_to = request.args.get('return_to') or url_for('index.index')
+        return_to = request.args.get('return_to') or g.user.default_after_logout_url()
 
     return redirect(return_to)
 
 @blueprint.route('/change-password', methods=['GET', 'POST'], auth=auth.login)
 @render_html('trex/auth/change_password.jinja2')
 def change_password():
-    return_to = request.args.get('return_to') or url_for('index.index')
+    return_to = request.args.get('return_to') or g.user.default_after_change_password_url()
 
     class Form(wtf.Form):
         old_password = wtf.PasswordField('Old password', [wtf.Required()])

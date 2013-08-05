@@ -67,6 +67,15 @@ class BaseUser(BaseDocument):
             ),
         )
 
+    def default_after_login_url(self):
+        return url_for('index.index')
+
+    def default_after_logout_url(self):
+        return url_for('index.index')
+
+    def default_after_change_password_url(self):
+        return url_for('index.index')
+
     def get_role(self, role):
         try:
             return self.roles()[role]
