@@ -382,11 +382,7 @@ class BaseIdentity(BaseDocument):
         self.rotate_session()
         self.save()
 
-        for session in self.__class__.objects(real=self.real):
-            if session != self:
-                session.actor = None
-                session.real = None
-                session.save()
+        self.__class__.objects(real=self.real, id__ne=self.id).update(set__actor=None, set__real=None)
 
 class TrexUpload(BaseDocument):
     meta = dict(
