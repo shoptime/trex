@@ -21,6 +21,9 @@ from termcolor import colored
 import inspect
 from collections import defaultdict
 
+class TestFailureException(Exception):
+    pass
+
 class TestRunner:
     """Manages running a test suite.
 
@@ -229,7 +232,7 @@ class TestRunner:
                 tests.append(test)
         return tests
 
-class WebElementExpectedOneElement(Exception):
+class WebElementExpectedOneElement(TestFailureException):
     pass
 
 class WebElementSet(object):
@@ -696,6 +699,7 @@ class TestBase(object):
         else:
             print "not ok %d %s" % (self.number, message)
         self.screenshot('%s-failure-%d.png' % (self.__class__.__name__, self.failed))
+        raise TestFailureException(message)
 
     def diag(self, message, indent=0):
         """
