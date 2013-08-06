@@ -115,3 +115,28 @@
         .input-small();
     }
 }
+
+.trex-star-rating-field {
+    & + table {
+        table-layout: fixed;
+        margin-bottom: 20px;
+        tbody {
+            td {
+                width: 32px;
+                height: 32px;
+                padding-left: 10px;
+                padding-right: 10px;
+                &:first-child { padding-left: 0; }
+                &:last-child { padding-right: 0; }
+                div {
+                    cursor: pointer;
+                    width: 32px;
+                    height: 32px;
+                    background: url(/trex/images/rating-stars.png) no-repeat -68px 0;
+                }
+                &.selected div { background-position: 0 0; }
+                &.hover div { background-position: -34px 0; }
+            }
+        }
+    }
+}
