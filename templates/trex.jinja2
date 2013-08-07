@@ -74,5 +74,5 @@
     {%- if match -%}
         {%- if request.endpoint and request.endpoint.startswith(match) %} class="active"{%- endif -%}
     {%- elif request.endpoint == endpoint %} class="active"{%- endif -%}
-    ><a href="{{ url_for(endpoint) }}">{{ label }}</a></li>
+    ><a href="{{ url_for(endpoint, **kwargs) }}">{{ label }}</a></li>
 {%- endmacro %}
