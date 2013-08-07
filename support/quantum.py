@@ -156,8 +156,6 @@ class Quantum(object):
 
     def as_utc(self):
         """Returns UTC representation of this Quantum as a naive datetime"""
-        # TODO - do we need to clone this before returning?, I don't think we
-        # do because you can't modify a datetime in place
         return self.dt
 
     def as_local(self):

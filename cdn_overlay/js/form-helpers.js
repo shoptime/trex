@@ -287,8 +287,6 @@
                 return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
             },
         }))();
-        // TODO - REMOVE THIS HACK
-        window.f = files;
         if ($widget.find('input:hidden').val()) {
             var model = new Trex.FileUploadModel(JSON.parse($widget.find('input:hidden').val()));
             model.set({
