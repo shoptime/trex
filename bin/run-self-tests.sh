@@ -11,6 +11,7 @@ ROOT=$(dirname $(dirname $(dirname $0)))
 
 (
     cd "$ROOT"
+    . bin/activate
     python -c 'from trex.self_tests import tests; tests.main()' "$@"
 )
 
