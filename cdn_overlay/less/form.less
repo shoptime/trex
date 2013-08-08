@@ -1,6 +1,12 @@
 @import "form-datepicker.less";
 @import "form-chosen.less";
 
+// Default textarea size is just dumb
+textarea {
+    width: 400px;
+    height: 80px;
+}
+
 .trex-file-list-widget {
     .file {
         position: relative;
@@ -139,4 +145,8 @@
             }
         }
     }
+}
+
+.trex-date-field {
+    width: 100px;
 }
