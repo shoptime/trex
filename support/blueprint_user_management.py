@@ -16,7 +16,8 @@ blueprint = AuthBlueprint('trex.user_management', __name__, url_prefix='/admin/u
 @render_html('trex/user_management/index.jinja2')
 def index():
     return dict(
-        users=m.User.active(),
+        add_url = m.User.url_for_add_user(),
+        users   = m.User.active(),
     )
 
 @blueprint.route('/add', methods=['GET', 'POST'], endpoint='add', auth=auth.has_flag('trex.user_management'))
