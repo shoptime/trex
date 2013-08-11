@@ -50,7 +50,7 @@ def render_html(template=None, add_etag=False):
         response['app'] = app
 
         if flask.request.blueprint:
-            response['html_classes'] = [ 'blueprint-%s' % x for x in [ flask.request.blueprint ] ]
+            response['html_classes'] = [ 'blueprint-%s' % x for x in [ flask.request.blueprint.replace('.', '-') ] ]
         if flask.request.endpoint:
             response['html_id'] = 'endpoint-%s' % flask.request.endpoint.replace('.', '-')
 
