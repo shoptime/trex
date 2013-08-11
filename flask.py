@@ -256,7 +256,10 @@ class Flask(flask.Flask):
         # When we replace flash, use this to remove wtform CSRF richard@
         # self.config['CSRF_ENABLED'] = False
 
-        if self.settings.get('server', 'url').startswith('https:'):
+        server_url = furl(self.settings.get('server', 'url'))
+        self.config['SERVER_NAME'] = server_url.host
+
+        if server_url.scheme == 'https':
             self.logger.info("Detected SSL service URL, enabling secure cookies")
             self.config['SESSION_COOKIE_SECURE'] = True
             self.config['PREFERRED_URL_SCHEME'] = 'https'
