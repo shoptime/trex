@@ -138,6 +138,7 @@ class TestRunner:
                     'browserName': self.selenium_browser,
                 },
             )
+            browser.set_window_size(1024, 650)
             if shared_data is None:
                 shared_data = dict()
             for test_case in self.test_cases:
