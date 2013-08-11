@@ -258,6 +258,21 @@ class CheckListField(wtf.SelectMultipleField):
     widget = BareListWidget()
     option_widget = BootstrapCheckboxInput()
 
+class StarRatingField(wtf.IntegerField):
+    def __init__(self, label='', validators=None, low_label='Poor', high_label='Excellent', star_count=5, **kwargs):
+        self.low_label = low_label
+        self.high_label = high_label
+        self.star_count = star_count
+        super(StarRatingField, self).__init__(label, validators, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'trex-star-rating-field'
+        kwargs['type'] = 'hidden'
+        kwargs['data-high-label'] = self.high_label
+        kwargs['data-low-label'] = self.low_label
+        kwargs['data-star-count'] = self.star_count
+        return super(StarRatingField, self).__call__(*args, **kwargs)
+
 class DependentSelectField(wtf.SelectField):
     def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', **kwargs):
         super(DependentSelectField, self).__init__(label, validators, **kwargs)

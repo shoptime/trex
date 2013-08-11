@@ -79,6 +79,13 @@ class BaseUser(BaseDocument):
     def default_after_change_password_url(self):
         return url_for('index.index')
 
+    @classmethod
+    def url_for_add_user(cls, **kwargs):
+        return url_for('trex.user_management.add', **kwargs)
+
+    def url_for_edit_user(self, **kwargs):
+        return url_for('trex.user_management.edit', user_token=self.token, **kwargs)
+
     def get_role(self, role):
         try:
             return self.roles()[role]
@@ -173,7 +180,7 @@ class BaseAudit(BaseDocument):
         for doc in self.documents:
             if isinstance(doc, BaseUser) and hasattr(g, 'user') and g.user.has_flag('trex.user_management'):
                 docs.append(dict(
-                    url   = url_for('trex.user_management.edit', user_token=doc.token),
+                    url   = doc.url_for_edit_user(),
                     label = doc.display_name,
                     type  = '%s user' % doc.role,
                 ))

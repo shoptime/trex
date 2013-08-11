@@ -587,13 +587,26 @@
                     trigger: 'manual',
                     html: true,
                     placement: 'top',
-                    container: this.$el
+                    container: this.$el,
+                    // This is a dirty hack for IE8 (which doesn't support the
+                    // :empty pseudo-selector). It's basically the normal
+                    // template without the <h3 class="popover-title"> element
+                    template: '<div class="popover"><div class="arrow"></div><div class="popover-content"></div></div>'
                 })
             ;
             this.render();
         },
         render: function() {
             this.$el.popover('show');
+            if ($.browser.msie && $.browser.version <= 8) {
+                // Really dirty hack to make sure the arrow-tip on the popup
+                // isn't munted
+                var popover = this.$el.data('popover');
+                popover.$tip.find('.arrow').hide();
+                setTimeout(function() {
+                    popover.$tip.find('.arrow').show();
+                }, 0);
+            }
         },
         remove: function(opt) {
             this.$el.popover('destroy');
