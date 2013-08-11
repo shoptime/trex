@@ -257,7 +257,7 @@ class Flask(flask.Flask):
         # self.config['CSRF_ENABLED'] = False
 
         server_url = furl(self.settings.get('server', 'url'))
-        self.config['SERVER_NAME'] = server_url.host
+        self.config['SERVER_NAME'] = server_url.netloc
 
         if server_url.scheme == 'https':
             self.logger.info("Detected SSL service URL, enabling secure cookies")
