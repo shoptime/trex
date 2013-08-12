@@ -121,12 +121,12 @@ class Flask(flask.Flask):
     db = None
     in_test_mode = False
 
-    def assert_default_config(self):
+    def check_default_config(self):
         """Asserts that the config in default.ini/base.ini is sane"""
         assert self.settings.has_section('server'), "Section [server] doesn't exist in config"
         assert 'url' not in self.settings.options('server'), "Option url exists in [server] section"
 
-    def assert_local_config(self):
+    def check_local_config(self):
         """Asserts that the config in local.ini is sane"""
         for section in ['app', 'server', 'mongo', 'notify']:
             assert self.settings.has_section(section), "Section [%s] doesn't exist in config" % section
@@ -187,9 +187,9 @@ class Flask(flask.Flask):
 
         self.settings.readfp(codecs.open(os.path.join(self.root_path, '..', 'trex', 'base.ini'), 'r', 'utf8'))
         self.settings.readfp(codecs.open(os.path.join(self.root_path, 'default.ini'), 'r', 'utf8'))
-        self.assert_default_config()
+        self.check_default_config()
         self.settings.readfp(codecs.open(os.path.join(self.root_path, 'local.ini'), 'r', 'utf8'))
-        self.assert_local_config()
+        self.check_local_config()
 
         self.init_jinja()
         self.exception_reporter = FlaskExceptionReporter(self)
