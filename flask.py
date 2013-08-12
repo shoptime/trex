@@ -50,7 +50,7 @@ def render_html(template=None, add_etag=False):
         response['app'] = app
 
         if flask.request.blueprint:
-            response['html_classes'] = [ 'blueprint-%s' % x for x in [ flask.request.blueprint ] ]
+            response['html_classes'] = [ 'blueprint-%s' % x for x in [ flask.request.blueprint.replace('.', '-') ] ]
         if flask.request.endpoint:
             response['html_id'] = 'endpoint-%s' % flask.request.endpoint.replace('.', '-')
 
@@ -121,7 +121,13 @@ class Flask(flask.Flask):
     db = None
     in_test_mode = False
 
-    def assert_valid_config(self):
+    def check_default_config(self):
+        """Asserts that the config in default.ini/base.ini is sane"""
+        assert self.settings.has_section('server'), "Section [server] doesn't exist in config"
+        assert 'url' not in self.settings.options('server'), "Option url exists in [server] section"
+
+    def check_local_config(self):
+        """Asserts that the config in local.ini is sane"""
         for section in ['app', 'server', 'mongo', 'notify']:
             assert self.settings.has_section(section), "Section [%s] doesn't exist in config" % section
         for option in ['host', 'port', 'debug', 'url']:
@@ -181,9 +187,10 @@ class Flask(flask.Flask):
 
         self.settings.readfp(codecs.open(os.path.join(self.root_path, '..', 'trex', 'base.ini'), 'r', 'utf8'))
         self.settings.readfp(codecs.open(os.path.join(self.root_path, 'default.ini'), 'r', 'utf8'))
+        self.check_default_config()
         self.settings.readfp(codecs.open(os.path.join(self.root_path, 'local.ini'), 'r', 'utf8'))
+        self.check_local_config()
 
-        self.assert_valid_config()
         self.init_jinja()
         self.exception_reporter = FlaskExceptionReporter(self)
 
@@ -256,7 +263,11 @@ class Flask(flask.Flask):
         # When we replace flash, use this to remove wtform CSRF richard@
         # self.config['CSRF_ENABLED'] = False
 
-        if self.settings.get('server', 'url').startswith('https:'):
+        server_url = furl(self.settings.get('server', 'url'))
+        self.config['SERVER_NAME'] = server_url.netloc
+        self.config['SESSION_COOKIE_DOMAIN'] = server_url.host
+
+        if server_url.scheme == 'https':
             self.logger.info("Detected SSL service URL, enabling secure cookies")
             self.config['SESSION_COOKIE_SECURE'] = True
             self.config['PREFERRED_URL_SCHEME'] = 'https'

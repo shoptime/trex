@@ -1,7 +1,9 @@
 {% import 'trex.jinja2' as trex with context %}
 {% extends 'base.jinja2' %}
 {% block content %}
+{% if add_url %}
 <a class="btn pull-right" href="{{ add_url }}"><i class="icon-plus"></i> add user</a>
+{% endif %}
 <h2>User management</h2>
 <table class="table">
     <thead>

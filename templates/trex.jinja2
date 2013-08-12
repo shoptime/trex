@@ -69,9 +69,11 @@
 {% endif %}
 {% endmacro %}
 
-{% macro bootstrap_nav_item(endpoint, label, match=None) -%}
+{% macro bootstrap_nav_item(endpoint, label, match=None, match_list=None) -%}
     <li
-    {%- if match -%}
+    {%- if match_list -%}
+        {% for match in match_list %}{%- if request.endpoint and request.endpoint.startswith(match) %} class="active"{%- endif -%}{% endfor %}
+    {%- elif match -%}
         {%- if request.endpoint and request.endpoint.startswith(match) %} class="active"{%- endif -%}
     {%- elif request.endpoint == endpoint %} class="active"{%- endif -%}
     ><a href="{{ url_for(endpoint, **kwargs) }}">{{ label }}</a></li>
