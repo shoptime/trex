@@ -425,8 +425,7 @@
     });
 
     $('.trex-date-field').each(function() {
-        var viewMode = $(this).data('viewmode') || 0;
-        $(this).datepicker({format: "yyyy-mm-dd", viewMode: viewMode});
+        $(this).datepicker();
     });
 
     if ( $('.trex-chosen-select-field').length ) {

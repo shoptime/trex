@@ -89,7 +89,7 @@ class BootstrapRadioInput(wtf.Input):
         return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 class DateField(wtf.DateField):
-    def __init__(self, label='', validators=None, timezone=None, default_mode='day', **kwargs):
+    def __init__(self, label='', validators=None, timezone=None, date_format='yyyy-mm-dd', default_mode='day', **kwargs):
         if not timezone:
             raise ValueError("Must specify a timezone for %s.%s" % (self.__class__.__module__, self.__class__.__name__))
         if isinstance(timezone, basestring):
@@ -100,8 +100,19 @@ class DateField(wtf.DateField):
 
         self.timezone = timezone
         self.default_mode = default_mode
+        self.js_date_format = date_format
+        self.py_date_format = self._calculate_strftime_format()
 
+        kwargs['format'] = self.py_date_format
         super(DateField, self).__init__(label, validators, **kwargs)
+
+    def _calculate_strftime_format(self):
+        if self.js_date_format == 'yyyy-mm-dd':
+            return '%Y-%m-%d'
+        elif self.js_date_format == 'dd-mm-yyyy':
+            return '%d-%m-%Y'
+        else:
+            raise ValueError("Invalid date format for trex.support.wtf.DateField: %s" % self.js_date_format)
 
     def _value(self):
         if self.raw_data:
@@ -121,9 +132,11 @@ class DateField(wtf.DateField):
     def __call__(self, *args, **kwargs):
         kwargs['class'] = 'trex-date-field'
         if self.default_mode == 'month':
-            kwargs['data-viewmode'] = 1
+            kwargs['data-date-viewmode'] = 1
         elif self.default_mode == 'year':
-            kwargs['data-viewmode'] = 2
+            kwargs['data-date-viewmode'] = 2
+
+        kwargs['data-date-format'] = self.js_date_format
         return super(DateField, self).__call__(*args, **kwargs)
 
 class SelectDateWidget(object):
