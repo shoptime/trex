@@ -317,7 +317,7 @@ class BaseIdentity(BaseDocument):
         Rotate the session ID and CSRF token
         """
         self.session_id = generate_session_id()
-        self.hashed_id = hashlib.sha256(self.session_id)
+        self.hashed_id = hashlib.sha256(self.session_id).hexdigest()
         self.csrf_token = generate_session_id()
 
     def reset_csrf(self):
@@ -365,22 +365,22 @@ class BaseIdentity(BaseDocument):
 
         #   No session ID? return new session
         if not session_id:
-            return cls()
+            return cls.create()
 
         # Invalid session ID? return new session
         if not verify_session_id(session_id):
-            return cls()
+            return cls.create()
 
         # Got session id in cookie, look in DB
         session = cls.objects(hashed_id=hashlib.sha256(session_id).hexdigest()).first()
 
         # Not in DB? create new session.
         if not session:
-            return cls()
+            return cls.create()
 
         # Expired? new session
         if session.is_expired():
-            return cls()
+            return cls.create()
 
         # return doc
         return session
