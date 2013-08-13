@@ -278,9 +278,15 @@ class BaseIdentity(BaseDocument):
     * Offers global-logout for logging out all sessions by a given user
     * Correctly performs global logout on conditions such as password change
 
+    Additional security features
+
+    * Retrieves session from data store via hashed ID instead of session ID to mitigate timing attacks based on index
+      retrieval
+    * Adds puffer to session headers to help mitigate SSL CRIME attacks
+    * Shadows CSRF to prevent BREACH SSL attack against CSRF token
+
     Possible further features:
 
-    * Puffers to provide assist against certain types of TLS attack
     * Rotation of session ID after a certain amount of time
     * Verify no-cache of session credentials
     * Explicit config permit of fields that survive credential transition
@@ -293,12 +299,13 @@ class BaseIdentity(BaseDocument):
 
     """
     meta = {
-        'indexes': [('session_id',),('real',),],
+        'indexes': [('session_id',),('hashed_id',),('real',),],
         'abstract': True
     }
 
     created = QuantumField(required=True, default=quantum.now)
-    session_id = StringField(required=True, default=generate_session_id)
+    session_id = StringField(required=True)
+    hashed_id = StringField(required=True)
     csrf_token = StringField(required=True, default=generate_session_id)
     expires = QuantumField(required=True, default=default_expiry)
     real = ReferenceField('User')
@@ -310,8 +317,8 @@ class BaseIdentity(BaseDocument):
         Rotate the session ID and CSRF token
         """
         self.session_id = generate_session_id()
+        self.hashed_id = hashlib.sha256(self.session_id)
         self.csrf_token = generate_session_id()
-        return self
 
     def reset_csrf(self):
         self.csrf_token = generate_session_id()
@@ -342,7 +349,9 @@ class BaseIdentity(BaseDocument):
             token = xor_hex_string(s[token_length:], shadow)
         else:
             token = s
-        return token == self.csrf_token
+
+        # Hash for comparison prevents string timing attacks
+        return hashlib.sha256(token).digest() == hashlib.sha256(self.csrf_token).digest()
 
 
     @classmethod
@@ -363,7 +372,7 @@ class BaseIdentity(BaseDocument):
             return cls()
 
         # Got session id in cookie, look in DB
-        session = cls.objects(session_id=session_id).first()
+        session = cls.objects(hashed_id=hashlib.sha256(session_id).hexdigest()).first()
 
         # Not in DB? create new session.
         if not session:
@@ -375,6 +384,11 @@ class BaseIdentity(BaseDocument):
 
         # return doc
         return session
+
+    @classmethod
+    def create(cls):
+        session_id = generate_session_id()
+        return cls(session_id = session_id, hashed_id = hashlib.sha256(session_id).hexdigest())
 
     def set_cookie(self, response):
         """
@@ -388,7 +402,6 @@ class BaseIdentity(BaseDocument):
 
         # QUESTION: autorotate after given time?
 
-        # QUESTION: Add puffer?
         try:
             max_age = settings.getint('identity', 'cookie_expiry')
         except ValueError:
