@@ -22,7 +22,10 @@
                 <i>System</i>
                 {% endif %}
             </td>
-            <td>{{ entry.description }}</td>
+            <td>{{ entry.description }}
+            {% if entry.moreinfo %}
+            (<a href="#" class="moreinfo" data-content="{{ entry.moreinfo }}">more info</a>)
+            {% endif %}</td>
             <td>
                 {% for tag in entry.tags %}
                 <span class="label">{{ tag }}</span>
@@ -46,4 +49,26 @@
 <div class="text-center">
     {{ trex.pager(pager) }}
 </div>
+{% endblock %}
+{% block script %}
+<script>
+$('.moreinfo').popover();
+$('.moreinfo').each(function() {
+    var $link = $(this);
+    $link
+        .popover({
+            container: 'body'
+        })
+        .on('click', function(e) {
+            e.stopPropagation();
+        })
+        .on('show', function() {
+            $('.moreinfo').not(this).popover('hide');
+        })
+    ;
+});
+$(document).on('click', function() {
+    $('.moreinfo').popover('hide');
+});
+</script>
 {% endblock %}

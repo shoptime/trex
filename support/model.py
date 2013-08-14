@@ -173,6 +173,7 @@ class BaseAudit(BaseDocument):
     user        = ReferenceField('User')
     tags        = ListField(StringField(), required=True)
     description = StringField(required=True)
+    moreinfo    = StringField()
     documents   = ListField(GenericReferenceField())
 
     def linkable_documents(self):
