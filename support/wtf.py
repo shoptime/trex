@@ -432,13 +432,16 @@ class ImageField(wtf.Field):
 
     def process_formdata(self, valuelist):
         if valuelist:
-            data = json.loads(valuelist[0])
-            if isinstance(self.object_data, TrexUpload) and str(self.object_data.id) == data['oid']:
-                # Even if we don't own this one, it was provided as the form
-                # default, so we'll let the user pass it through untouched.
-                self.data = self.object_data
+            if valuelist[0]:
+                data = json.loads(valuelist[0])
+                if isinstance(self.object_data, TrexUpload) and str(self.object_data.id) == data['oid']:
+                    # Even if we don't own this one, it was provided as the form
+                    # default, so we'll let the user pass it through untouched.
+                    self.data = self.object_data
+                else:
+                    self.data = TrexUpload.objects(user=g.user, id=data['oid']).first()
             else:
-                self.data = TrexUpload.objects(user=g.user, id=data['oid']).first()
+                self.data = None
         else:
             self.data = None
 
