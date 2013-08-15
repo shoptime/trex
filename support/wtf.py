@@ -408,6 +408,7 @@ class ImageWidget(object):
 <div %(widget_args)s>
     <span %(thumbnail_args)s><span %(span_args)s></span></span>
     <a class="add-file btn">Upload Image <input name="%(file_input_name)s" type="file"></a>
+    <button type="button" class="btn">Clear image</button>
     <span class="uploading"></span>
     <input %(input_args)s>
 </div>

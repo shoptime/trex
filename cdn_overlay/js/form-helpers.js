@@ -331,13 +331,18 @@
                 this.render();
             },
             change_model: function(new_model) {
-                this.stopListening(this.model);
+                if (this.model) {
+                    this.stopListening(this.model);
+                }
                 this.model = new_model;
-                this.listenTo(this.model, 'change', this.render);
+                if (this.model) {
+                    this.listenTo(this.model, 'change', this.render);
+                }
                 this.render();
             },
             render: function() {
                 if (this.model) {
+                    this.$('button').show();
                     if (this.model.get('url')) {
                         this.$('.uploading').css('display', 'none');
                         this.$('.thumbnail').html('<img>').find('img')
@@ -361,6 +366,7 @@
                     }
                 }
                 else {
+                    this.$('button').hide();
                     this.$('.uploading').css('display', 'none');
                     this.$('.thumbnail')
                         .html('<span><span>No image</span></span>')
@@ -385,6 +391,10 @@
             files.reset(model);
             view.change_model(model);
             $(this).val('');
+        });
+        $widget.find('button').on('click', function(e) {
+            files.reset([]);
+            view.change_model();
         });
     });
 
