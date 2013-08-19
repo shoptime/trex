@@ -26,6 +26,12 @@ class BaseDocument(Document):
         except DoesNotExist:
             abort(404)
 
+    def __init__(self, *args, **kwargs):
+        # This is to prevent mongoengine doing weird conversions on new values
+        # passed in the constructor
+        kwargs['__auto_convert'] = False
+        return super(BaseDocument, self).__init__(*args, **kwargs)
+
 class InvalidRoleException(Exception):
     pass
 
