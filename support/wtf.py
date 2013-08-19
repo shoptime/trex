@@ -89,16 +89,7 @@ class BootstrapRadioInput(wtf.Input):
         return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 class DateField(wtf.DateField):
-    def __init__(self, label='', validators=None, timezone=None, date_format='yyyy-mm-dd', default_mode='day', **kwargs):
-        if not timezone:
-            raise ValueError("Must specify a timezone for %s.%s" % (self.__class__.__module__, self.__class__.__name__))
-        if isinstance(timezone, basestring):
-            timezone = pytz.timezone(timezone)
-
-        if not (timezone == pytz.utc or isinstance(timezone, pytz.tzinfo.DstTzInfo)):
-            raise ValueError("Not a valid timezone object: %s" % timezone)
-
-        self.timezone = timezone
+    def __init__(self, label='', validators=None, date_format='yyyy-mm-dd', default_mode='day', **kwargs):
         self.default_mode = default_mode
         self.js_date_format = date_format
         self.py_date_format = self._calculate_strftime_format()
@@ -118,16 +109,16 @@ class DateField(wtf.DateField):
         if self.raw_data:
             return ' '.join(self.raw_data)
         else:
-            return self.data and self.data.at(self.timezone).as_local().strftime(self.format) or ''
+            return self.data and self.data.strftime(self.format) or ''
 
     def process_formdata(self, valuelist):
         if valuelist:
             date_str = ' '.join(valuelist)
             try:
-                self.data = quantum.parse(date_str, timezone=self.timezone, format=self.format)
+                self.data = quantum.parse_date(date_str, format=self.format)
             except ValueError:
                 self.data = None
-                raise ValueError(self.gettext('Not a valid datetime value'))
+                raise ValueError(self.gettext('Not a valid date value'))
 
     def __call__(self, *args, **kwargs):
         kwargs['class'] = 'trex-date-field'
@@ -238,14 +229,14 @@ class SelectDateField(wtf.Field):
 
     def _value(self):
         if self.raw_data:
-            return self._valuelist_to_date(self.raw_data)
+            return self._valuelist_to_quantum_date(self.raw_data)
         else:
-            return self.data and self.data.at('UTC').as_local() or ''
+            return self.data
 
     def process_formdata(self, valuelist):
         if valuelist:
             try:
-                self.data = self._valuelist_to_date(valuelist)
+                self.data = self._valuelist_to_quantum_date(valuelist)
             except ValueError:
                 self.data = None
                 raise ValueError(self.gettext('Not a valid datetime value'))
@@ -253,11 +244,11 @@ class SelectDateField(wtf.Field):
             if self.data.year > self.maxyear or self.data.year < self.minyear:
                 raise ValueError(self.gettext('Not a valid date'))
 
-    def _valuelist_to_date(self, valuelist):
+    def _valuelist_to_quantum_date(self, valuelist):
         if len(valuelist) != 3:
             raise ValueError(self.gettext('Not a valid datetime value'))
         date_str = '%s-%s-%s' % tuple(reversed(valuelist))
-        return quantum.parse(date_str, timezone='UTC', format='%Y-%m-%d').as_local()
+        return quantum.parse_date(date_str, format='%Y-%m-%d')
 
     def __call__(self, *args, **kwargs):
         kwargs['class'] = 'trex-select-date-field'

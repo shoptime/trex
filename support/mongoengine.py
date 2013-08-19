@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import mongoengine
 from flask import request, abort
 from . import quantum
-from datetime import datetime
+from datetime import datetime, date, time
 
 class LowerCaseEmailField(mongoengine.EmailField):
     def to_mongo(self, *args, **kwargs):
@@ -34,6 +34,37 @@ class QuantumField(mongoengine.fields.BaseField):
         if isinstance(value, quantum.Quantum):
             return value
         return quantum.Quantum(value)
+
+    def prepare_query_value(self, op, value):
+        return self.to_mongo(value)
+
+class QuantumDateField(mongoengine.fields.BaseField):
+    """A QuantumDate field.
+
+    Uses the trex.support.quantum library. Stores raw datetimes in mongo (time
+    is always 00:00:00)
+    """
+
+    def validate(self, value):
+        new_value = self.to_mongo(value)
+        if not isinstance(new_value, date):
+            self.error(u'cannot parse quantum date "%s"' % value)
+
+    def to_mongo(self, value):
+        if value is None:
+            return value
+
+        if isinstance(value, quantum.QuantumDate):
+            return datetime.combine(value.date, time())
+
+    def to_python(self, value):
+        if value is None:
+            return value
+        if isinstance(value, quantum.QuantumDate):
+            return value
+        if isinstance(value, datetime):
+            value = value.date()
+        return quantum.QuantumDate(value)
 
     def prepare_query_value(self, op, value):
         return self.to_mongo(value)

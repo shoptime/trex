@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 import calendar
-from datetime import datetime
+import datetime
 import dateutil.parser
 import dateutil.relativedelta
 import pytz
@@ -41,7 +41,10 @@ class timezone(object):
 def now(timezone=None):
     if not timezone:
         timezone = default_timezone()
-    return Quantum(datetime.utcnow(), timezone)
+    return Quantum(datetime.datetime.utcnow(), timezone)
+
+def today():
+    return QuantumDate(datetime.date.today())
 
 def parse(datestring, timezone=None, format='%Y-%m-%dT%H:%M:%S', relaxed=False):
     if not timezone:
@@ -53,9 +56,17 @@ def parse(datestring, timezone=None, format='%Y-%m-%dT%H:%M:%S', relaxed=False):
     if relaxed:
         dt = dateutil.parser.parse(datestring, ignoretz=True, dayfirst=True)
     else:
-        dt = datetime.strptime(datestring, format)
+        dt = datetime.datetime.strptime(datestring, format)
 
     return Quantum(convert_timezone(dt, timezone, 'UTC'), timezone)
+
+def parse_date(datestring, format='%Y-%m-%d', relaxed=False):
+    if relaxed:
+        dt = dateutil.parser.parse(datestring, ignoretz=True, dayfirst=True)
+    else:
+        dt = datetime.datetime.strptime(datestring, format)
+
+    return QuantumDate(dt.date())
 
 def from_date(dt, timezone=None):
     if not timezone:
@@ -64,7 +75,7 @@ def from_date(dt, timezone=None):
     if not timezone:
         raise QuantumException("Can't parse without a valid timezone")
 
-    return Quantum(convert_timezone(datetime(dt.year, dt.month, dt.day), timezone, 'UTC'), timezone)
+    return Quantum(convert_timezone(datetime.datetime(dt.year, dt.month, dt.day), timezone, 'UTC'), timezone)
 
 def from_datetime(dt, timezone=None):
     if not timezone:
@@ -79,7 +90,7 @@ def from_unix(timestamp, timezone=None):
     if not timezone:
         timezone = default_timezone()
 
-    return Quantum(datetime.utcfromtimestamp(timestamp), timezone)
+    return Quantum(datetime.datetime.utcfromtimestamp(timestamp), timezone)
 
 def convert_timezone(dt, from_timezone, to_timezone):
     from_timezone = get_timezone(from_timezone)
@@ -98,7 +109,7 @@ class Quantum(object):
         return self._tz
 
     def __init__(self, dt, tz=None):
-        if not isinstance(dt, datetime):
+        if not isinstance(dt, datetime.datetime):
             raise ValueError("First argument to Quantum must be a datetime")
         self.dt = dt
         if tz is None:
@@ -236,3 +247,123 @@ class Quantum(object):
 
     def format_date(self):
         return self.as_local().strftime("%-e %b %Y")
+
+class QuantumDate(object):
+    date = None
+    """
+    Python date object representing the date of this object (Note that this
+    doesn't represent any "real" point in time until you use the .at() method
+    to convert it to a Quantum object in a particular timezone)
+    """
+
+    def __init__(self, date):
+        if isinstance(date, datetime.datetime):
+            raise ValueError("First argument to QuantumDate can not be a datetime")
+        if not isinstance(date, datetime.date):
+            raise ValueError("First argument to QuantumDate must be a date")
+        self.date = date
+
+    @property
+    def day(self):
+        return self.date.day
+
+    @property
+    def month(self):
+        return self.date.month
+
+    @property
+    def year(self):
+        return self.date.year
+
+    def __hash__(self):
+        return self.date.__hash__()
+
+    def _check_comparison_type(self, other):
+        if not isinstance(other, QuantumDate):
+            raise TypeError("Expected a QuantumDate object for comparison")
+
+    def __lt__(self, other):
+        self._check_comparison_type(other)
+        return self.date < other.date
+
+    def __le__(self, other):
+        self._check_comparison_type(other)
+        return self.date <= other.date
+
+    def __eq__(self, other):
+        self._check_comparison_type(other)
+        return self.date == other.date
+
+    def __ne__(self, other):
+        self._check_comparison_type(other)
+        return self.date != other.date
+
+    def __gt__(self, other):
+        self._check_comparison_type(other)
+        return self.date > other.date
+
+    def __ge__(self, other):
+        self._check_comparison_type(other)
+        return self.date >= other.date
+
+    def __repr__(self):
+        return "<%s(%s)>" % (self.__class__.__name__, self.date)
+
+    def __str__(self):
+        return str(self.date)
+
+    def at(self, timezone):
+        """Returns a Quantum object representing this date in the supplied timezone"""
+        dt = datetime.datetime.combine(self.date, datetime.time())
+        return Quantum(convert_timezone(dt, timezone, 'UTC'), timezone)
+
+    def add(self, years=0, months=0, days=0):
+        rd = dateutil.relativedelta.relativedelta(years=years, months=months, days=days)
+        return QuantumDate(self.date + rd)
+
+    def subtract(self, years=0, months=0, days=0):
+        rd = dateutil.relativedelta.relativedelta(years=years, months=months, days=days)
+        return QuantumDate(self.date - rd)
+
+    def start_of(self, period, first_day_of_week=1):
+        valid_periods = ['week', 'month', 'year']
+        if period not in valid_periods:
+            raise ValueError("Invalid period for QuantumDate.start_of: %s" % period)
+
+        date = self.date
+        for p in valid_periods:
+            if p == 'month':
+                date = date.replace(day=1)
+            if p == 'year':
+                date = date.replace(month=1)
+            if p == period:
+                break
+
+        new = QuantumDate(date)
+
+        if period == 'week':
+            if date.isoweekday() < first_day_of_week:
+                new = new.subtract(days = 7 - first_day_of_week + date.isoweekday())
+            if date.isoweekday() > first_day_of_week:
+                new = new.subtract(days = date.isoweekday() - first_day_of_week)
+
+        return new
+
+    def strftime(self, format):
+        result   = self.date.strftime(format)
+
+        suffix_placeholder = '{TH}'
+        if result.find(suffix_placeholder) != -1:
+            day = self.date.day
+
+            if 4 <= day <= 20 or 24 <= day <= 30:
+                suffix = 'th'
+            else:
+                suffix = ['st', 'nd', 'rd'][day % 10 - 1]
+
+            result = result.replace(suffix_placeholder, suffix)
+
+        return result
+
+    def format_short(self):
+        return self.date.strftime("%-e %b %Y")
