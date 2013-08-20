@@ -34,6 +34,11 @@ def register_app(app_to_register):
     global app
     app = app_to_register
 
+def flash(message, category=None):
+    if not hasattr(flask.g, 'identity'):
+        raise Exception("No identity exists")
+    flask.g.identity.flash(message, category)
+
 def render_html(template=None, add_etag=False):
     def decorated(f, *args, **kwargs):
         response = f(*args, **kwargs)

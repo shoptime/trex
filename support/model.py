@@ -260,6 +260,10 @@ def xor_hex_string(s, key):
 
     return binascii.hexlify(''.join([chr(a ^ b) for (a, b) in izip(s, cycle(key))]))
 
+class FlashMessage(EmbeddedDocument):
+    message  = StringField(required=True)
+    category = StringField(required=True, default='message')
+
 class BaseIdentity(BaseDocument):
     """
     Base identity session for trex
@@ -317,6 +321,17 @@ class BaseIdentity(BaseDocument):
     real = ReferenceField('User')
     actor = ReferenceField('User')
     logged_out = BooleanField(required=True, default=False)
+    flashes = ListField(EmbeddedDocumentField(FlashMessage))
+
+    def flash(self, message, category=None):
+        self.flashes.append(FlashMessage(message=message, category=category))
+        self.save()
+
+    def get_flashes(self):
+        flashes = self.flashes
+        self.flashes = []
+        self.save()
+        return flashes
 
     def rotate_session(self):
         """
