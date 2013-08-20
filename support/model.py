@@ -6,7 +6,7 @@ from .mongoengine import QuantumField
 import os
 from trex.support import pcrypt
 from trex.support.mongoengine import LowerCaseEmailField
-from flask import flash, g, url_for, abort
+from flask import g, url_for, abort
 import re
 import hashlib
 from . import token, quantum
@@ -143,7 +143,7 @@ class BaseUser(BaseDocument):
                 password = new_password,
             )
         )
-        flash("Password emailed to %s" % self.email)
+        g.identity.flash("Password emailed to %s" % self.email)
 
     def to_ejson(self):
         data = self.to_mongo()

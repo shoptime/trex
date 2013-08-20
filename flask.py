@@ -265,8 +265,8 @@ class Flask(flask.Flask):
         self.debug = self.settings.getboolean('server', 'debug')
         self.logger.setLevel(logging.DEBUG)
 
-        # When we replace flash, use this to remove wtform CSRF richard@
-        # self.config['CSRF_ENABLED'] = False
+        # Identity does this, we don't want whatever flask might be doing
+        self.config['CSRF_ENABLED'] = False
 
         server_url = furl(self.settings.get('server', 'url'))
         self.config['SERVER_NAME'] = server_url.netloc
@@ -305,15 +305,6 @@ class Flask(flask.Flask):
             self.db = pymongo.Connection(str(mongo_url))[mongo_db]
 
         mongoengine.register_connection('default', mongo_db, host=str(mongo_url))
-
-        config = self.db.config.find_one()
-        if config is None:
-            config = {
-                'secret_key': os.urandom(20).encode('hex')
-            }
-            self.db.config.insert(config)
-
-        self.secret_key = config['secret_key'].encode('ascii')
 
         register_app(self)
 

@@ -2,9 +2,9 @@
 
 from __future__ import absolute_import
 from trex.flask import app
-from trex.flask import AuthBlueprint, render_html
+from trex.flask import AuthBlueprint, render_html, flash
 from .. import auth
-from flask import g, redirect, url_for, request, flash, abort
+from flask import g, redirect, url_for, request, abort
 from flask.ext import wtf
 from .audit import audit
 import app.model as m
