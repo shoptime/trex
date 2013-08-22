@@ -328,6 +328,8 @@ class BaseIdentity(BaseDocument):
         self.save()
 
     def get_flashes(self):
+        if len(self.flashes) == 0:
+            return []
         flashes = self.flashes
         self.flashes = []
         self.save()
