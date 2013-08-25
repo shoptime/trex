@@ -1,5 +1,7 @@
 from trex.flask import app
 import requests
+import logging
+log = logging.getLogger(__name__)
 
 def error(site, tag, message):
     if app.settings.getboolean('notify', 'enabled'):
@@ -12,7 +14,7 @@ def error(site, tag, message):
             },
         )
     else:
-        app.logger.error("NOTIFY [%s]: %s" % (tag, message))
+        log.error("NOTIFY [%s]: %s" % (tag, message))
 
 def info(site, tag, message):
     if app.settings.getboolean('notify', 'enabled'):
@@ -25,4 +27,4 @@ def info(site, tag, message):
             },
         )
     else:
-        app.logger.info("NOTIFY [%s]: %s" % (tag, message))
+        log.info("NOTIFY [%s]: %s" % (tag, message))

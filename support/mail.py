@@ -28,7 +28,6 @@ import json
 import logging
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 # Signals whether we're sending emails or just capturing them to mongo (for the
 # test suite mainly)

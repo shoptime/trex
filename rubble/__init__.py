@@ -125,6 +125,9 @@ class Harness(object):
         # Stops the "accesslog" output from the server
         logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+        # Stops lots of crappy selenium logging
+        logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(logging.WARNING)
+
         # Empty the test database to get things rolling
         app.db.connection.drop_database(app.db.name)
 
@@ -237,14 +240,6 @@ class Harness(object):
             raise Exception("Server failed to start")
 
     def _start_application(self):
-        log_handler = logging.StreamHandler(sys.stderr)
-        log_handler.setLevel(logging.DEBUG)
-        log_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-        ))
-        app.logger.addHandler(log_handler)
-        app.logger.setLevel(logging.DEBUG)
         app.run(debug=False)
 
     def stop_application(self):

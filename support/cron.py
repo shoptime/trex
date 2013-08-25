@@ -158,22 +158,10 @@ class remove_old_file_uploads(CronJob):
             upload.delete()
 
 def cron_daemon(cron_jobs, base_interval=60, max_interval=600, failure_multiplier=1.5):
-    if app.debug:
-        app.logger.handlers[0].setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-        ))
-    else:
-        log_dir = os.path.abspath(os.path.join(app.root_path, '..', 'logs'))
-        file_handler = logging.FileHandler(os.path.join(log_dir, 'cron.log'))
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-        ))
-        app.logger.addHandler(file_handler)
+    if not app.debug:
+        app.log_to_file('cron.log')
 
-    app.logger.info('Starting cron daemon')
+    log.info('Starting cron daemon')
 
     interval = base_interval
 
@@ -184,8 +172,8 @@ def cron_daemon(cron_jobs, base_interval=60, max_interval=600, failure_multiplie
         try:
             cron_jobs()
             interval = base_interval
-        except Exception, e:
-            app.logger.error(traceback.format_exc())
+        except Exception:
+            log.error(traceback.format_exc())
             interval *= failure_multiplier
 
         context.pop()
