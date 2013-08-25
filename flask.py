@@ -153,19 +153,25 @@ class Flask(flask.Flask):
             assert 'channel' in self.settings.options('notify'), "channel not set in [notify] section"
 
 
-    def switch_to_test_mode(self):
-        mongo_url = furl(self.settings.get('mongo', 'url'))
-        mongo_url.path.segments[0] = "test_%s" % mongo_url.path.segments[0]
+    def switch_to_test_mode(self, instance_number=None):
+        mongo_url   = furl(self.settings.get('mongo', 'url'))
+        server_port = self.settings.getint('test', 'server_port')
+        server_url  = furl(self.settings.get('test', 'server_url'))
+
+        if instance_number is not None:
+            mongo_url.path.segments[0] = "test_%d_%s" % (instance_number, mongo_url.path.segments[0])
+            server_port += instance_number
+            if not server_url.port or server_url.port != self.settings.getint('test', 'server_port'):
+                raise Exception("Can't detect how to adjust server url for instance: %d" % instance_number)
+            server_url.port = server_port
+        else:
+            mongo_url.path.segments[0] = "test_%s" % mongo_url.path.segments[0]
+
         self.settings.set('mongo', 'url', str(mongo_url))
-
-        if 'server_port' in self.settings.options('test'):
-            self.settings.set('server', 'port', self.settings.get('test', 'server_port'))
-
-        if 'server_url' in self.settings.options('test'):
-            self.settings.set('server', 'url', self.settings.get('test', 'server_url'))
+        self.settings.set('server', 'port', str(server_port))
+        self.settings.set('server', 'url', str(server_url))
 
         self.in_test_mode = True
-
         self.init_application()
 
     def switch_to_wsgi_mode(self):
