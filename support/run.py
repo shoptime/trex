@@ -17,6 +17,8 @@ from . import quantum
 import subprocess
 import requests
 from furl import furl
+from multiprocessing import Process
+import signal
 
 class Manager(script.Manager):
     def __init__(self, *args, **kwargs):
@@ -124,6 +126,59 @@ class Manager(script.Manager):
                 failed = t.run()
             if failed:
                 sys.exit(1)
+
+        @self.option('-p', '--processes', action='store', default=1, help='How many parallel processes to run')
+        @self.option('-f', '--fail-method', action='store', default=None, help='What to do on a test/assertion failure [exception|ipdb|print]')
+        @self.option('tests', action='store', nargs='*', default=None)
+        def rubble(processes, fail_method, tests):
+            """Run the new test harness"""
+            import trex.rubble
+
+            if fail_method is None:
+                fail_method = 'exception'
+            processes = int(processes)
+
+            if len(tests):
+                test_classes = trex.rubble.load_tests_by_names(tests)
+            else:
+                test_classes = trex.rubble.load_all_tests()
+
+            def run_tests(instance_number, instance_total):
+                def sig_quit_handler(signum, frame):
+                    raise SystemExit(3)
+                signal.signal(signal.SIGQUIT, sig_quit_handler)
+                tests = trex.rubble.split_tests_by_instance_number(test_classes, instance_number, instance_total)
+                harness = trex.rubble.Harness(instance_number=instance_number, fail_method=fail_method)
+                harness.run(tests)
+                if harness.error_count:
+                    print "[%d] Process complete with errors" % os.getpid()
+                    raise SystemExit(1)
+                else:
+                    print "[%d] Process complete" % os.getpid()
+
+            if processes > 1:
+                procs = []
+                for i in range(processes):
+                    proc = Process(
+                        target = run_tests,
+                        name   = "Test Harness %d of %d" % (i, processes),
+                        args   = (i, processes)
+                    )
+                    proc.start()
+                    if not proc.is_alive():
+                        raise Exception("Failed to start %d" % proc.name)
+                    procs.append(proc)
+
+                while len(procs):
+                    for proc in procs:
+                        proc.join(0.5)
+                        if not proc.is_alive():
+                            procs.remove(proc)
+                            if proc.exitcode:
+                                for proc in procs:
+                                    os.kill(proc.pid, signal.SIGQUIT)
+            else:
+                run_tests(0, 1)
 
         @self.command
         def cron(job_name):

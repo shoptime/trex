@@ -206,6 +206,8 @@ class TestRunner:
 
         # Creative mechanism for loading scripts
         for root, dirs, files in os.walk(test_dir):
+            if root == os.path.join(test_dir, 'helpers'):
+                continue
             for name in files:
                 if name.endswith(".py") and not name.startswith("__"):
                     name = name.rsplit('.', 1)[0]
