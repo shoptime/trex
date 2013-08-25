@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from trex.flask import app
 import logging
+log = logging.getLogger(__name__)
 import os
 import sys
 import time
@@ -26,15 +27,7 @@ class CronJob(object):
 
     def __init__(self, app):
         self.app = app
-
-        log_file = os.path.abspath(os.path.join(app.root_path, '..', 'logs', 'cron.log'))
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-        ))
-        app.logger.addHandler(file_handler)
+        self.app.log_to_file('cron.log')
 
     def run(self):
         raise NotImplementedError("Need to implement CronJob.run()")
@@ -52,8 +45,8 @@ class CronJob(object):
         try:
             try:
                 self._check_timeouts()
-            except TimeoutException, e:
-                self.app.logger.error(traceback.format_exc())
+            except TimeoutException:
+                log.error(traceback.format_exc())
 
             try:
                 lock = CronLock(
@@ -64,21 +57,21 @@ class CronJob(object):
                 )
                 lock.save()
             except mongoengine.queryset.NotUniqueError:
-                self.app.logger.debug('%s could not get lock, giving up', self.__class__.__name__)
+                log.debug('%s could not get lock, giving up', self.__class__.__name__)
                 context.pop()
                 return
 
-            self.app.logger.info('%s running', self.__class__.__name__)
+            log.info('%s running', self.__class__.__name__)
             begin_time = time.time()
 
             self.run()
 
             run_time = time.time() - begin_time
-            self.app.logger.info('%s completed (%.2f secs)', self.__class__.__name__, run_time)
+            log.info('%s completed (%.2f secs)', self.__class__.__name__, run_time)
             if not sys.stdout.isatty():
                 time.sleep(max(0, 15 - run_time))
         except Exception:
-            self.app.logger.error(traceback.format_exc())
+            log.error(traceback.format_exc())
 
         context.pop()
         lock.delete()

@@ -24,7 +24,11 @@ from flask import render_template
 from premailer import transform
 import re
 from email.utils import parseaddr
+import json
+import logging
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 # Signals whether we're sending emails or just capturing them to mongo (for the
 # test suite mainly)
@@ -146,9 +150,10 @@ def _send_postmark(
         doc.save()
 
     if test:
-        test = True
+        log.debug("email content: %s" % json.dumps(pm.to_json_message(), cls=postmark.PMJSONEncoder, indent=4))
+        return
 
-    pm.send(test=test)
+    pm.send()
 
 def _send_sendgrid(
         sender         = None,

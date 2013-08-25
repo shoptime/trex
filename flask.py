@@ -180,14 +180,12 @@ class Flask(flask.Flask):
 
 
     def log_to_file(self, filename):
+        self.logger.debug("Logging to file: %s" % filename)
         log_filename = os.path.abspath(os.path.join(self.root_path, '..', 'logs', filename))
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-        ))
-        self.logger.addHandler(file_handler)
+        file_handler.setFormatter(self.logger_formatter)
+        logging.root.addHandler(file_handler)
 
     def __init__(self, *args, **kwargs):
         super(Flask, self).__init__(*args, **kwargs)
@@ -269,7 +267,24 @@ class Flask(flask.Flask):
 
     def init_application(self):
         self.debug = self.settings.getboolean('server', 'debug')
+        self.logger_formatter = logging.Formatter(
+            '%(asctime)s [%(process)5d] [%(name)20.20s] %(levelname)8s - %(message)s '
+            '[in %(pathname)s:%(lineno)d]'
+        )
         self.logger.setLevel(logging.DEBUG)
+        log_handler = logging.StreamHandler()
+        log_handler.setLevel(logging.DEBUG)
+        log_handler.setFormatter(self.logger_formatter)
+
+        # Set the root handler, and clear the app-specific one
+        logging.root.addHandler(log_handler)
+        logging.root.setLevel(logging.DEBUG)
+        self.logger.handlers = []
+
+        werkzeug_logger = logging.getLogger('werkzeug')
+        werkzeug_logger.setLevel(logging.INFO)
+        werkzeug_logger.propagate = False
+        werkzeug_logger.addHandler(logging.StreamHandler())
 
         # Identity does this, we don't want whatever flask might be doing
         self.config['CSRF_ENABLED'] = False
