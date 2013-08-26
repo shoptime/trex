@@ -4,7 +4,7 @@ decorator
 flask==0.9
 flask-script
 flask-seasurf
-flask-wtf
+flask-wtf==0.8.4
 furl
 jinja2
 httpagentparser
