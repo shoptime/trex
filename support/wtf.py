@@ -309,7 +309,10 @@ class DependentSelectField(wtf.SelectField):
             raise ValueError(self.gettext('Not a valid choice'))
 
     def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'trex-dependent-select-field'
+        if 'class' in kwargs:
+            kwargs['class'] += ' trex-dependent-select-field'
+        else:
+            kwargs['class'] = 'trex-dependent-select-field'
         kwargs['data-parent'] = self.parent_field
         kwargs['data-choices'] = json.dumps(self.choice_dict)
         kwargs['data-select-text'] = self.select_text
