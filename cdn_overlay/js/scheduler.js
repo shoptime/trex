@@ -630,7 +630,7 @@
             this.render();
         },
         render: function() {
-            this.$content.html('<button class="btn">remove</button>');
+            this.$content.html('<button class="btn btn-default">remove</button>');
             Trex.Scheduler.EventViewBase.prototype.render.apply(this, arguments);
         }
     });

@@ -341,7 +341,7 @@ class FileListWidget(object):
 <div %(widget_args)s>
     <input %(input_args)s>
     <div class="files"></div>
-    <a class="add-file btn">Add File <input name="%(file_input_name)s" type="file" multiple></a>
+    <a class="add-file btn btn-default">Add File <input name="%(file_input_name)s" type="file" multiple></a>
 </div>
 """ % data)
 
@@ -398,8 +398,8 @@ class ImageWidget(object):
         return wtf.widgets.HTMLString("""
 <div %(widget_args)s>
     <span %(thumbnail_args)s><span %(span_args)s></span></span>
-    <a class="add-file btn">Upload Image <input name="%(file_input_name)s" type="file"></a>
-    <button type="button" class="btn">Clear image</button>
+    <a class="add-file btn btn-default">Upload Image <input name="%(file_input_name)s" type="file"></a>
+    <button type="button" class="btn btn-default">Clear image</button>
     <span class="uploading"></span>
     <input %(input_args)s>
 </div>

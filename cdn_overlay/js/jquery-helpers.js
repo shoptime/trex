@@ -44,7 +44,7 @@
         e.preventDefault();
         var href = $(this).data('href');
 
-        var modal = $('<div class="modal fade"><div class="modal-header"><a href="" class="close">&times</a><h3></h3></div><div class="modal-body"><p></p><p><a class="cancel btn">Cancel</a> <a class="confirm btn btn-primary">Confirm</a></p></div></div>');
+        var modal = $('<div class="modal fade"><div class="modal-header"><a href="" class="close">&times</a><h3></h3></div><div class="modal-body"><p></p><p><a class="cancel btn btn-default">Cancel</a> <a class="confirm btn btn-primary">Confirm</a></p></div></div>');
         modal
             .find('.modal-header h3').text($(this).data('title')).end()
             .find('.modal-body p:first-child').text($(this).data('body')).end()
