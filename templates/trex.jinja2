@@ -1,3 +1,4 @@
+{% if not trex_bootstrap_version %}{% set trex_bootstrap_version = 2 %}{% endif %}
 {% macro pager(pager) %}
 {% if pager.first_page != pager.last_page %}
     <div class="pagination">
@@ -32,12 +33,25 @@
     <input type="hidden" name="_csrf_token" value="{{ g.identity.get_csrf() }}">
     {{ form.hidden_tag() }}
     {% for field in form %}
+    {% if trex_bootstrap_version == 3 %}
+    {{ form_render_field_bs3(field) }}
+    {% else %}
     {{ form_render_field(field) }}
+    {% endif %}
     {% endfor %}
+    {% if trex_bootstrap_version == 3 %}
+    <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+            <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
+            {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
+        </div>
+    </div>
+    {% else %}
     <div class="form-actions">
         <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
         {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
     </div>
+    {% endif %}
 </form>
 {% endmacro %}
 
@@ -51,6 +65,33 @@
         {{ field(**kwargs) | safe }}
         {% if field.errors %}
         <span class="help-inline">
+        {% for error in field.errors %}{{ error }} {% endfor %}
+        </span>
+        {% endif %}
+        {% if field.description %}
+        <span class="help-block">{{ field.description }}</span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% if field.type == 'LabelField' %}
+<div class="control-group">
+    <div class="controls">
+        <p>{{ field.label.text }}</p>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+{% macro form_render_field_bs3(field) %}
+{% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
+<div class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
+    {% if field.label.text %}
+    <label for="{{ field.id }}" class="col-lg-2">{{ field.label.text }}</label>
+    {% endif %}
+    <div class="col-lg-10">
+        {{ field(class="form-control", **kwargs) | safe }}
+        {% if field.errors %}
+        <span class="help-block">
         {% for error in field.errors %}{{ error }} {% endfor %}
         </span>
         {% endif %}
