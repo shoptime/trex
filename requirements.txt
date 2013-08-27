@@ -1,13 +1,13 @@
 blinker
 cssselect
 decorator
-flask==0.9
 flask-script
 flask-seasurf
 flask-wtf==0.8.4
+flask==0.9
 furl
-jinja2
 httpagentparser
+jinja2
 markdown
 mongoengine>=0.7
 passlib
@@ -21,4 +21,5 @@ requests
 selenium
 sendgrid-python
 termcolor
+unidecode
 werkzeug
