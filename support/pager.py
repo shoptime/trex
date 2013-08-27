@@ -1,6 +1,7 @@
 from furl import furl
+from flask import request
 
-class Pager():
+class Pager(object):
     first_page = None
     last_page = None
     first_visible_item = None
@@ -70,3 +71,26 @@ class Pager():
         if ( self.page > self.first_page ):
             return self.page - 1
         return None
+
+class MongoPager(Pager):
+    iter_cursor = None
+
+    def __init__(self, cursor, page=None, per_page=20, list_count=10, base_uri=None):
+        self.cursor = cursor
+
+        if page is None:
+            page = int(request.args.get('page', 1))
+
+        if base_uri is None:
+            base_uri = request.url
+
+        super(MongoPager, self).__init__(self.cursor.count(), page=page, per_page=per_page, list_count=list_count, base_uri=base_uri)
+
+    def calculate(self):
+        self.iter_cursor = None
+        super(MongoPager, self).calculate()
+
+    def __iter__(self):
+        if not self.iter_cursor:
+            self.iter_cursor = self.cursor.skip(self.skip()).limit(self.limit())
+        return self.iter_cursor.__iter__()

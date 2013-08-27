@@ -1,23 +1,21 @@
 {% if not trex_bootstrap_version %}{% set trex_bootstrap_version = 2 %}{% endif %}
 {% macro pager(pager) %}
 {% if pager.first_page != pager.last_page %}
-    <div class="pagination">
-        <ul>
-            {% if pager.prev() %}
-                <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.prev()}) }}">Prev</a></li>
-            {% else %}
-                <li class="disabled"><a>Prev</a></li>
-            {% endif %}
-            {% for page in pager.list %}
-            <li{% if page == pager.page %} class="active"{% endif %}><a href="{{ pager.uri.remove(['page']).add({'page':page}) }}">{{ page }}</a></li>
-            {% endfor %}
-            {% if pager.next() %}
-                <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.next()}) }}">Next</a></li>
-            {% else %}
-                <li class="disabled"><a>Next</a></li>
-            {% endif %}
-        </ul>
-    </div>
+{% if trex_bootstrap_version == 3 %}<ul class="pagination">{% else %}<div class="pagination"><ul>{% endif %}
+    {% if pager.prev() %}
+        <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.prev()}) }}">Prev</a></li>
+    {% else %}
+        <li class="disabled"><a>Prev</a></li>
+    {% endif %}
+    {% for page in pager.list %}
+    <li{% if page == pager.page %} class="active"{% endif %}><a href="{{ pager.uri.remove(['page']).add({'page':page}) }}">{{ page }}</a></li>
+    {% endfor %}
+    {% if pager.next() %}
+        <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.next()}) }}">Next</a></li>
+    {% else %}
+        <li class="disabled"><a>Next</a></li>
+    {% endif %}
+{% if trex_bootstrap_version == 3 %}</ul>{% else %}</ul></div>{% endif %}
 {% endif %}
 {% endmacro %}
 
