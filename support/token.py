@@ -1,4 +1,6 @@
 import random
+from unidecode import unidecode
+import re
 
 default_token_chars = "abcdefhijklmnopqrstuvwxyzABCDEFHIJKLMNOPQRSTUVWXYZ0123456789_-"
 human_token_chars = "BCDFGHKMNPQRTWXYZ2346789"
@@ -24,5 +26,10 @@ def create_token_factory(**factory_args):
         return create_token(**kwargs)
 
     return _create_token
+
+def generate_slug(source):
+    slug = unidecode(source).lower()
+    slug = re.sub(r'\W+', '-', slug)
+    return slug
 
 create_human_token = create_token_factory(chars=human_token_chars)
