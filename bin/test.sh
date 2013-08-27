@@ -27,7 +27,8 @@ bash trex/bin/install-deps.sh
 # Compile static stuff
 app compile_static
 
-app test
+# Run tests
+app rubble
 
 # Reload for other things that hit this hive instance
 touch site.wsgi
