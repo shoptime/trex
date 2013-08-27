@@ -137,6 +137,10 @@ class WebElementSet(object):
             new_selector.append(selector)
         return self.__class__(self.browser, elements=self._verify_elements(elements), selector=new_selector)
 
+    @require_one_element
+    def tag_name(self):
+        return self.elements[0].tag_name
+
     def find(self, selector, selector_desc=None):
         if not selector_desc:
             selector_desc = selector
