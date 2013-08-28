@@ -82,6 +82,9 @@ class TestRunner:
         # This just stops the "accesslog" output from the server
         logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+        # Stops lots of crappy selenium logging
+        logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(logging.WARNING)
+
         self.configure(
             server_url          = server_url,
             selenium_server_url = selenium_server_url,
