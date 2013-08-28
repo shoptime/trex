@@ -282,6 +282,7 @@ class Flask(flask.Flask):
         log_handler.setFormatter(self.logger_formatter)
 
         # Set the root handler, and clear the app-specific one
+        logging.root.handlers = []  # When init_application is called more than once, we don't want to acrue handlers
         logging.root.addHandler(log_handler)
         logging.root.setLevel(logging.DEBUG)
         self.logger.handlers = []
