@@ -12,6 +12,7 @@ from multiprocessing import Process
 from furl import furl
 from pprint import pformat
 from termcolor import colored
+import time
 
 _global_harness = None
 def global_harness():
@@ -194,8 +195,11 @@ class Harness(object):
                     print banner
                     print re.sub('.', '-', banner)
                     # TODO - timing for each test?
+                    start_time = time.time()
                     obj.run()
                     obj.post_run()
+                    end_time = time.time()
+                    print "# %s took %0.1f seconds" % (obj.__class__.__name__, end_time-start_time)
                 finally:
                     obj.teardown()
                     for function in _global_teardown_test_methods:

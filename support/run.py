@@ -19,6 +19,7 @@ import requests
 from furl import furl
 from multiprocessing import Process
 import signal
+import time
 
 class Manager(script.Manager):
     def __init__(self, *args, **kwargs):
@@ -134,6 +135,8 @@ class Manager(script.Manager):
             """Run the new test harness"""
             import trex.rubble
 
+            start_time = time.time()
+
             if fail_method is None:
                 fail_method = 'exception'
             processes = int(processes)
@@ -179,6 +182,9 @@ class Manager(script.Manager):
                                     os.kill(proc.pid, signal.SIGQUIT)
             else:
                 run_tests(0, 1)
+
+            end_time = time.time()
+            print "Total time: %0.1f seconds" % (end_time-start_time)
 
         @self.command
         def cron(job_name):
