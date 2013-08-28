@@ -181,11 +181,15 @@ class Flask(flask.Flask):
 
 
     def log_to_file(self, filename):
-        self.logger.debug("Logging to file: %s" % filename)
         log_filename = os.path.abspath(os.path.join(self.root_path, '..', 'logs', filename))
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(self.logger_formatter)
+        if self.settings.getboolean('server', 'debug'):
+            self.logger.debug("Logging to file: %s" % filename)
+        else:
+            # Nuke the existing StreamHandler
+            logging.root.handlers = []
         logging.root.addHandler(file_handler)
 
     def __init__(self, *args, **kwargs):
