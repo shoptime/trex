@@ -86,7 +86,7 @@
     {% if field.label.text %}
     <label for="{{ field.id }}" class="col-md-2 control-label">{{ field.label.text }}</label>
     {% endif %}
-    <div class="col-md-10">
+    <div class="col-md-10{% if not field.label.text %} col-md-offset-2{% endif %}">
         {{ field(class="form-control", **kwargs) | safe }}
         {% if field.errors %}
         <span class="help-block">
