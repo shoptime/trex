@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+if [ "$1" != "" ]; then
+    test_harness="$1"
+else
+    test_harness='test'
+fi
+
 # Basic prep
 source bin/activate
 mkdir -p logs
@@ -28,7 +34,7 @@ bash trex/bin/install-deps.sh
 app compile_static
 
 # Run tests
-app rubble
+app $test_harness
 
 # Reload for other things that hit this hive instance
 touch site.wsgi
