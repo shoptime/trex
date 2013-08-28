@@ -28,7 +28,7 @@ def create_token_factory(**factory_args):
     return _create_token
 
 def generate_slug(source):
-    slug = unidecode(source).lower()
+    slug = unidecode(unicode(source)).lower()
     slug = re.sub(r'\W+', '-', slug)
     return slug
 
