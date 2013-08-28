@@ -3,12 +3,15 @@
 from __future__ import absolute_import
 from flask import url_for
 from trex.rubble import global_harness as harness
-from .assertions import is_equal, is_like
+from .assertions import is_equal, is_like, message
 
 def browser_for(browser):
     if isinstance(browser, basestring):
         return harness().browser_for_key(browser)
     return harness().current_browser()
+
+def back(browser=None):
+    browser_for(browser).back()
 
 def get(path, browser=None):
     browser = browser_for(browser)
@@ -53,5 +56,27 @@ def execute_script(script, browser=None):
 
 def wait_for_ajax(browser=None):
     browser_for(browser).wait_for_ajax()
+
+def table_like(head, body, table=None):
+    message("verifying table contents")
+    if not table:
+        table = find('.table').length_is(1, message="Get the only table on the page")
+
+    head_cells = table.find('thead tr th')
+
+    is_equal(len(head), len(head_cells), "Correct number of header cells")
+
+    body_rows = table.find('tbody tr')
+
+    is_equal(len(body), len(body_rows), "Correct number of body rows")
+
+    for observed_row, expected_row in zip(body_rows, body):
+        observed_cells = observed_row.find('td, th')
+        is_equal(len(observed_cells), len(expected_row), "Correct number of body cells")
+        for observed_cell, expected_cell in zip(observed_cells, expected_row):
+            if expected_cell is None:
+                # Don't care about content
+                continue
+            observed_cell.text_is(expected_cell)
 
 # TODO - screenshot

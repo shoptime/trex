@@ -59,7 +59,3 @@ def message(message):
     for i in range(depth-1):
         print "    ",
     print message
-
-#url_is
-#url_like
-

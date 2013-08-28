@@ -29,6 +29,9 @@ class Browser(object):
     def shutdown(self):
         self.selenium.quit()
 
+    def back(self):
+        self.selenium.back()
+
     def get(self, uri):
         self.selenium.get(uri)
 
@@ -73,9 +76,6 @@ class Browser(object):
 #    wait_for_ajax
 #    refresh
 #    source
-#    back
-#    get
-#    url
 #    screenshot
 
 
