@@ -32,4 +32,17 @@ def generate_slug(source):
     slug = re.sub(r'\W+', '-', slug)
     return slug
 
+class SlugList(object):
+    def __init__(self, name):
+        self.name = name
+        self.count = 1
+
+    def __iter__(self):
+        yield generate_slug(self.name)
+        # Potentially we could find some other variations on a name here
+        while True:
+            yield generate_slug("%s %d" % (self.name, self.count))
+            self.count += 1
+
+
 create_human_token = create_token_factory(chars=human_token_chars)
