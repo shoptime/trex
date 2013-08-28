@@ -166,12 +166,13 @@ class Harness(object):
         self.error_count = 0
 
         try:
-            if self.fail_method == 'ipdb':
-                from ipdb import launch_ipdb_on_exception
-                with launch_ipdb_on_exception():
+            with app.test_request_context():
+                if self.fail_method == 'ipdb':
+                    from ipdb import launch_ipdb_on_exception
+                    with launch_ipdb_on_exception():
+                        self._run(test_classes)
+                else:
                     self._run(test_classes)
-            else:
-                self._run(test_classes)
         except Exception:
             traceback.print_exc()
             raise SystemExit(2)

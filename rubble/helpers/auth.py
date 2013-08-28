@@ -4,8 +4,14 @@ from __future__ import absolute_import
 from flask import url_for
 from .browser import *
 from .assertions import *
+import app.model as m
 
-def login(email, password='password'):
+def login(user, password='password'):
+    if isinstance(user, m.User):
+        email = user.email
+    else:
+        email = user
+
     message("Logging in as %s" % email)
 
     get(url_for('trex.auth.logout'))

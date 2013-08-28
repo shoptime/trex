@@ -12,7 +12,7 @@ def browser_for(browser):
 
 def get(path, browser=None):
     browser = browser_for(browser)
-    uri = harness().base_uri.copy().set(path=path)
+    uri = harness().base_uri.copy().join(str(path))
     browser.get(str(uri))
 
 def get_for(endpoint, browser=None, **kwargs):
@@ -45,6 +45,8 @@ def url_is(expected, browser=None):
 def url_like(expected, browser=None):
     is_like(current_url(browser), expected, message="Browser URL is_like")
 
+def flash_is(expected, browser=None):
+    browser_for(browser).find('.flash>div').text_is(expected, message="Flash text matches")
 
 def execute_script(script, browser=None):
     return browser_for(browser).execute_script(script)

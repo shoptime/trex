@@ -38,7 +38,7 @@
     {% endif %}
     {% endfor %}
     {% if trex_bootstrap_version == 3 %}
-    <div class="form-group">
+    <div class="form-group form-actions">
         <div class="col-md-offset-2 col-md-10">
             <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
             {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
