@@ -440,6 +440,92 @@ class ImageField(wtf.Field):
         else:
             self.data = None
 
+class PhoneNumberWidget(object):
+    def __call__(self, field, **kwargs):
+        value = field._value()
+        data = dict(
+            widget_args = wtf.widgets.html_params(**{
+                'class':'trex-phone-number-widget',
+            }),
+            cc_select_args = wtf.widgets.html_params(**{
+                'id': '%s-country-code' % field.id,
+                'name': field.name,
+                'class': 'input-country-code',
+            }),
+            number_input_args = wtf.widgets.html_params(**{
+                'id': '%s-number' % field.id,
+                'name': field.name,
+                'class': 'input-number',
+                'type': 'text',
+                'value': value[1],
+            }),
+            cc_select_options = self.cc_select_options(field)
+        )
+
+        return wtf.widgets.HTMLString("""
+<div %(widget_args)s>
+    <select %(cc_select_args)s>
+        <option value="">Country</option>
+        %(cc_select_options)s
+    </select>
+    <input %(number_input_args)s>
+</div>
+""" % data)
+
+    def cc_select_options(self, field):
+        result = []
+
+        value = field._value()
+        for code in field.country_codes:
+            options = dict(value=code)
+            if value and value[0] and value[0] == code:
+                options['selected'] = True
+            result.append('<option %s>+%s</option>' % (wtf.widgets.html_params(**options), str(code)))
+
+        return '\n'.join(result)
+
+class PhoneNumberField(wtf.Field):
+    widget = PhoneNumberWidget()
+
+    def __init__(self, label='', validators=None, country_codes=[], **kwargs):
+        self.country_codes = country_codes
+
+        super(PhoneNumberField, self).__init__(label, validators, **kwargs)
+
+    def _value(self):
+        if self.raw_data:
+            return self.raw_data
+        else:
+            if self.data:
+                parts = self.data.split(' ', 2)
+                parts[0] = parts[0][1:]
+                return parts
+            else:
+                return ('', '')
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            try:
+                self.data = self._valuelist_to_phone_number(valuelist)
+            except ValueError:
+                self.data = None
+                raise ValueError(self.gettext('Not a valid phone number'))
+            if valuelist[1]:
+                if not valuelist[0] or valuelist[0] not in self.country_codes:
+                    raise ValueError(self.gettext('Please select a country code'))
+
+
+    def _valuelist_to_phone_number(self, valuelist):
+        if len(valuelist) != 2:
+            raise ValueError(self.gettext('Not a valid phone number'))
+        if valuelist[0] and valuelist[1]:
+            phone_str = '+%s %s' % tuple(valuelist)
+            return phone_str
+        return None
+
+    def __call__(self, *args, **kwargs):
+        return super(PhoneNumberField, self).__call__(*args, **kwargs)
+
 
 blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
 
