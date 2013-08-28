@@ -22,6 +22,7 @@ import traceback
 from jinja2.exceptions import TemplateNotFound
 import trex.support.model
 import trex.support.format
+from .support.configparser import TrexConfigParser
 import base64
 import hashlib
 import random
@@ -122,7 +123,7 @@ class TrexRequest(flask.Request):
     parameter_storage_class = OrderedMultiDict
 
 class Flask(flask.Flask):
-    settings = ConfigParser()
+    settings = TrexConfigParser()
     db = None
     in_test_mode = False
 
