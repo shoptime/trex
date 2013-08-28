@@ -299,7 +299,6 @@ class Flask(flask.Flask):
         self.config['SESSION_COOKIE_DOMAIN'] = server_url.host
 
         if server_url.scheme == 'https':
-            self.logger.info("Detected SSL service URL, enabling secure cookies")
             self.config['SESSION_COOKIE_SECURE'] = True
             self.config['PREFERRED_URL_SCHEME'] = 'https'
 
