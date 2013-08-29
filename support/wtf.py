@@ -279,6 +279,7 @@ class StarRatingField(wtf.IntegerField):
 
 class DependentSelectField(wtf.SelectField):
     def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', **kwargs):
+        kwargs['coerce'] = lambda x: x is not None and str(x) or None
         super(DependentSelectField, self).__init__(label, validators, **kwargs)
         if parent_field is None:
             raise Exception("You must specify a parent field")
@@ -291,6 +292,9 @@ class DependentSelectField(wtf.SelectField):
         parent_field = form._fields.get(self.parent_field)
         if not parent_field:
             raise Exception("Couldn't find parent field on form")
+
+        if not self.data:
+            return
 
         if parent_field.data in self.choice_dict:
             choices = self.choice_dict[parent_field.data]
