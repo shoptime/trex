@@ -80,4 +80,50 @@
             })
         ;
     });
+
+    $(document).on('click', 'button.trex-post-simple-confirm', function(e) {
+        e.preventDefault();
+        var cleaned_up = false;
+        var $button = $(e.currentTarget);
+        var href = $button.data('href');
+        var $confirm = $('<ul class="dropdown-menu"><li><a></a></li></ul>')
+            .css({
+                marginRight: '-2px',
+                marginLeft: '-2px',
+            })
+            .find('a')
+                .attr('href', href)
+                .text('Confirm ' + $button.text())
+                .on('click', function(e) {
+                    e.preventDefault();
+                    $('<form method="post"></form>')
+                        .append($('<input type="hidden" name="_csrf_token">').val($('html').data('csrf-token')))
+                        .attr('action', href)
+                        .appendTo('body')
+                        .submit()
+                    ;
+                })
+            .end()
+            .on('click', function(e) { e.stopPropagation(); cleanup(); })
+        ;
+
+        if ($button.offset().left >= $(document).width()/2) {
+            $confirm.addClass('pull-right');
+        }
+
+        $button
+            .css('position', 'relative')
+            .append($confirm.show())
+        ;
+
+        var cleanup;
+        cleanup = function() {
+            if (cleaned_up) { return; }
+            cleaned_up = true;
+            $(document).off('click', cleanup);
+            $button.css('position', '');
+            $confirm.remove();
+        };
+        $(document).on('click', cleanup);
+    });
 })(jQuery);
