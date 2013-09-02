@@ -295,6 +295,8 @@ class Flask(flask.Flask):
         werkzeug_logger.propagate = False
         werkzeug_logger.addHandler(logging.StreamHandler())
 
+        logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
+
         # Identity does this, we don't want whatever flask might be doing
         self.config['CSRF_ENABLED'] = False
 
