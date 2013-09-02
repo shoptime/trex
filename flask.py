@@ -236,9 +236,12 @@ class Flask(flask.Flask):
 
         @self.template_filter()
         def oxford_join(items):
-            if len(items) == 1:
+            num = len(items)
+            if num == 0:
+                return ''
+            if num == 1:
                 return items[0]
-            if len(items) == 2:
+            if num == 2:
                 return ' and '.join(items)
             return ', '.join(items[0:-1]) + ', and ' + items[-1]
 
