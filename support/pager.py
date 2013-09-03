@@ -86,6 +86,9 @@ class MongoPager(Pager):
 
         super(MongoPager, self).__init__(self.cursor.count(), page=page, per_page=per_page, list_count=list_count, base_uri=base_uri)
 
+    def __len__(self):
+        return self.total
+
     def calculate(self):
         self.iter_cursor = None
         super(MongoPager, self).calculate()
