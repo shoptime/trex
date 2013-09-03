@@ -435,7 +435,12 @@
     });
 
     $('.trex-date-field').each(function() {
-        $(this).datepicker();
+        $(this).datepicker().on('changeDate', function(e) {
+            if (e.viewMode === 'days') {
+                // Hide the picker when the user selects a date
+                $(this).datepicker('hide');
+            }
+        });
     });
 
     if ( $('.trex-chosen-select-field').length ) {
