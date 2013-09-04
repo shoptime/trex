@@ -63,8 +63,19 @@ def login():
         password = wtf.PasswordField('Password', [wtf.Required()])
 
         def validate_email(form, field):
-            user = m.User.active(email=form.email.data).first()
-            if not user or not user.check_login(form.password.data):
+            user = m.User.objects(email=form.email.data).first()
+
+            if not user:
+                raise wtf.ValidationError("Invalid email or password")
+
+            if not user.is_active:
+                if app.settings.getboolean('security', 'reveal_disabled_accounts'):
+                    raise wtf.ValidationError("Your account has been disabled. If you think this is a mistake, please contact your manager.")
+                # Vague message if we aren't revealing that the account is disabled
+                raise wtf.ValidationError("Invalid email or password")
+
+
+            if not user.check_login(form.password.data):
                 raise wtf.ValidationError("Invalid email or password")
 
     form = Form()
