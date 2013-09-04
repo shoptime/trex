@@ -130,6 +130,107 @@ class DateField(wtf.DateField):
         kwargs['data-date-format'] = self.js_date_format
         return super(DateField, self).__call__(*args, **kwargs)
 
+class DateTimeWidget(object):
+    def __call__(self, field, **kwargs):
+        date_viewmode = 0
+        if field.date_default_mode == 'month':
+            date_viewmode = 1
+        elif field.date_default_mode == 'year':
+            date_viewmode = 2
+
+        value = field._value()
+        date_value = time_value = ''
+        if value:
+            value = value.at(field.timezone)
+            date_value = value.strftime('%Y-%m-%d')
+            time_value = value.strftime('%H:%M %p')
+
+        data = dict(
+            widget_args = wtf.widgets.html_params(**{
+                'class':'trex-date-time-widget',
+            }),
+            date_input_args = wtf.widgets.html_params(**{
+                'id': '%s-date' % field.id,
+                'name': field.name,
+                'class': 'input-date form-control trex-date-field',
+                'data-date-viewmode': date_viewmode,
+                'data-date-format': field.js_date_format,
+                'value': date_value,
+                'autocomplete': 'off',
+            }),
+            time_input_args = wtf.widgets.html_params(**{
+                'id': '%s-date' % field.id,
+                'name': field.name,
+                'class': 'input-time form-control trex-time-field',
+                'data-step': field.time_step,
+                'data-lower-bound': field.time_lower_bound,
+                'data-upper-bound': field.time_upper_bound,
+                'data-24h': field.time_24h and 'true' or '',
+                'value': time_value,
+            }),
+        )
+
+        return wtf.widgets.HTMLString("""
+<div %(widget_args)s>
+    <input %(date_input_args)s>
+    <input %(time_input_args)s>
+</div>
+""" % data)
+
+class DateTimeField(wtf.Field):
+    widget = DateTimeWidget()
+
+    def __init__(self, label='', validators=None, timezone=None, date_format='yyyy-mm-dd', date_default_mode='day', time_step=30, time_lower_bound=None, time_upper_bound='23:59', time_24h=True, **kwargs):
+        if not timezone:
+            raise Exception("Must specify a timezone when using a DateTimeField")
+        self.timezone = timezone
+
+        self.date_default_mode = date_default_mode
+        self.js_date_format = date_format
+        self.py_date_format = self._calculate_strftime_format()
+
+        if time_step < 0 or time_step > 3600:
+            raise Exception("time_step is out of range")
+        self.time_step = time_step
+
+        self.time_lower_bound = time_lower_bound
+        self.time_upper_bound = time_upper_bound
+        self.time_24h = time_24h
+
+        super(DateTimeField, self).__init__(label, validators, **kwargs)
+
+    def _calculate_strftime_format(self):
+        if self.js_date_format == 'yyyy-mm-dd':
+            return '%Y-%m-%d'
+        elif self.js_date_format == 'dd-mm-yyyy':
+            return '%d-%m-%Y'
+        else:
+            raise ValueError("Invalid date format for trex.support.wtf.DateTimeField: %s" % self.js_date_format)
+
+    def _value(self):
+        if self.raw_data:
+            return self._valuelist_to_quantum(self.raw_data)
+        else:
+            return self.data
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            try:
+                self.data = self._valuelist_to_quantum(valuelist)
+            except ValueError:
+                self.data = None
+                raise ValueError(self.gettext('Not a valid datetime value'))
+
+    def _valuelist_to_quantum(self, valuelist):
+        if len(valuelist) != 2:
+            raise ValueError(self.gettext('Not a valid datetime value'))
+        date_str = '%s %s' % tuple(valuelist)
+        return quantum.parse(date_str, timezone=self.timezone, relaxed=True)
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'trex-select-date-field'
+        return super(DateTimeField, self).__call__(*args, **kwargs)
+
 class SelectDateWidget(object):
     def __call__(self, field, **kwargs):
         data = dict(

@@ -443,6 +443,20 @@
         });
     });
 
+    $('.trex-time-field').each(function() {
+        var $field = $(this);
+        var step = $field.data('step') || 30;
+        var lower_bound = $field.data('lower-bound') || null;
+        var upper_bound = $field.data('upper-bound') || null;
+        var show_24h = !!$field.data('24h');
+        $(this).timePicker({
+            step: step,
+            startTime: lower_bound,
+            endTime: upper_bound,
+            show24Hours: show_24h,
+        });
+    });
+
     if ( $('.trex-chosen-select-field').length ) {
         if ( _.isFunction($.fn.chosen) ) {
             $('.trex-chosen-select-field').chosen();
