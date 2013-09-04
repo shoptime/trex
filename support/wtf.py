@@ -121,7 +121,7 @@ class DateField(wtf.DateField):
                 raise ValueError(self.gettext('Not a valid date value'))
 
     def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'trex-date-field'
+        kwargs['class'] = 'trex-date-field form-control'
         if self.default_mode == 'month':
             kwargs['data-date-viewmode'] = 1
         elif self.default_mode == 'year':
