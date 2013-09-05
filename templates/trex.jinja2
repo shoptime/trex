@@ -39,7 +39,7 @@
     {% endfor %}
     {% if trex_bootstrap_version == 3 %}
     <div class="form-group form-actions">
-        <div class="col-md-offset-2 col-md-10">
+        <div class="col-sm-offset-4 col-sm-8">
             <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
             {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
         </div>
@@ -84,9 +84,9 @@
 {% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
 <div class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
     {% if field.label.text %}
-    <label for="{{ field.id }}" class="col-md-2 control-label">{{ field.label.text }}</label>
+    <label for="{{ field.id }}" class="col-sm-4 control-label">{{ field.label.text }}</label>
     {% endif %}
-    <div class="col-md-10{% if not field.label.text %} col-md-offset-2{% endif %}">
+    <div class="col-sm-8{% if not field.label.text %} col-sm-offset-4{% endif %}">
         {{ field(class="form-control", **kwargs) | safe }}
         {% if field.errors %}
         <span class="help-block">
