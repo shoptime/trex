@@ -26,6 +26,7 @@ from .support.configparser import TrexConfigParser
 import base64
 import hashlib
 import random
+import urllib
 
 app = None
 
@@ -264,6 +265,7 @@ class Flask(flask.Flask):
         self.jinja_env.globals['hostname'] = os.uname()[1]
         self.jinja_env.globals['format'] = trex.support.format
         self.jinja_env.globals['puffer'] = puffer
+        self.jinja_env.globals['urlencode'] = urllib.quote
 
 
         def csrf_token():

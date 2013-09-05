@@ -117,3 +117,15 @@
     {%- elif request.endpoint == endpoint %} class="active"{%- endif -%}
     ><a href="{{ url_for(endpoint, **kwargs) }}">{{ label }}</a></li>
 {%- endmacro %}
+
+{% macro nav_item(endpoint, label, match=None, match_list=None, endpoint_only=False) -%}
+    <li
+    {%- if match_list -%}
+        {% for match in match_list %}{%- if request.endpoint and request.endpoint.startswith(match) %} class="active"{%- endif -%}{% endfor %}
+    {%- elif match -%}
+        {%- if request.endpoint and request.endpoint.startswith(match) %} class="active"{%- endif -%}
+    {%- elif endpoint_only -%}
+        {%- if request.endpoint == endpoint %} class="active"{%- endif -%}
+    {%- elif urlencode(request.path) == url_for(endpoint, **kwargs) %} class="active"{%- endif -%}
+    ><a href="{{ url_for(endpoint, **kwargs) }}">{{ label }}</a></li>
+{%- endmacro %}
