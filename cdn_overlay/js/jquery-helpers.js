@@ -153,6 +153,7 @@
 
         function handle_render(data) {
             if ( data.state != 'render' ) {
+                $('.modal-body').text('Sorry, this form is currently unavailable');
                 throw Error("Did not receive a 'render' response from server");
             }
             var $content = $('<div>' + data.content + '</div>');
