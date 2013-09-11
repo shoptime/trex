@@ -261,8 +261,8 @@ Trex.bind_form_widgets = function(context) {
     $('.trex-time-field', context).each(function() {
         var $field = $(this);
         var step = $field.data('step') || 30;
-        var lower_bound = $field.data('lower-bound') || null;
-        var upper_bound = $field.data('upper-bound') || null;
+        var lower_bound = $field.data('lower-bound') || '00:00';
+        var upper_bound = $field.data('upper-bound') || '23:59';
         var show_24h = !!$field.data('24h');
         $(this).timePicker({
             step: step,
