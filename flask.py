@@ -88,6 +88,31 @@ def render_html(template=None, add_etag=False):
 
     return decorator(decorated)
 
+def render_modal_form(template=None):
+    def decorated(f, *args, **kwargs):
+        response = f(*args, **kwargs)
+
+        if type(response) != dict:
+            raise Exception("Must return a dict to render_modal_form")
+
+        if 'state' not in response:
+            template_name = template
+            if template_name is None:
+                template_name = 'trex/templates/modal_form.jinja2'
+
+            out = flask.render_template(template_name, **response)
+            response = dict(state='render', content=out)
+
+        http_response = flask.Response(ejson.dumps(response), 200)
+        http_response.content_type = 'application/json'
+        http_response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+        http_response.headers.set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+        http_response.headers.set('Pragma', 'no-cache')
+
+        return http_response
+
+    return decorator(decorated)
+
 def render_upload():
     def decorated(f, *args, **kwargs):
         upload = f(*args, **kwargs)
