@@ -159,6 +159,7 @@
             var $content = $('<div>' + data.content + '</div>');
             var $form = $content.find('form');
             $modal.find('.modal-body').html($content.children());
+            Trex.bind_form_widgets($form);
             $form.on('submit', function(e) {
                 e.preventDefault();
                 $modal.find('.modal-footer .loading').show();

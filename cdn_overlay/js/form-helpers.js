@@ -1,3 +1,341 @@
+Trex.bind_form_widgets = function(context) {
+    $('.trex-file-list-widget', context).each(function() {
+        var $widget = $(this);
+        var files = new (Backbone.Collection.extend({
+            model: Trex.FileUploadModel,
+            uploads_complete: function() {
+                return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
+            },
+        }))();
+        if ($widget.find('input:hidden').val()) {
+            _.each(JSON.parse($widget.find('input:hidden').val()), function(data) {
+                var model = new Trex.FileUploadModel(data);
+                model.set({
+                    id: model.cid,
+                    progress: 100
+                });
+                files.add(model);
+            });
+        }
+        var finished_uploads;
+        $widget.closest('form').trex_delayed_submit('Waiting for file uploads to finish ...', function() {
+            finished_uploads = $.Deferred();
+            if (files.uploads_complete()) {
+                finished_uploads.resolve();
+            }
+            return finished_uploads;
+        });
+        files.on('add remove change', function(model) {
+            // Keep the javascript up to date
+            $widget.find('input:hidden').val(JSON.stringify(files.where({error:false})));
+            if (finished_uploads && files.uploads_complete()) {
+                if (model.get('error')) {
+                    finished_uploads.reject();
+                }
+                else {
+                    finished_uploads.resolve();
+                }
+            }
+        });
+        var files_view = new Trex.ViewCollection({
+            view: Backbone.View.extend({
+                className: "file",
+                events: {
+                    'click .close': 'remove_file',
+                    'click .filename.linkable': 'open_link'
+                },
+                initialize: function() {
+                    this.$el
+                        .addClass(this.className)
+                        .html('<a class="close">&times</a> <span class="filename"></span> <span class="size"></span><div class="progress progress-striped active"><div class="bar"></div></div><div class="uploading"></div><div class="label label-important">Upload failed</div>')
+                    ;
+                    this.listenTo(this.model, 'change', this.render);
+                    this.render();
+                },
+                render: function() {
+                    this.$('.filename')
+                        .text(this.model.get('filename'))
+                        .data('url', this.model.get('url'))
+                        .toggleClass('linkable', !!this.model.get('url'))
+                    ;
+                    this.$('.size').toggle(!!this.model.get('size')).text('('+this.model.pretty_size()+')');
+                    if (this.model.get('progress') === 'unknown') {
+                        this.$('.progress').hide();
+                        this.$('.uploading').show();
+                    }
+                    else {
+                        this.$('.uploading').hide();
+                        this.$('.bar').css('width', this.model.get('progress')+'%');
+                        this.$('.progress').toggle(this.model.get('progress')<100);
+                    }
+                    this.$('.label').toggle(!!this.model.get('error'));
+                },
+                remove_file: function(e) {
+                    e.preventDefault();
+                    this.model.collection.remove(this.model);
+                },
+                open_link: function(e) {
+                    e.preventDefault();
+                    window.open(this.model.get('url'), '_blank');
+                }
+            }),
+            model: files,
+            el: $widget.find('.files')
+        });
+
+        $widget.on('change.trexFileListWidget', 'input[type=file]', function(e) {
+            if (can_do_xhr_upload) {
+                do_xhr_upload($widget.data('xhr-url'), e.target, files);
+            }
+            else {
+                do_iframe_upload($widget.data('iframe-url'), e.target, files);
+            }
+            $(this).val('');
+        });
+    });
+
+    $('.trex-image-widget', context).each(function() {
+        var $widget = $(this);
+        var files = new (Backbone.Collection.extend({
+            model: Trex.FileUploadModel,
+            uploads_complete: function() {
+                return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
+            },
+        }))();
+        if ($widget.find('input:hidden').val()) {
+            var model = new Trex.FileUploadModel(JSON.parse($widget.find('input:hidden').val()));
+            model.set({
+                id: model.cid,
+                progress: 100
+            });
+            files.add(model);
+        }
+        var finished_uploads;
+        $widget.closest('form').trex_delayed_submit('Waiting for file uploads to finish ...', function() {
+            finished_uploads = $.Deferred();
+            if (files.uploads_complete()) {
+                finished_uploads.resolve();
+            }
+            return finished_uploads;
+        });
+        files.on('add remove change reset', function() {
+            // Keep the javascript up to date
+            var model = files.where({error:false})[0];
+            $widget.find('input:hidden').val(model ? JSON.stringify(model) : '');
+
+            if (finished_uploads && files.uploads_complete()) {
+                if (model.get('error')) {
+                    finished_uploads.reject();
+                }
+                else {
+                    finished_uploads.resolve();
+                }
+            }
+        });
+        var view = new (Backbone.View.extend({
+            el: $widget,
+            model: files.first(),
+            initialize: function(opt) {
+                this.opt = _.extend({
+                    width: parseInt($widget.find('.thumbnail').data('width'), 10),
+                    height: parseInt($widget.find('.thumbnail').data('height'), 10),
+                }, opt);
+                if (this.model) {
+                    this.listenTo(this.model, 'change', this.render);
+                }
+                this.render();
+            },
+            change_model: function(new_model) {
+                if (this.model) {
+                    this.stopListening(this.model);
+                }
+                this.model = new_model;
+                if (this.model) {
+                    this.listenTo(this.model, 'change', this.render);
+                }
+                this.render();
+            },
+            render: function() {
+                if (this.model) {
+                    this.$('button').show();
+                    if (this.model.get('url')) {
+                        this.$('.uploading').css('display', 'none');
+                        this.$('.thumbnail').html('<img>').find('img')
+                            .css({
+                                maxWidth: this.opt.width-10,
+                                maxHeight: this.opt.height-10,
+                                verticalAlign: 'center',
+                            })
+                            .attr('src', this.model.get('url'))
+                        ;
+                    }
+                    else {
+                        this.$('.uploading').css('display', 'inline-block');
+                        this.$('.thumbnail')
+                            .html('<span><span>Loading</span></span>')
+                            .find('>span').css({
+                                width: this.opt.width,
+                                height: this.opt.height,
+                            })
+                        ;
+                    }
+                }
+                else {
+                    this.$('button').hide();
+                    this.$('.uploading').css('display', 'none');
+                    this.$('.thumbnail')
+                        .html('<span><span>No image</span></span>')
+                        .find('>span').css({
+                            width: this.opt.width,
+                            height: this.opt.height,
+                        })
+                    ;
+                }
+            },
+        }))();
+        window.v = view;
+
+        $widget.on('change.trexImageWidget', 'input[type=file]', function(e) {
+            var model;
+            if (can_do_xhr_upload) {
+                model = do_xhr_upload($widget.data('xhr-url'), e.target)[0];
+            }
+            else {
+                model = do_iframe_upload($widget.data('iframe-url'), e.target)[0];
+            }
+            files.reset(model);
+            view.change_model(model);
+            $(this).val('');
+        });
+        $widget.find('button').on('click', function(e) {
+            files.reset([]);
+            view.change_model();
+        });
+    });
+
+    $('.trex-dependent-select-field', context).each(function() {
+        var $select = $(this);
+        var $parent = $('#'+$select.data('parent'));
+        var choices = $select.data('choices');
+        var select_text = $select.data('select-text');
+
+        function render_options() {
+            var old_value = $select.val();
+            $select.empty();
+            if (choices[$parent.val()]) {
+                $select.prop('disabled', false);
+                if (select_text) {
+                    $('<option></option>')
+                        .attr('value', '')
+                        .text(select_text)
+                        .appendTo($select)
+                    ;
+                }
+                _.each(choices[$parent.val()], function(choice) {
+                    $('<option></option>')
+                        .attr('value', choice[0])
+                        .attr('selected', choice[0] === old_value)
+                        .text(choice[1])
+                        .appendTo($select)
+                    ;
+                });
+            }
+            else {
+                $select.prop('disabled', true);
+            }
+        }
+
+        $parent.on('change', render_options);
+        render_options();
+    });
+
+    $('.trex-date-field', context).each(function() {
+        $(this).datepicker().on('changeDate', function(e) {
+            if (e.viewMode === 'days') {
+                // Hide the picker when the user selects a date
+                $(this).datepicker('hide');
+            }
+        });
+    });
+
+    $('.trex-time-field', context).each(function() {
+        var $field = $(this);
+        var step = $field.data('step') || 30;
+        var lower_bound = $field.data('lower-bound') || null;
+        var upper_bound = $field.data('upper-bound') || null;
+        var show_24h = !!$field.data('24h');
+        $(this).timePicker({
+            step: step,
+            startTime: lower_bound,
+            endTime: upper_bound,
+            show24Hours: show_24h,
+        });
+    });
+
+    if ( $('.trex-chosen-select-field', context).length ) {
+        if ( _.isFunction($.fn.chosen) ) {
+            $('.trex-chosen-select-field', context).chosen();
+        }
+        else {
+            Trex.log.d("You have objects with the trex-chosen-select-field class, but you have not loaded cdn('trex/js/form-chosen.js')");
+        }
+    }
+
+    $('.trex-star-rating-field', context).each(function() {
+        var $input = $(this);
+        var high_label = $input.data('high-label');
+        var low_label = $input.data('low-label');
+        var star_count = parseInt($input.data('star-count'), 10);
+        var $stars = {};
+        var value = parseInt($input.val(), 10);
+        var hover_value = null;
+        var $el = $('<table><tbody><tr></td></tbody><tfoot><tr><td></td><td class="text-right"></td></tr></tfoot></table>');
+        $el
+            .find('tfoot td:eq(0)').text(low_label).attr('colspan', Math.floor(star_count/2)).end()
+            .find('tfoot td:eq(1)').text(high_label).attr('colspan', Math.ceil(star_count/2)).end()
+        ;
+
+        var render = function() {
+            _.each($stars, function($star, v) {
+                v = parseInt(v, 10);
+                if (hover_value) {
+                    $star.toggleClass('hover', v<=hover_value);
+                }
+                else {
+                    $star.removeClass('hover')
+                }
+                $star.toggleClass('selected', v<=value);
+            });
+        };
+
+        var i;
+        for (i=1; i<=star_count; i++) {
+            $stars[i] = $('<td><div></div></td>')
+                .data('value', i)
+                .on('click', function() {
+                    value = $(this).data('value');
+                    $input.val(value);
+                    render();
+                })
+                .hover(
+                    function() {
+                        hover_value = $(this).data('value');
+                        render();
+                    },
+                    function() {
+                        hover_value = null;
+                        render();
+                    }
+                )
+            ;
+            $el.find('tbody tr').append($stars[i]);
+        }
+        $el.insertAfter($input);
+        render();
+    });
+};
+
+
 (function($) {
     var can_do_xhr_upload = window.File && window.FileList && window.FileReader && (new XMLHttpRequest()).upload;
     var log = new Trex.Logger('trex-form');
@@ -183,339 +521,5 @@
             });
         }
     };
-
-    $('.trex-file-list-widget').each(function() {
-        var $widget = $(this);
-        var files = new (Backbone.Collection.extend({
-            model: Trex.FileUploadModel,
-            uploads_complete: function() {
-                return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
-            },
-        }))();
-        if ($widget.find('input:hidden').val()) {
-            _.each(JSON.parse($widget.find('input:hidden').val()), function(data) {
-                var model = new Trex.FileUploadModel(data);
-                model.set({
-                    id: model.cid,
-                    progress: 100
-                });
-                files.add(model);
-            });
-        }
-        var finished_uploads;
-        $widget.closest('form').trex_delayed_submit('Waiting for file uploads to finish ...', function() {
-            finished_uploads = $.Deferred();
-            if (files.uploads_complete()) {
-                finished_uploads.resolve();
-            }
-            return finished_uploads;
-        });
-        files.on('add remove change', function(model) {
-            // Keep the javascript up to date
-            $widget.find('input:hidden').val(JSON.stringify(files.where({error:false})));
-            if (finished_uploads && files.uploads_complete()) {
-                if (model.get('error')) {
-                    finished_uploads.reject();
-                }
-                else {
-                    finished_uploads.resolve();
-                }
-            }
-        });
-        var files_view = new Trex.ViewCollection({
-            view: Backbone.View.extend({
-                className: "file",
-                events: {
-                    'click .close': 'remove_file',
-                    'click .filename.linkable': 'open_link'
-                },
-                initialize: function() {
-                    this.$el
-                        .addClass(this.className)
-                        .html('<a class="close">&times</a> <span class="filename"></span> <span class="size"></span><div class="progress progress-striped active"><div class="bar"></div></div><div class="uploading"></div><div class="label label-important">Upload failed</div>')
-                    ;
-                    this.listenTo(this.model, 'change', this.render);
-                    this.render();
-                },
-                render: function() {
-                    this.$('.filename')
-                        .text(this.model.get('filename'))
-                        .data('url', this.model.get('url'))
-                        .toggleClass('linkable', !!this.model.get('url'))
-                    ;
-                    this.$('.size').toggle(!!this.model.get('size')).text('('+this.model.pretty_size()+')');
-                    if (this.model.get('progress') === 'unknown') {
-                        this.$('.progress').hide();
-                        this.$('.uploading').show();
-                    }
-                    else {
-                        this.$('.uploading').hide();
-                        this.$('.bar').css('width', this.model.get('progress')+'%');
-                        this.$('.progress').toggle(this.model.get('progress')<100);
-                    }
-                    this.$('.label').toggle(!!this.model.get('error'));
-                },
-                remove_file: function(e) {
-                    e.preventDefault();
-                    this.model.collection.remove(this.model);
-                },
-                open_link: function(e) {
-                    e.preventDefault();
-                    window.open(this.model.get('url'), '_blank');
-                }
-            }),
-            model: files,
-            el: $widget.find('.files')
-        });
-
-        $widget.on('change.trexFileListWidget', 'input[type=file]', function(e) {
-            if (can_do_xhr_upload) {
-                do_xhr_upload($widget.data('xhr-url'), e.target, files);
-            }
-            else {
-                do_iframe_upload($widget.data('iframe-url'), e.target, files);
-            }
-            $(this).val('');
-        });
-    });
-
-    $('.trex-image-widget').each(function() {
-        var $widget = $(this);
-        var files = new (Backbone.Collection.extend({
-            model: Trex.FileUploadModel,
-            uploads_complete: function() {
-                return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
-            },
-        }))();
-        if ($widget.find('input:hidden').val()) {
-            var model = new Trex.FileUploadModel(JSON.parse($widget.find('input:hidden').val()));
-            model.set({
-                id: model.cid,
-                progress: 100
-            });
-            files.add(model);
-        }
-        var finished_uploads;
-        $widget.closest('form').trex_delayed_submit('Waiting for file uploads to finish ...', function() {
-            finished_uploads = $.Deferred();
-            if (files.uploads_complete()) {
-                finished_uploads.resolve();
-            }
-            return finished_uploads;
-        });
-        files.on('add remove change reset', function() {
-            // Keep the javascript up to date
-            var model = files.where({error:false})[0];
-            $widget.find('input:hidden').val(model ? JSON.stringify(model) : '');
-
-            if (finished_uploads && files.uploads_complete()) {
-                if (model.get('error')) {
-                    finished_uploads.reject();
-                }
-                else {
-                    finished_uploads.resolve();
-                }
-            }
-        });
-        var view = new (Backbone.View.extend({
-            el: $widget,
-            model: files.first(),
-            initialize: function(opt) {
-                this.opt = _.extend({
-                    width: parseInt($widget.find('.thumbnail').data('width'), 10),
-                    height: parseInt($widget.find('.thumbnail').data('height'), 10),
-                }, opt);
-                if (this.model) {
-                    this.listenTo(this.model, 'change', this.render);
-                }
-                this.render();
-            },
-            change_model: function(new_model) {
-                if (this.model) {
-                    this.stopListening(this.model);
-                }
-                this.model = new_model;
-                if (this.model) {
-                    this.listenTo(this.model, 'change', this.render);
-                }
-                this.render();
-            },
-            render: function() {
-                if (this.model) {
-                    this.$('button').show();
-                    if (this.model.get('url')) {
-                        this.$('.uploading').css('display', 'none');
-                        this.$('.thumbnail').html('<img>').find('img')
-                            .css({
-                                maxWidth: this.opt.width-10,
-                                maxHeight: this.opt.height-10,
-                                verticalAlign: 'center',
-                            })
-                            .attr('src', this.model.get('url'))
-                        ;
-                    }
-                    else {
-                        this.$('.uploading').css('display', 'inline-block');
-                        this.$('.thumbnail')
-                            .html('<span><span>Loading</span></span>')
-                            .find('>span').css({
-                                width: this.opt.width,
-                                height: this.opt.height,
-                            })
-                        ;
-                    }
-                }
-                else {
-                    this.$('button').hide();
-                    this.$('.uploading').css('display', 'none');
-                    this.$('.thumbnail')
-                        .html('<span><span>No image</span></span>')
-                        .find('>span').css({
-                            width: this.opt.width,
-                            height: this.opt.height,
-                        })
-                    ;
-                }
-            },
-        }))();
-        window.v = view;
-
-        $widget.on('change.trexImageWidget', 'input[type=file]', function(e) {
-            var model;
-            if (can_do_xhr_upload) {
-                model = do_xhr_upload($widget.data('xhr-url'), e.target)[0];
-            }
-            else {
-                model = do_iframe_upload($widget.data('iframe-url'), e.target)[0];
-            }
-            files.reset(model);
-            view.change_model(model);
-            $(this).val('');
-        });
-        $widget.find('button').on('click', function(e) {
-            files.reset([]);
-            view.change_model();
-        });
-    });
-
-    $('.trex-dependent-select-field').each(function() {
-        var $select = $(this);
-        var $parent = $('#'+$select.data('parent'));
-        var choices = $select.data('choices');
-        var select_text = $select.data('select-text');
-
-        function render_options() {
-            var old_value = $select.val();
-            $select.empty();
-            if (choices[$parent.val()]) {
-                $select.prop('disabled', false);
-                if (select_text) {
-                    $('<option></option>')
-                        .attr('value', '')
-                        .text(select_text)
-                        .appendTo($select)
-                    ;
-                }
-                _.each(choices[$parent.val()], function(choice) {
-                    $('<option></option>')
-                        .attr('value', choice[0])
-                        .attr('selected', choice[0] === old_value)
-                        .text(choice[1])
-                        .appendTo($select)
-                    ;
-                });
-            }
-            else {
-                $select.prop('disabled', true);
-            }
-        }
-
-        $parent.on('change', render_options);
-        render_options();
-    });
-
-    $('.trex-date-field').each(function() {
-        $(this).datepicker().on('changeDate', function(e) {
-            if (e.viewMode === 'days') {
-                // Hide the picker when the user selects a date
-                $(this).datepicker('hide');
-            }
-        });
-    });
-
-    $('.trex-time-field').each(function() {
-        var $field = $(this);
-        var step = $field.data('step') || 30;
-        var lower_bound = $field.data('lower-bound') || null;
-        var upper_bound = $field.data('upper-bound') || null;
-        var show_24h = !!$field.data('24h');
-        $(this).timePicker({
-            step: step,
-            startTime: lower_bound,
-            endTime: upper_bound,
-            show24Hours: show_24h,
-        });
-    });
-
-    if ( $('.trex-chosen-select-field').length ) {
-        if ( _.isFunction($.fn.chosen) ) {
-            $('.trex-chosen-select-field').chosen();
-        }
-        else {
-            Trex.log.d("You have objects with the trex-chosen-select-field class, but you have not loaded cdn('trex/js/form-chosen.js')");
-        }
-    }
-
-    $('.trex-star-rating-field').each(function() {
-        var $input = $(this);
-        var high_label = $input.data('high-label');
-        var low_label = $input.data('low-label');
-        var star_count = parseInt($input.data('star-count'), 10);
-        var $stars = {};
-        var value = parseInt($input.val(), 10);
-        var hover_value = null;
-        var $el = $('<table><tbody><tr></td></tbody><tfoot><tr><td></td><td class="text-right"></td></tr></tfoot></table>');
-        $el
-            .find('tfoot td:eq(0)').text(low_label).attr('colspan', Math.floor(star_count/2)).end()
-            .find('tfoot td:eq(1)').text(high_label).attr('colspan', Math.ceil(star_count/2)).end()
-        ;
-
-        var render = function() {
-            _.each($stars, function($star, v) {
-                v = parseInt(v, 10);
-                if (hover_value) {
-                    $star.toggleClass('hover', v<=hover_value);
-                }
-                else {
-                    $star.removeClass('hover')
-                }
-                $star.toggleClass('selected', v<=value);
-            });
-        };
-
-        var i;
-        for (i=1; i<=star_count; i++) {
-            $stars[i] = $('<td><div></div></td>')
-                .data('value', i)
-                .on('click', function() {
-                    value = $(this).data('value');
-                    $input.val(value);
-                    render();
-                })
-                .hover(
-                    function() {
-                        hover_value = $(this).data('value');
-                        render();
-                    },
-                    function() {
-                        hover_value = null;
-                        render();
-                    }
-                )
-            ;
-            $el.find('tbody tr').append($stars[i]);
-        }
-        $el.insertAfter($input);
-        render();
-    });
+    Trex.bind_form_widgets(document);
 })(jQuery);
