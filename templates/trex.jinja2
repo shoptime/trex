@@ -37,6 +37,7 @@
     {{ form_render_field(field) }}
     {% endif %}
     {% endfor %}
+    {% if button_label is not none %}
     {% if trex_bootstrap_version == 3 %}
     <div class="form-group form-actions">
         <div class="col-sm-offset-4 col-sm-8">
@@ -49,6 +50,7 @@
         <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
         {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
     </div>
+    {% endif %}
     {% endif %}
 </form>
 {% endmacro %}
