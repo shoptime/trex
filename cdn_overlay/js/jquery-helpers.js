@@ -164,6 +164,7 @@
                 e.preventDefault();
                 $modal.find('.modal-footer .loading').show();
                 $modal.find('.modal-footer .failed').hide();
+                $modal.find('.modal-body').append('<div class="overlay"></div>');
                 $.ajax({
                     type: 'POST',
                     url: $button.data('href'),
@@ -189,6 +190,7 @@
                     },
                     error: function() {
                         $modal.find('.modal-footer .failed').show();
+                        $modal.find('.modal-body .overlay').remove();
                     }
                 }).always(function() {
                     $modal.find('.modal-footer .loading').hide();
