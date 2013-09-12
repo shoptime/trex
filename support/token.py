@@ -3,7 +3,7 @@ from unidecode import unidecode
 import re
 
 default_token_chars = "abcdefhijklmnopqrstuvwxyzABCDEFHIJKLMNOPQRSTUVWXYZ0123456789_-"
-human_token_chars = "BCDFGHKMNPQRTWXYZ2346789"
+human_token_chars = "BCDFGHKMNPQRTWXZ2346789"
 
 def create_token(length=32, chars=default_token_chars):
     """Create a random token"""
