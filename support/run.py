@@ -20,6 +20,10 @@ from furl import furl
 from multiprocessing import Process
 import signal
 import time
+from glob import glob
+import re
+import logging
+c_logger = logging.getLogger('app.lessc')
 
 class Manager(script.Manager):
     def __init__(self, *args, **kwargs):
@@ -58,7 +62,7 @@ class Manager(script.Manager):
             os.chdir(os.path.join(self.app.root_path, 'cdn'))
 
             # Compile less
-            subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
+            compile_application_less_to_css()
 
         @self.command
         def watch_static():
@@ -71,6 +75,7 @@ class Manager(script.Manager):
 
             import time
             from watchdog.observers import Observer
+            from watchdog.events import FileModifiedEvent
 
             observer = Observer()
             class EventHandler(object):
@@ -81,20 +86,27 @@ class Manager(script.Manager):
                     if event.src_path[-5:] != '.less':
                         return
 
-                    app.logger.info("Building (%s changed)", event.src_path)
-                    try:
-                        subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
-                    except subprocess.CalledProcessError as e:
-                        app.logger.error("lessc exited with error code %d" % e.returncode)
+                    if not isinstance(event, FileModifiedEvent):
+                        # Only care if the file was actually modified
+                        return
 
-            app.logger.info("Building")
-            try:
-                subprocess.check_call(['../../node_modules/.bin/lessc', '-x', 'less/app.less', 'less/app.css'])
-            except subprocess.CalledProcessError as e:
-                app.logger.error( "lessc exited with error code %d" % e.returncode)
+                    less_file = event.src_path
+                    c_logger.info("Building (%s changed)", less_file)
+
+                    if re.search('app[^/]*\.less$', less_file):
+                        # Compile it
+                        css_file  = '%s.css' % less_file[0:-5]
+                        compile_less_to_css(less_file, css_file)
+                    else:
+                        # Compile all app less files, in the hope they'll
+                        # include this one
+                        compile_application_less_to_css()
+
+            c_logger.info("Building")
+            compile_application_less_to_css()
             observer.schedule(EventHandler(), path='.', recursive=True)
             observer.start()
-            app.logger.info("Began listening")
+            c_logger.info("Began listening")
             try:
                 while True:
                     time.sleep(0.5)
@@ -237,3 +249,15 @@ class Manager(script.Manager):
             super(Manager, self).run(*args, **kwargs)
         finally:
             self.app.shutdown()
+
+def compile_less_to_css(less_file, css_file):
+    c_logger.debug('%s => %s' % (less_file, css_file))
+    try:
+        subprocess.check_call(['../../node_modules/.bin/lessc', '-x', less_file, css_file])
+    except subprocess.CalledProcessError as e:
+        c_logger.error("lessc exited with error code %d" % e.returncode)
+
+def compile_application_less_to_css():
+    for less_file in glob('less/app*.less'):
+        css_file = '%s.css' % less_file[0:-5]
+        compile_less_to_css(less_file, css_file)
