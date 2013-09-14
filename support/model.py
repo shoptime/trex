@@ -418,7 +418,10 @@ class BaseIdentity(BaseDocument):
         Set the cookie with the current session
         """
         # Update expiry so session stays valid
-        self.set_expiry(settings.getint('identity', 'activity_timeout'))
+        if self.real or self.actor:
+            self.set_expiry(settings.getint('identity', 'activity_timeout'))
+        else:
+            self.set_expiry(settings.getint('identity', 'anonymous_activity_timeout'))
 
         # Ensure we're setting the cookie matching the stored session
         self.save()
