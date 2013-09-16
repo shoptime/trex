@@ -68,6 +68,9 @@ def parse_date(datestring, format='%Y-%m-%d', relaxed=False):
 
     return QuantumDate(dt.date())
 
+def delta(**kwargs):
+    return QuantumDelta(dateutil.relativedelta.relativedelta(**kwargs))
+
 def from_date(dt, timezone=None):
     if not timezone:
         timezone = default_timezone()
@@ -152,6 +155,30 @@ class Quantum(object):
     def __ge__(self, other):
         self._check_comparison_type(other)
         return self.dt >= other.dt
+
+    def __add__(self, other):
+        if not isinstance(other, QuantumDelta):
+            raise TypeError("Expected a QuantumDelta object for addition")
+        if self.tz is None:
+            raise QuantumException("Can't manipulate a Quantum with no timezone set")
+
+        local_dt = self.as_local()
+        local_dt += other.rd
+
+        return Quantum(convert_timezone(local_dt, self.tz, 'UTC'), self.tz)
+
+    def __sub__(self, other):
+        if isinstance(other, Quantum):
+            if self.tz is None:
+                raise QuantumException("Can't calculate a QuantumDelta for Quantums with no timezone set")
+            if self.tz != other.tz:
+                raise ValueError("Timezones don't match for subtraction")
+            return QuantumDelta(dateutil.relativedelta.relativedelta(self.as_local(), other.as_local()))
+        elif isinstance(other, QuantumDelta):
+            return self.__add__(-other)
+        else:
+            raise TypeError("Expected a Quantum or QuantumDelta object for subtraction")
+
 
     def __repr__(self):
         return "<%s(%s, %s)>" % (self.__class__.__name__, self.dt, (self.tz or 'no timezone'))
@@ -367,3 +394,41 @@ class QuantumDate(object):
 
     def format_short(self):
         return self.date.strftime("%-e %b %Y")
+
+class QuantumDelta(object):
+    rd = None
+    """relativedelta object representing the delta"""
+
+    def __init__(self, rd):
+        if not isinstance(rd, dateutil.relativedelta.relativedelta):
+            raise ValueError("First argument to QuantumDelta must be a relativedelta")
+        self.rd = rd
+
+    def __neg__(self):
+        return self.__class__(-self.rd)
+
+    def __repr__(self):
+        return "<%s(%s)>" % (self.__class__.__name__, self.rd)
+
+    def format_summary(self, depth=1):
+        rd = self.rd
+        if rd.year or rd.month or rd.day or rd.hour or rd.minute or rd.second or rd.microsecond:
+            raise ValueError("Can't format a QuantumDelta with absolute components")
+
+        found_depth = 0
+        found = []
+        for attr in ['years', 'months', 'days', 'hours', 'minutes', 'seconds']:
+            value = getattr(rd, attr)
+            display_attr = attr
+            if abs(value) == 1:
+                display_attr = display_attr[:-1]
+            if value or found_depth:
+                found.append("%d %s" % (value, display_attr))
+                found_depth += 1
+            if found_depth >= depth:
+                break
+
+        if len(found) == 0:
+            return ""
+
+        return " ".join(found)
