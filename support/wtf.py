@@ -162,7 +162,7 @@ class DateTimeWidget(object):
                 'autocomplete': 'off',
             }),
             time_input_args = wtf.widgets.html_params(**{
-                'id': '%s-date' % field.id,
+                'id': '%s-time' % field.id,
                 'name': field.name,
                 'class': 'input-time form-control trex-time-field',
                 'data-step': field.time_step,
