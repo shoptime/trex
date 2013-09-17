@@ -14,6 +14,7 @@ from datetime import date
 import json
 import pytz
 import operator
+import re
 
 class AttrDict(dict):
     def __init__(self, _proxy=None, **kwargs):
@@ -208,10 +209,10 @@ class DateTimeField(wtf.Field):
             raise ValueError("Invalid date format for trex.support.wtf.DateTimeField: %s" % self.js_date_format)
 
     def _value(self):
-        if self.raw_data:
+        if self.raw_data and len(self.raw_data) == 2 and len(filter(lambda x:re.search(r'\S', x), self.raw_data)):
             return self._valuelist_to_quantum(self.raw_data)
         else:
-            return self.data
+            return None
 
     def process_formdata(self, valuelist):
         if valuelist:
