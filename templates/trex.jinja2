@@ -84,7 +84,7 @@
 {% endmacro %}
 {% macro form_render_field_bs3(field) %}
 {% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
-<div class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
+<div id="form-group-{{ field.id }}" class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
     {% if field.label.text %}
     <label for="{{ field.id }}" class="col-sm-4 control-label">{{ field.label.text }}</label>
     {% endif %}
