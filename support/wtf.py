@@ -15,6 +15,8 @@ import json
 import pytz
 import operator
 import re
+import logging
+log = logging.getLogger(__name__)
 
 class AttrDict(dict):
     def __init__(self, _proxy=None, **kwargs):
@@ -208,16 +210,20 @@ class DateTimeField(wtf.Field):
         else:
             raise ValueError("Invalid date format for trex.support.wtf.DateTimeField: %s" % self.js_date_format)
 
+    # Called to calculate the value to send to the widget, in this case we're
+    # just sendin the Quantum object (or None)
     def _value(self):
-        if self.raw_data and len(self.raw_data) == 2 and len(filter(lambda x:re.search(r'\S', x), self.raw_data)):
-            return self._valuelist_to_quantum(self.raw_data)
-        else:
-            return None
+        return self.data
 
+    # Called to calculate the new value based on the form data
     def process_formdata(self, valuelist):
         if valuelist:
             try:
-                self.data = self._valuelist_to_quantum(valuelist)
+                if len(valuelist) == 2 and len(filter(lambda x: re.search(r'\S', x), valuelist)):
+                    # Only try to process it if there's actually something in one of the input boxes
+                    self.data = self._valuelist_to_quantum(valuelist)
+                else:
+                    self.data = None
             except ValueError:
                 self.data = None
                 raise ValueError(self.gettext('Not a valid datetime value'))
