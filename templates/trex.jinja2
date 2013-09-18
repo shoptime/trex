@@ -19,6 +19,30 @@
 {% endif %}
 {% endmacro %}
 
+{% macro form_render_inline(form, button_label='Submit', id=None, button_class='btn-primary') %}
+<form
+    action=""
+    method="POST"
+    enctype="multipart/form-data"
+    class="wtform form-inline"
+    accept-charset="utf-8"
+    {% if id %}id="{{ id }}"{% endif %}
+    >
+    <input type="hidden" name="_csrf_token" value="{{ g.identity.get_csrf() }}">
+    {{ form.hidden_tag() }}
+    {% for field in form %}
+    {% if trex_bootstrap_version == 3 %}
+    {{ form_render_field_inline(field) }}
+    {% else %}
+    {{ form_render_field_inline(field) }}
+    {% endif %}
+    {% endfor %}
+    {% if button_label is not none %}
+    <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
+    {% endif %}
+</form>
+{% endmacro %}
+
 {% macro form_render(form, button_label='Submit', vertical=False, id=None, secondary_action_html=None, button_class='btn-primary') %}
 <form
     action=""
@@ -106,6 +130,18 @@
     <div class="controls">
         <p>{{ field.label.text }}</p>
     </div>
+</div>
+{% endif %}
+{% endmacro %}
+{% macro form_render_field_inline(field) %}
+{% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
+<div id="form-group-{{ field.id }}" class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
+    {{ field(class="form-control", **kwargs) | safe }}
+    {% if field.errors %}
+    <span class="help-block">
+    {% for error in field.errors %}{{ error }} {% endfor %}
+    </span>
+    {% endif %}
 </div>
 {% endif %}
 {% endmacro %}
