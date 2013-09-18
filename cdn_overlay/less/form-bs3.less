@@ -4,27 +4,12 @@
 @linkColor: @link-color;
 @linkColorHover: @link-hover-color;
 @baseFontSize: @font-size-base;
-@btnPrimaryBackground: @btn-primary-color;
+@btnPrimaryBackground: @btn-primary-bg;
 .input-mini { width: 60px; }
 .input-small { width: 90px; }
 
 .buttonBackground(@startColor, @endColor, @textColor: #fff, @textShadow: 0 -1px 0 rgba(0,0,0,.25)) {
-  // gradientBar will set the background to a pleasing blend of these, to support IE<=9
-  #gradient>.vertical-three-colors(@start-color: @startColor; @mid-color: @textColor; @end-color: @endColor);
-  .reset-filter();
-
-  // in these cases the gradient won't cover the background, so we override
-  &:hover, &:focus, &:active, &.active, &.disabled, &[disabled] {
-    color: @textColor;
-    background-color: @endColor;
-    *background-color: darken(@endColor, 5%);
-  }
-
-  // IE 7 + 8 can't handle box-shadow to show active, so we darken a bit ourselves
-  &:active,
-  &.active {
-    background-color: darken(@endColor, 10%) e("\9");
-  }
+    .button-variant(@textColor; @startColor; darken(@startColor, 5%));
 }
 
 .trex-modal-form-modal {
