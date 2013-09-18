@@ -70,8 +70,9 @@ class CronJob(object):
             log.info('%s completed (%.2f secs)', self.__class__.__name__, run_time)
             if not sys.stdout.isatty():
                 time.sleep(max(0, 15 - run_time))
-        except Exception:
+        except Exception, e:
             log.error(traceback.format_exc())
+            app.exception_reporter.invoke(app, e)
 
         context.pop()
         lock.delete()
