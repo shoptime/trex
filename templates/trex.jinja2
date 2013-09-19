@@ -43,7 +43,7 @@
 </form>
 {% endmacro %}
 
-{% macro form_render(form, button_label='Submit', vertical=False, id=None, secondary_action_html=None, button_class='btn-primary') %}
+{% macro form_render(form, button_label='Submit', vertical=False, id=None, secondary_action_html=None, button_class='btn-primary', autofocus_field=None) %}
 <form
     action=""
     method="POST"
@@ -56,7 +56,7 @@
     {{ form.hidden_tag() }}
     {% for field in form %}
     {% if trex_bootstrap_version == 3 %}
-    {{ form_render_field_bs3(field) }}
+        {% if autofocus_field == field.id %}{{ form_render_field_bs3(field, autofocus=true) }}{% else %}{{ form_render_field_bs3(field) }}{% endif %}
     {% else %}
     {{ form_render_field(field) }}
     {% endif %}
