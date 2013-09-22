@@ -517,6 +517,14 @@ class BaseIdentity(BaseDocument):
 
         self.__class__.objects(real=self.real, id__ne=self.id).update(set__actor=None, set__real=None)
 
+    @classmethod
+    def destroy_sessions_for_user(cls, user):
+        """
+        Log out all sessions for this user
+        """
+        for session in cls.objects(real=user.id):
+            session.logout()
+
 class TrexUpload(BaseDocument):
     meta = dict(
         collection = 'trex.upload',
