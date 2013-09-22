@@ -69,6 +69,12 @@ def send(
     @return:
     """
 
+    ignore_send_regex = app.settings.get('mail', 'ignore_send_regex')
+    if ignore_send_regex and re.search(ignore_send_regex, to):
+        if test:
+            log.debug('Not sending to %s, this address matches ignore_send_regex' % to)
+        return
+
     if service == 'postmark':
         return _send_postmark(
             sender         = sender,
