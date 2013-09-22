@@ -638,6 +638,33 @@ class PhoneNumberField(wtf.Field):
     def __call__(self, *args, **kwargs):
         return super(PhoneNumberField, self).__call__(*args, **kwargs)
 
+class BrainTreeEncryptedTextInput(wtf.TextInput):
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('id', field.id)
+        kwargs.setdefault('type', self.input_type)
+        kwargs['data-encrypted-name'] = field.name
+        return wtf.HTMLString('<input %s>' % self.html_params(**kwargs))
+
+class BrainTreeTextField(wtf.TextField):
+    widget = BrainTreeEncryptedTextInput()
+
+class BrainTreeEncryptedSelect(wtf.Select):
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('id', field.id)
+        if self.multiple:
+            kwargs['multiple'] = True
+        kwargs['data-encrypted-name'] = field.name
+        html = ['<select %s>' % wtf.html_params(**kwargs)]
+        for val, label, selected in field.iter_choices():
+            html.append(self.render_option(val, label, selected))
+        html.append('</select>')
+        return wtf.HTMLString(''.join(html))
+
+class BrainTreeSelectField(wtf.SelectField):
+    widget = BrainTreeEncryptedSelect()
+
+    def pre_validate(self, form):
+        pass
 
 blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
 
