@@ -56,11 +56,11 @@ class BareListWidget(object):
         html = []
         for subfield in field:
             if self.label_position == 'before':
-                html.append('%s %s' % (subfield.label, subfield()))
+                html.append('%s %s' % (subfield.label, subfield(**kwargs)))
             elif self.label_position == 'after':
-                html.append('%s %s' % (subfield(), subfield.label))
+                html.append('%s %s' % (subfield(**kwargs), subfield.label))
             else:
-                html.append(subfield())
+                html.append(subfield(**kwargs))
         return wtf.widgets.HTMLString(''.join(html))
 
 
