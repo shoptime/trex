@@ -192,15 +192,20 @@ class Quantum(object):
         """Returns a new Quantum object with the applied timezone"""
         return Quantum(self.dt, timezone)
 
-    def as_utc(self):
+    def as_utc(self, include_tzinfo=False):
         """Returns UTC representation of this Quantum as a naive datetime"""
+        if include_tzinfo:
+            return self.dt.replace(tzinfo=pytz.UTC)
         return self.dt
 
-    def as_local(self):
+    def as_local(self, include_tzinfo=False):
         """Returns a representation of this Quantum as a naive datetime"""
         if self.tz is None:
             raise QuantumException("Can't represent a Quantum as local time without a timezone")
-        return convert_timezone(self.dt, 'UTC', self.tz)
+        dt = convert_timezone(self.dt, 'UTC', self.tz)
+        if include_tzinfo:
+            return dt.replace(tzinfo=self.tz)
+        return dt
 
     def as_unix(self):
         return calendar.timegm(self.as_utc().timetuple()) + float(self.as_utc().microsecond)/1000000
