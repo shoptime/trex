@@ -417,6 +417,13 @@
 							date.setFullYear(2000 + val);
 							break;
 						case 'yyyy':
+                            // Handle people entering two-digit years sensibly
+                            if (val < 60) {
+                                val = 2000 + val;
+                            }
+                            else if (val < 100) {
+                                val = 1900 + val;
+                            }
 							year = val;
 							date.setFullYear(val);
 							break;
