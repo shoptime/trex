@@ -27,6 +27,8 @@ import base64
 import hashlib
 import random
 import urllib
+import csv
+import StringIO
 
 app = None
 
@@ -143,6 +145,37 @@ def render_json(cachable=False):
             http_response.headers.set('Pragma', 'no-cache')
 
         return http_response
+    return decorator(decorated)
+
+def render_csv():
+    def decorated(f, *args, **kwargs):
+        response = f(*args, **kwargs)
+
+        if type(response) != dict:
+            return response
+
+        io = StringIO.StringIO()
+
+        output = csv.writer(io)
+
+        if 'headers' in response:
+            output.writerow(response['headers'])
+
+        for row in response['rows']:
+            output.writerow(row)
+
+        io.seek(0)
+        http_response = flask.Response(io.getvalue(), 200)
+        http_response.content_type = 'text/csv'
+        if 'filename' in response:
+            http_response.headers.set('Content-Disposition', 'attachment; filename=%s.csv' % response['filename'])
+        http_response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+        http_response.headers.set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+        http_response.headers.set('Pragma', 'no-cache')
+
+        io.close()
+        return http_response
+
     return decorator(decorated)
 
 class TrexRequest(flask.Request):
