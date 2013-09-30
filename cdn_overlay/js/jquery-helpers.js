@@ -135,7 +135,7 @@
         var button_id = $button.attr('id');
         var modal_id  = button_id + '-modal';
         var title_id  = button_id + '-modal-title';
-        var $modal    = $('<div class="modal fade trex-modal-form-modal" tabindex="-1" role="dialog" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title"></h4></div><div class="modal-body">Loading...</div><div class="modal-footer"><span class="label label-info loading">Please wait...</span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
+        var $modal    = $('<div class="modal fade trex-modal-form-modal" tabindex="-1" role="dialog" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title"></h4></div><div class="modal-body"><span class="loading"></span> Loading...</div><div class="modal-footer"><span class="loading"></span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
 
         $modal.attr('id', modal_id);
         $modal.attr('aria-labelledby', title_id);
@@ -145,6 +145,7 @@
         $modal.find('.modal-footer .btn-primary')
             .prop('disabled', true)
             .text($button.data('button-title'));
+        $modal.find('.modal-footer .loading').hide();
         $modal.on('hidden.bs.modal', function() {
             _.defer(function() {
                 $modal.remove();
