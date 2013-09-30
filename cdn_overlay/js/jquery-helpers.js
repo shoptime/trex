@@ -154,7 +154,7 @@
 
         function handle_render(data) {
             if ( data.state != 'render' ) {
-                $('.modal-body').text('Sorry, this form is currently unavailable');
+                $modal.find('.modal-body').text('Sorry, this form is currently unavailable');
                 throw Error("Did not receive a 'render' response from server");
             }
             var $content = $('<div>' + data.content + '</div>');
@@ -219,7 +219,7 @@
             cache: false,
             success: handle_render,
             error: function() {
-                $('.modal-body').text('Sorry, this form is currently unavailable');
+                $modal.find('.modal-body').text('Sorry, this form is currently unavailable');
             },
         });
 
