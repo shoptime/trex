@@ -18,6 +18,13 @@ import re
 import logging
 log = logging.getLogger(__name__)
 
+# Stolen from mongoengine
+EMAIL_REGEX = re.compile(
+    r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
+    r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"'  # quoted-string
+    r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?$', re.IGNORECASE  # domain
+)
+
 class AttrDict(dict):
     def __init__(self, _proxy=None, **kwargs):
         self.__dict__ = self
@@ -641,6 +648,41 @@ class PhoneNumberField(wtf.Field):
 
     def __call__(self, *args, **kwargs):
         return super(PhoneNumberField, self).__call__(*args, **kwargs)
+
+class InviteField(wtf.TextAreaField):
+    def __init__(self, label='', validators=None, placeholder_text=None, contacts=None, **kwargs):
+        self.placeholder_text = placeholder_text
+        self.contacts = contacts
+        if not contacts:
+            self.contacts = []
+
+        super(self.__class__, self).__init__(label, validators, **kwargs)
+
+    def __call__(self, **kwargs):
+        if self.placeholder_text:
+            kwargs['data-placeholder'] = self.placeholder_text
+        kwargs['data-contacts'] = json.dumps(self.contacts)
+        kwargs['class'] = 'form-control trex-invite-field'
+        kwargs['data-existing'] = json.dumps(self.data)
+        return super(InviteField, self).__call__(**kwargs)
+
+    def _value(self):
+        return u''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            emails = json.loads(valuelist[0])
+            invalid = []
+            self.data = []
+            for invite in emails:
+                if bool(EMAIL_REGEX.match(invite)):
+                    self.data.append(invite)
+                else:
+                    invalid.append(invite)
+            if len(invalid):
+                raise wtf.ValidationError("Invalid emails: %s" % ", ".join(invalid))
+        else:
+            self.data = []
 
 class BrainTreeEncryptedTextInput(wtf.TextInput):
     def __call__(self, field, **kwargs):
