@@ -161,6 +161,9 @@
             var $form = $content.find('form');
             $modal.find('.modal-body').html($content.children());
             Trex.bind_form_widgets($form);
+            $modal.on('shown.bs.modal', function() {
+                $form.find('.form-control').first().focus();
+            });
             // Make pressing enter in fields do a form submit, like most forms usually do.
             $form.find('input').on('keyup', function(e) {
                 if ( e.keyCode === 13 ) {
