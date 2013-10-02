@@ -1006,7 +1006,7 @@ Copyright (c) 2011 by Harvest
 
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.form.chosen_select", "trex.form");
+    Trex._register_module("trex.form.chosen_select", "trex.form");
 
     function bind(context) {
         $('.trex-chosen-select-field', context).chosen();

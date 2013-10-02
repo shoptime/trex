@@ -1,8 +1,16 @@
 (function(window, Backbone) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.util", "trex");
+    Trex._register_module("trex.util", "trex");
 
     Trex.util = new Trex._TrexModule();
+
+    Trex.util.check_element_deps = function(selector) {
+        var $el = $(selector);
+        var args = Array.prototype.slice.apply(arguments);
+        args.shift();
+        args.unshift("$("+selector+")");
+        if ($el.length) { Trex._check_deps.apply(Trex, args); }
+    };
 
     Trex.util.ViewCollection = function() { Backbone.View.apply(this, arguments); };
     Trex.util.ViewCollection = Backbone.View.extend({

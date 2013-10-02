@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.ux.confirm", "trex");
+    Trex._register_module("trex.ux.confirm", "trex");
 
     $('body').on('click', 'button.trex-post, .dropdown-menu a.trex-post', function(e) {
         e.preventDefault();

@@ -4147,7 +4147,7 @@
 
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.form.invites", "trex.form");
+    Trex._register_module("trex.form.invites", "trex.form");
 
     Trex.form.invites = new Trex._TrexModule();
 

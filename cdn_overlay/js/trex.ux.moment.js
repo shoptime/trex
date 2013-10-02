@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.ux.moment", "trex");
+    Trex._register_module("trex.ux.moment", "trex");
 
     $.fn.trex_moment = function() {
         this.each(function() {

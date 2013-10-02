@@ -763,7 +763,7 @@
 
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.form.datetime", "trex.form");
+    Trex._register_module("trex.form.datetime", "trex.form");
 
     function bind(context) {
         $('.trex-date-field', context).each(function() {

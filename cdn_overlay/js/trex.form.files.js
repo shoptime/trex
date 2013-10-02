@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.form.files", "trex.form");
+    Trex._register_module("trex.form.files", "trex.form");
     Trex.form.files = new Trex._TrexModule();
 
     Trex.form.files.can_do_xhr_upload = !!(window.File && window.FileList && window.FileReader && (new XMLHttpRequest()).upload);

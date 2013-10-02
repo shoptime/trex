@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.form.dependent_select", "trex.form");
+    Trex._register_module("trex.form.dependent_select", "trex.form");
 
     function bind(context) {
         $('.trex-dependent-select-field', context).each(function() {

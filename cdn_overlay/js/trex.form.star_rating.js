@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.form.star_rating", "trex.form");
+    Trex._register_module("trex.form.star_rating", "trex.form");
 
     function bind(context) {
         $('.trex-star-rating-field', context).each(function() {

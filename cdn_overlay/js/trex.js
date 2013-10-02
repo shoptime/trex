@@ -4,8 +4,8 @@
 
     Trex._loaded_modules = ['trex'];
 
-    Trex._module_check_deps = function(this_module) {
-        this._check_deps(arguments);
+    Trex._register_module = function(this_module) {
+        this._check_deps.apply(this, arguments);
         Trex._loaded_modules.push(this_module);
     };
 

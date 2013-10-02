@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._module_check_deps("trex.ux.modal_form", "trex");
+    Trex._register_module("trex.ux.modal_form", "trex", "trex.form");
 
     $(document).on('click', 'button.trex-modal-form', function(e) {
         e.preventDefault();
