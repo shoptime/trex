@@ -1,3 +1,4 @@
+// {{{ TextExt Plugin
 /**
  * jQuery TextExt Plugin
  * http://textextjs.com
@@ -6,8 +7,7 @@
  * @copyright Copyright (C) 2011 Alex Gorbatchev. All rights reserved.
  * @license MIT License
  */
-(function($, undefined)
-{
+(function($, undefined) {
 	/**
 	 * TextExt is the main core class which by itself doesn't provide any functionality
 	 * that is user facing, however it has the underlying mechanics to bring all the
@@ -1581,8 +1581,7 @@
 	textext.patches       = {};
 })(jQuery);
 
-(function($)
-{
+(function($) {
 	function TextExtIE9Patches() {};
 
 	$.fn.textext.TextExtIE9Patches = TextExtIE9Patches;
@@ -1623,8 +1622,7 @@
  * @copyright Copyright (C) 2011 Alex Gorbatchev. All rights reserved.
  * @license MIT License
  */
-(function($)
-{
+(function($) {
 	/**
 	 * Autocomplete plugin brings the classic autocomplete functionality to the TextExt ecosystem.
 	 * The gist of functionality is when user starts typing in, for example a term or a tag, a
@@ -2733,8 +2731,7 @@
  * @copyright Copyright (C) 2011 Alex Gorbatchev. All rights reserved.
  * @license MIT License
  */
-(function($)
-{
+(function($) {
 	/**
 	 * Suggestions plugin allows to easily specify the list of suggestion items that the
 	 * Autocomplete plugin would present to the user.
@@ -2908,8 +2905,7 @@
  * @copyright Copyright (C) 2011 Alex Gorbatchev. All rights reserved.
  * @license MIT License
  */
-(function($)
-{
+(function($) {
 	/**
 	 * Tags plugin brings in the traditional tag functionality where user can assemble and
 	 * edit list of tags. Tags plugin works especially well together with Autocomplete, Filter,
@@ -3606,8 +3602,7 @@
  * @copyright Copyright (C) 2011 Alex Gorbatchev. All rights reserved.
  * @license MIT License
  */
-(function($)
-{
+(function($) {
 	/**
 	 * The Filter plugin introduces ability to limit input that the text field
 	 * will accept. If the Tags plugin is used, Filter plugin will limit which
@@ -3848,8 +3843,7 @@
  * @copyright Copyright (C) 2011 Alex Gorbatchev. All rights reserved.
  * @license MIT License
  */
-(function($)
-{
+(function($) {
 	/**
 	 * Prompt plugin displays a visual user propmpt in the text input area. If user focuses
 	 * on the input, the propt is hidden and only shown again when user focuses on another
@@ -4149,15 +4143,21 @@
 		return $(this).data('container');
 	};
 })(jQuery);
+// }}}
 
-// Invite widget
-(function(Trex, Backbone, $) {
-    var log = new Trex.Logger('trex.invite-field');
-    var contactItemManager = function() {};
-    (function(cls) {
+(function(window, $) {
+    var Trex = window.Trex;
+    Trex._module_check_deps("trex.form.invites", "trex.form");
+
+    Trex.form.invites = new Trex._TrexModule();
+
+    var log = new Trex.Logger('trex.form.invites');
+    Trex.form.invites.contactItemManager = function() {};
+    (function(cls) { // {{{
         var log = new Trex.Logger('trex.invite-field.contact-item-manager');
-        cls.init = function(core) {
+        cls.init = function(core, contacts) {
             log.d('init(', core, ')');
+            this.contacts = core.opts('contacts');
         };
         cls.filter = function(list, query) {
             log.d('filter(', list, ', ', query, ')');
@@ -4168,12 +4168,12 @@
         };
         cls.stringToItem = function(str) {
             log.d('stringToItem(', str, ')');
-            var contact = contacts.get(str);
+            var contact = this.contacts.get(str);
             if (contact) {
                 return contact;
             }
-            contact = new Contact({ email: str });
-            contacts.add(contact);
+            contact = new Trex.form.invites.Contact({ email: str });
+            this.contacts.add(contact);
             return contact;
         };
         cls.itemToString = function(item) {
@@ -4183,10 +4183,11 @@
         cls.compareItems = function(item1, item2) {
             return item1.cid == item2.cid;
         };
-    })(contactItemManager.prototype);
-    var Contact = function() { Backbone.Model.apply(this, arguments); };
-    Contact = Backbone.Model.extend({
-        constructor: Contact,
+    })(Trex.form.invites.contactItemManager.prototype); // }}}
+
+    Trex.form.invites.Contact = function() { Backbone.Model.apply(this, arguments); };
+    Trex.form.invites.Contact = Backbone.Model.extend({
+        constructor: Trex.form.invites.Contact,
         initialize: function() {
         },
         match: function(query) {
@@ -4213,74 +4214,80 @@
             return this.get('email');
         },
     });
-    var Contacts = function() { Backbone.Collection.apply(this, arguments); };
-    Contacts = Backbone.Collection.extend({
-        constructor: Contacts,
-        model: Contact,
+    Trex.form.invites.Contacts = function() { Backbone.Collection.apply(this, arguments); };
+    Trex.form.invites.Contacts = Backbone.Collection.extend({
+        constructor: Trex.form.invites.Contacts,
+        model: Trex.form.invites.Contact,
         contact_for_email: function(email) {
             var contact = this.findWhere({email: email});
             if (contact) {
                 return contact;
             }
-            contact = new Contact({ email: email });
-            contacts.add(contact);
+            contact = new Trex.form.invites.Contact({ email: email });
+            this.add(contact);
             return contact;
         },
     });
-    var contacts = new Contacts();
 
-    $('.trex-invite-field').each(function() {
-        log.d("Initialising invite field");
-        var $field = $(this);
-        var existing = [];
-        if ($field.data('existing')) {
-            try {
-                existing = _.map($field.data('existing'), function(email) { return contacts.contact_for_email(email); });
-            }
-            catch(e) {
-                log.e("Couldn't parse existing invitees as JSON: ", e);
-            }
-        }
-        log.d("Existing invitees: ", existing);
-        if ($field.data('contacts')) {
-            contacts.add(_.map($field.data('contacts'), function(i) { return {name: i[0], email: i[1]}; }));
-        }
-        var textext = $('#invitees').width($('#invitees').outerWidth()).textext({
-            plugins: 'autocomplete prompt suggestions tags filter',
-            itemManager: contactItemManager,
-            tags: {
-                items: existing
-            },
-            autocomplete: {
-                render: function(item) {
-                    // Dirty hack for encoding html
-                    return $('<span></span>').text(item.asString()).html();
+    function bind(context) {
+        $('.trex-invite-field', context).each(function() {
+            var contacts = new Trex.form.invites.Contacts();
+            log.d("Initialising invite field");
+            var $field = $(this);
+            var existing = [];
+            if ($field.data('existing')) {
+                try {
+                    existing = _.map($field.data('existing'), function(email) { return contacts.contact_for_email(email); });
                 }
-            },
-            prompt: $field.data('placeholder'),
-            ext: {
+                catch(e) {
+                    log.e("Couldn't parse existing invitees as JSON: ", e);
+                }
+            }
+            log.d("Existing invitees: ", existing);
+            if ($field.data('contacts')) {
+                contacts.add(_.map($field.data('contacts'), function(i) { return {name: i[0], email: i[1]}; }));
+            }
+            var textext = $field.width($field.outerWidth()).textext({
+                plugins: 'autocomplete prompt suggestions tags filter',
+                itemManager: Trex.form.invites.contactItemManager,
+                contacts: contacts,
                 tags: {
-                    renderTag: function(tag) {
-                        var $node = $(this.opts('html.tag'));
-                        $node.find('.text-label').text(tag.asString());
-                        $node.data('text-tag', tag);
-                        return $node;
-                    },
-                    isTagAllowed: function() {
-                        console.log('isTagAllowed', arguments);
-                        return true;
+                    items: existing
+                },
+                autocomplete: {
+                    render: function(item) {
+                        // Dirty hack for encoding html
+                        return $('<span></span>').text(item.asString()).html();
+                    }
+                },
+                prompt: $field.data('placeholder'),
+                ext: {
+                    tags: {
+                        renderTag: function(tag) {
+                            var $node = $(this.opts('html.tag'));
+                            $node.find('.text-label').text(tag.asString());
+                            $node.data('text-tag', tag);
+                            return $node;
+                        },
+                        isTagAllowed: function() {
+                            console.log('isTagAllowed', arguments);
+                            return true;
+                        },
                     },
                 },
-            },
-            suggestions: contacts.models,
-        }).textext()[0];
-        textext.opts('keys')[188] = 'comma!';
-        textext.on({
-            commaKeyPress: function(e) {
-                this.autocomplete().onEnterKeyPress();
-                this.tags().onEnterKeyPress();
-                this.input().val('');
-            },
+                suggestions: contacts.models,
+            }).textext()[0];
+            textext.opts('keys')[188] = 'comma!';
+            textext.on({
+                commaKeyPress: function(e) {
+                    this.autocomplete().onEnterKeyPress();
+                    this.tags().onEnterKeyPress();
+                    this.input().val('');
+                },
+            });
         });
-    });
-})(Trex, Backbone, jQuery);
+    }
+
+    Trex.form._bind_functions.push(bind);
+    bind();
+})(window, jQuery);
