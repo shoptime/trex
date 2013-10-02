@@ -53,10 +53,22 @@
         ;
     });
 
+    $('button.trex-post-simple-confirm').each(function() {
+        var $button = $(this);
+        $(this).wrap('<span class="trex-post-simple-confirm-wrapper" style="display: inline-block; position: relative" />');
+    });
     $(document).on('click', 'button.trex-post-simple-confirm', function(e) {
         e.preventDefault();
         var cleaned_up = false;
         var $button = $(e.currentTarget);
+        if ($button.hasClass('opened')) {
+            $button.removeClass('opened');
+            return;
+        }
+        else {
+            $button.addClass('opened');
+        }
+
         var href = $button.data('href');
         var $confirm = $('<ul class="dropdown-menu"><li><a></a></li></ul>')
             .css({
@@ -84,7 +96,7 @@
         }
 
         $button
-            .css('position', 'relative')
+            .closest('.trex-post-simple-confirm-wrapper')
             .append($confirm.show())
         ;
 
@@ -93,7 +105,7 @@
             if (cleaned_up) { return; }
             cleaned_up = true;
             $(document).off('click', cleanup);
-            $button.css('position', '');
+            $button.removeClass('opened');
             $confirm.remove();
         };
         $(document).on('click', cleanup);
