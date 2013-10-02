@@ -4212,7 +4212,7 @@
         },
         toJSON: function() {
             return this.get('email');
-        },
+        }
     });
     Trex.form.invites.Contacts = function() { Backbone.Collection.apply(this, arguments); };
     Trex.form.invites.Contacts = Backbone.Collection.extend({
@@ -4226,7 +4226,7 @@
             contact = new Trex.form.invites.Contact({ email: email });
             this.add(contact);
             return contact;
-        },
+        }
     });
 
     function bind(context) {
@@ -4272,10 +4272,10 @@
                         isTagAllowed: function() {
                             console.log('isTagAllowed', arguments);
                             return true;
-                        },
-                    },
+                        }
+                    }
                 },
-                suggestions: contacts.models,
+                suggestions: contacts.models
             }).textext()[0];
             textext.opts('keys')[188] = 'comma!';
             textext.on({
@@ -4283,7 +4283,7 @@
                     this.autocomplete().onEnterKeyPress();
                     this.tags().onEnterKeyPress();
                     this.input().val('');
-                },
+                }
             });
         });
     }

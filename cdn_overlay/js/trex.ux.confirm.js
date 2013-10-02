@@ -73,7 +73,7 @@
         var $confirm = $('<ul class="dropdown-menu"><li><a></a></li></ul>')
             .css({
                 marginRight: '-2px',
-                marginLeft: '-2px',
+                marginLeft: '-2px'
             })
             .find('a')
                 .attr('href', href)
