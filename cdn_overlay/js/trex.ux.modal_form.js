@@ -35,8 +35,8 @@
             var $content = $('<div>' + data.content + '</div>');
             var $form = $content.find('form');
             $modal.find('.modal-body').html($content.children());
-            Trex.form.bind_widgets($form);
             $modal.on('shown.bs.modal', function() {
+                Trex.form.bind_widgets($form);
                 $form.find('.form-control').first().focus();
             });
             // Make pressing enter in fields do a form submit, like most forms usually do.
