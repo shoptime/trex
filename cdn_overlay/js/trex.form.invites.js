@@ -4270,7 +4270,7 @@
                             return $node;
                         },
                         isTagAllowed: function() {
-                            console.log('isTagAllowed', arguments);
+                            log.d('isTagAllowed', arguments);
                             return true;
                         }
                     }
