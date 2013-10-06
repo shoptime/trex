@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._register_module("trex.form", "trex", "trex.ux");
+    Trex._register_module("trex.form", "trex", "trex.ux", "trex.util");
     Trex.form = new Trex._TrexModule();
 
     Trex.form._bind_functions = [];

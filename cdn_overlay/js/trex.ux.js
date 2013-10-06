@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._register_module("trex.ux", "trex");
+    Trex._register_module("trex.ux", "trex", "trex.util");
     Trex.ux = new Trex._TrexModule();
 
     $(function() {
