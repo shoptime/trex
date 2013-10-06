@@ -81,7 +81,7 @@ class BootstrapCheckboxInput(wtf.Input):
         if getattr(field, 'checked', field.data):
             kwargs['checked'] = True
 
-        kwargs.pop('class')
+        kwargs.pop('class', None)
 
         html_string = super(BootstrapCheckboxInput, self).__call__(field, **kwargs)
         return wtf.widgets.HTMLString('<label class="checkbox">%s %s</label>' % (html_string.__html__(), field.label.text))
@@ -97,7 +97,7 @@ class BootstrapRadioInput(wtf.Input):
         if getattr(field, 'checked', field.data):
             kwargs['checked'] = True
 
-        kwargs.pop('class')
+        kwargs.pop('class', None)
 
         html_string = super(BootstrapRadioInput, self).__call__(field, **kwargs)
         return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
