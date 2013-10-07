@@ -113,7 +113,11 @@
     <label for="{{ field.id }}" class="col-sm-4 control-label">{{ field.label.text }}</label>
     {% endif %}
     <div class="col-sm-8{% if not field.label.text %} col-sm-offset-4{% endif %}">
+        {%- if field.type == 'FileField' %}
+        {{ field(**kwargs) | safe }}
+        {%- else -%}
         {{ field(class="form-control", **kwargs) | safe }}
+        {%- endif -%}
         {% if field.errors %}
         <span class="help-block">
         {% for error in field.errors %}{{ error }} {% endfor %}
