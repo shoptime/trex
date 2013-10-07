@@ -4269,9 +4269,11 @@
                             $node.data('text-tag', tag);
                             return $node;
                         },
-                        isTagAllowed: function() {
+                        isTagAllowed: function(tag) {
                             log.d('isTagAllowed', arguments);
-                            return true;
+                            if ( tag.get('email').match(/^[^@]+@[^@]+\.[^@]+$/) ) {
+                                return true;
+                            }
                         }
                     }
                 },
@@ -4280,6 +4282,14 @@
             textext.opts('keys')[188] = 'comma!';
             textext.on({
                 commaKeyPress: function(e) {
+                    this.autocomplete().onEnterKeyPress();
+                    var beforeLen = this.tags().tagElements().length;
+                    this.tags().onEnterKeyPress();
+                    if (beforeLen < this.tags().tagElements().length) {
+                        this.input().val('');
+                    }
+                },
+                tabKeyDown: function(e) {
                     this.autocomplete().onEnterKeyPress();
                     this.tags().onEnterKeyPress();
                     this.input().val('');
