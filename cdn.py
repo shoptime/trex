@@ -50,8 +50,8 @@ class FlaskCDN(object):
 
             return response
 
-    def __call__(self, uri):
-        return self.cdn.resolve(uri)
+    def __call__(self, uri, **kwargs):
+        return self.cdn.resolve(uri, **kwargs)
 
 class CDNPlugin(object):
     def __init__(self, cdn):
