@@ -1,5 +1,6 @@
 {% import 'trex.jinja2' as trex with context %}
 {% extends 'base.jinja2' %}
+{% set page_title = 'User management' %}
 {% block content %}
 {% if add_url %}
 <a class="btn btn-default pull-right" href="{{ add_url }}"><i class="icon-plus"></i> add user</a>

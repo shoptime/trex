@@ -1,5 +1,6 @@
 {% import 'trex.jinja2' as trex with context %}
 {% extends 'base.jinja2' %}
+{% set page_title = 'Log in' %}
 {% block content %}
 <h2>Log in</h2>
 {{ trex.form_render(form, 'Log in') }}

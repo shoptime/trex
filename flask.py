@@ -304,6 +304,24 @@ class Flask(flask.Flask):
                 return ' and '.join(items)
             return ', '.join(items[0:-1]) + ', and ' + items[-1]
 
+        @self.template_filter()
+        def page_title(title, default=None, strict=True):
+            if strict:
+                if not title:
+                    raise Exception("No page title set for this page")
+
+                if default:
+                    return '%s - %s' % (title, default)
+
+                return title
+
+            if title:
+                if default:
+                    return '%s - %s' % (title, default)
+                return title
+
+            return default
+
         def puffer():
             """
             Provides a random-content, psuedo-random-length string to be placed in responses to prevent the application
