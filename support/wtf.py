@@ -564,16 +564,43 @@ class ImageField(wtf.Field):
             self.data = None
 
 class PhoneNumberWidget(object):
+    def __init__(self, country_code_as_select=False, placeholder=None, *args, **kwargs):
+        super(PhoneNumberWidget, self).__init__(*args, **kwargs)
+        self.country_code_as_select = country_code_as_select
+        self.placeholder = placeholder
+
     def __call__(self, field, **kwargs):
         value = field._value()
-        data = dict(
-            widget_args = wtf.widgets.html_params(**{
-                'class':'trex-phone-number-widget',
-            }),
-            cc_select_args = wtf.widgets.html_params(**{
+        if self.country_code_as_select:
+            data = dict(
+                cc_select_args = wtf.widgets.html_params(**{
+                    'id': '%s-country-code' % field.id,
+                    'name': field.name,
+                    'class': 'input-country-code',
+                }),
+                cc_select_options = self.cc_select_options(field),
+            )
+            country_code_input = wtf.widgets.HTMLString("""
+<select %(cc_select_args)s>
+    <option value="">Country</option>
+    %(cc_select_options)s
+</select>
+""" % data)
+        else:
+            cc_input_args = wtf.widgets.html_params(**{
                 'id': '%s-country-code' % field.id,
                 'name': field.name,
                 'class': 'input-country-code',
+                'type': 'text',
+                'value': value[0],
+                'placeholder': self.placeholder,
+                'maxlength': 4,
+            })
+            country_code_input = wtf.widgets.HTMLString('<input %s>' % cc_input_args)
+
+        data = dict(
+            widget_args = wtf.widgets.html_params(**{
+                'class':'trex-phone-number-widget',
             }),
             number_input_args = wtf.widgets.html_params(**{
                 'id': '%s-number' % field.id,
@@ -582,15 +609,12 @@ class PhoneNumberWidget(object):
                 'type': 'text',
                 'value': value[1],
             }),
-            cc_select_options = self.cc_select_options(field)
+            country_code_input = country_code_input,
         )
 
         return wtf.widgets.HTMLString("""
 <div %(widget_args)s>
-    <select %(cc_select_args)s>
-        <option value="">Country</option>
-        %(cc_select_options)s
-    </select>
+    %(country_code_input)s
     <input %(number_input_args)s>
 </div>
 """ % data)
@@ -608,10 +632,10 @@ class PhoneNumberWidget(object):
         return '\n'.join(result)
 
 class PhoneNumberField(wtf.Field):
-    widget = PhoneNumberWidget()
 
-    def __init__(self, label='', validators=None, country_codes=[], **kwargs):
+    def __init__(self, label='', validators=None, country_codes=[], placeholder=None, **kwargs):
         self.country_codes = country_codes
+        self.widget = PhoneNumberWidget(country_code_as_select=len(country_codes) > 0, placeholder=placeholder)
 
         super(PhoneNumberField, self).__init__(label, validators, **kwargs)
 
@@ -621,7 +645,8 @@ class PhoneNumberField(wtf.Field):
         else:
             if self.data:
                 parts = self.data.split(' ', 2)
-                parts[0] = parts[0][1:]
+                if self.country_codes:
+                    parts[0] = parts[0][1:]
                 return parts
             else:
                 return ('', '')
@@ -634,15 +659,22 @@ class PhoneNumberField(wtf.Field):
                 self.data = None
                 raise ValueError(self.gettext('Not a valid phone number'))
             if valuelist[1]:
-                if not valuelist[0] or valuelist[0] not in self.country_codes:
-                    raise ValueError(self.gettext('Please select a country code'))
+                if self.country_codes:
+                    if not valuelist[0] or valuelist[0] not in self.country_codes:
+                        raise ValueError(self.gettext('Please select a country code'))
+                else:
+                    if not valuelist[0]:
+                        raise ValueError(self.gettext('Please select a country code'))
 
 
     def _valuelist_to_phone_number(self, valuelist):
         if len(valuelist) != 2:
             raise ValueError(self.gettext('Not a valid phone number'))
         if valuelist[0] and valuelist[1]:
-            phone_str = '+%s %s' % tuple(valuelist)
+            cc = valuelist[0]
+            if not cc.startswith('+'):
+                cc = '+%s' % cc
+            phone_str = '%s %s' % (cc, valuelist[1])
             return phone_str
         return None
 
