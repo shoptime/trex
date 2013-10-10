@@ -28,7 +28,14 @@
                 // same args) but is responsible for creating the appropriate
                 // view.
                 openEventHandler: null,
-                openEventView: Trex.Scheduler.SampleEventView
+                openEventView: Trex.Scheduler.SampleEventView,
+                // This allows you to have events mashed together if they
+                // overlap. If you name a type in this list, all events of that
+                // type will be merged. Note: events of DIFFERENT types are
+                // NEVER merged together. Also note that this option is merely
+                // passed through to the model; if you specify your own model,
+                // then set this option on that instead.
+                mergeTypes: []
             };
         },
         className: 'trex-scheduler',
@@ -172,7 +179,7 @@
             }
 
             if (!this.model) {
-                this.model = new Trex.Scheduler.Events();
+                this.model = new Trex.Scheduler.Events([], {mergeTypes: this.opt.mergeTypes});
             }
             if (!(this.model instanceof Trex.Scheduler.Events)) {
                 throw new Error("Model must be an instance of Trex.Scheduler.Events");
@@ -467,6 +474,7 @@
                     new_attrs.end = self.model.end();
                 }
                 self.model.set(new_attrs);
+                self.model.trigger('altered'); // Moved or resized
             };
 
             $(document).on('mousemove', mousemove);
@@ -560,10 +568,83 @@
         }
     });
 
-    Trex.Scheduler.Events = function() { Backbone.Collection.apply(this, arguments); };
+    Trex.Scheduler.Events = function(models, options) {
+        options || (options = {});
+        this.mergeTypes = options.mergeTypes || [];
+        Backbone.Collection.apply(this, arguments);
+    };
     Trex.Scheduler.Events = Backbone.Collection.extend({
         constructor: Trex.Scheduler.Events,
-        model: Trex.Scheduler.Event
+        model: Trex.Scheduler.Event,
+        merge: function(evt, options) {
+            if (!(evt instanceof Trex.Scheduler.Event)) {
+                evt = this._prepareModel(evt, options);
+            }
+
+            var evtStartDate = evt.start();
+            var evtEndDate = evt.end();
+
+            // Create a list of the events we need to check against
+            var date = evt.date();
+            var events = this.filter(function(e) { return  e != evt && date.isSame(e.date(), 'day') && e.get('type') === evt.get('type'); }, this);
+
+            var merged = false;
+            while (events.length) {
+                var existingEvent = events.pop();
+
+                if (
+                    evtStartDate >= existingEvent.start() && evtStartDate <= existingEvent.end() // new event start in range
+                    ||
+                    evtEndDate >= existingEvent.start() && evtEndDate <= existingEvent.end() // new event end in range
+                    ||
+                    existingEvent.start() >= evtStartDate && existingEvent.start() <= evtEndDate // existing event start
+                    ||
+                    existingEvent.end() >= evtStartDate && existingEvent.end() <= evtEndDate // existing event end
+                    ) {
+                    // Make the existing event incorporate the new start/end
+                    existingEvent.set({
+                        start: moment(Math.min(existingEvent.start(), evtStartDate)),
+                        end: moment(Math.max(existingEvent.end(), evtEndDate))
+                    });
+
+                    // And baleet the event we were checking against. This
+                    // might seem strange, but we can be checking against an
+                    // event that's already in the model (see next block of
+                    // code)
+                    this.remove(evt);
+
+                    // Now start checking against the event that we modified
+                    evt = existingEvent;
+                    evtStartDate = evt.start();
+                    evtEndDate = evt.end();
+                    merged = true;
+                }
+            }
+
+            if (!merged) {
+                // Not merged. Add new event as a distinct model.
+                var r = Backbone.Collection.prototype.add.apply(this, [evt, options]);
+                var self = this;
+                this.listenTo(evt, 'altered', function() { self.merge(evt, options); });
+            }
+        },
+        add: function(models, options) {
+            if (models instanceof Trex.Scheduler.Event) {
+                models = [models];
+            }
+
+            _.forEach(models, function(evt) {
+                evt = this._prepareModel(evt);
+                // Work out if this model actually needs to result in a merge with an existing model
+                if (_.contains(this.mergeTypes, evt.get('type'))) {
+                    this.merge(evt, options);
+                }
+                else {
+                    // Not merging. Add new event as a distinct model.
+                    Backbone.Collection.prototype.add.apply(this, [evt, options]);
+                }
+            }, this);
+        }
     });
 
     Trex.Scheduler.EventViewBase = function() { Backbone.View.apply(this, arguments); };
