@@ -5,9 +5,9 @@ from trex.rubble import global_harness as harness, TestFailureException
 from .browser import *
 from .assertions import *
 
-def fill(**kwargs):
+def fill(_selector='[name="%(key)s"]', **kwargs):
     for key, value in kwargs.items():
-        el = find('[name="%s"]' % key)
+        el = find(_selector % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
         is_equal(el.length() > 0, True, "Couldn't find form element: %s" % key)
         if el[0].tag_name() == 'select':
             el.select_by_value(value)
@@ -27,10 +27,10 @@ def fill(**kwargs):
 def submit():
     find('.form-group button[type="submit"]').length_is(1).click()
 
-def check_errors(**kwargs):
+def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
     find('.form-group.has-error').length_is(len(kwargs.keys()), message="Correct number of errors")
     for key, value in kwargs.items():
-        el = find('.has-error [name="%s"]' % key)
+        el = find(_selector % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
         if not len(el):
             failure("Couldn't find form element: %s" % key)
         parent = el.parent()
