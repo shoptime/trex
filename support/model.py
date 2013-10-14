@@ -35,6 +35,9 @@ class BaseDocument(Document):
 class InvalidRoleException(Exception):
     pass
 
+class InvalidLoginException(Exception):
+    pass
+
 class BaseUser(BaseDocument):
     meta = {
         'indexes': [('email',), ('token',)],
@@ -122,7 +125,10 @@ class BaseUser(BaseDocument):
         return False
 
     def check_login(self, entered_password):
-        return self.is_active and self.check_password(entered_password)
+        if not self.is_active:
+            raise InvalidLoginException("This account is disabled")
+        if not self.check_password(entered_password):
+            raise InvalidLoginException("Invalid email or password")
 
     def set_password(self, password, rounds=10001):
         self.password = pcrypt.hash(password, rounds)

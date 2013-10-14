@@ -75,8 +75,10 @@ def login():
                 raise wtf.ValidationError("Invalid email or password")
 
 
-            if not user.check_login(form.password.data):
-                raise wtf.ValidationError("Invalid email or password")
+            try:
+                user.check_login(form.password.data)
+            except trex_model.InvalidLoginException as e:
+                raise wtf.ValidationError(e.message)
 
     form = Form()
 
