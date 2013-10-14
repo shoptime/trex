@@ -528,7 +528,7 @@ class BaseIdentity(BaseDocument):
         """
         Log out all sessions for this user
         """
-        for session in cls.objects(real=user.id):
+        for session in cls.objects(Q(real=user.id) | Q(actor=user.id)):
             session.logout()
 
 class TrexUpload(BaseDocument):
