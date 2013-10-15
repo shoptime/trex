@@ -90,6 +90,7 @@
 
             _.bindAll(this, 'blur_handler');
             $(document).on('focus blur', '.trex-tag-field', this.blur_handler);
+            // TODO - should probably unbind this (although it's not functionally important it's just messy)
 
             this.collection = this.opt.collection || (new this.opt.collection_class());
             this.tags = [];
@@ -195,6 +196,7 @@
             }
             else {
                 this.$el.addClass('focus');
+                this.$('textarea').get(0).focus();
             }
         },
 
