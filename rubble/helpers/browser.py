@@ -64,11 +64,11 @@ def table_like(head, body, table=None):
 
     head_cells = table.find('thead tr th')
 
-    is_equal(len(head), len(head_cells), "Correct number of header cells")
+    is_equal(len(head_cells), len(head), "Correct number of header cells")
 
     body_rows = table.find('tbody tr')
 
-    is_equal(len(body), len(body_rows), "Correct number of body rows")
+    is_equal(len(body_rows), len(body), "Correct number of body rows")
 
     for observed_row, expected_row in zip(body_rows, body):
         observed_cells = observed_row.find('td, th')
