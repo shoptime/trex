@@ -1,0 +1,98 @@
+.trex-tag-field {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
+    resize: none; // This just makes the initialise look nicer
+
+    @color-rgba: rgba(red(@input-border-focus), green(@input-border-focus), blue(@input-border-focus), .6);
+    &.focus {
+        border-color: @input-border-focus;
+        outline: 0;
+        .box-shadow(~"inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px @{color-rgba}");
+    }
+
+    .form-group.has-error & {
+    }
+
+    .tag {
+        border-radius: 2px;
+        border: 1px solid #c0c0c0;
+        background: #eee;
+        display: inline-block;
+        padding: 0 17px 0 3px;
+        margin-right: 5px;
+        margin-bottom: 3px;
+        word-wrap: break-word;
+        max-width: 100%;
+        a {
+            cursor: pointer;
+            position: relative;
+            top: 2px;
+            margin-left: 3px;
+            width: 0;
+            display: inline-block;
+            text-decoration: none;
+            font-family: 'Glyphicons Halflings';
+            font-style: normal;
+            font-weight: normal;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            &:before { content: "\e014"; }
+            color: #888;
+            &:hover {
+                color: #000;
+                text-decoration: none;
+            }
+        }
+    }
+
+    .mark {
+        width: 0;
+        display: inline-block;
+    }
+
+    textarea {
+        height: auto;
+        resize: none;
+        margin: 0;
+        outline: 0;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+    textarea, .textarea-mirror {
+        border: 1px solid transparent;
+        padding: 0;
+        font-size: @font-size-base;
+        line-height: @line-height-base;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .textarea-mirror {
+        position: absolute;
+        color: transparent;
+        z-index: -1000;
+    }
+
+    .autocomplete {
+        position: absolute;
+        z-index: 1050;
+        left: @padding-base-horizontal;
+        right: @padding-base-horizontal;
+        border: 1px solid @input-border;
+        padding: @padding-base-vertical 0;
+        background: #fff;
+        .box-shadow(0 1px 1px rgba(0,0,0,.075));
+        div {
+            padding: @padding-base-vertical @padding-base-horizontal;
+            cursor: pointer;
+            word-wrap: break-word;
+            max-width: 100%;
+            &.selected {
+                background: #eee;
+            }
+        }
+    }
+}

@@ -716,6 +716,32 @@ class InviteField(wtf.TextAreaField):
         else:
             self.data = []
 
+class TagField(wtf.TextAreaField):
+    def __init__(self, label='', validators=None, source_data=None, behaviour=None, **kwargs):
+        self.source_data = source_data
+        if not source_data:
+            self.source_data = []
+        self.behaviour = behaviour
+
+        super(self.__class__, self).__init__(label, validators, **kwargs)
+
+    def __call__(self, **kwargs):
+        kwargs['data-source-data'] = json.dumps(self.source_data)
+        kwargs['data-existing'] = json.dumps(self.data)
+        kwargs['class'] = 'trex-tag-field form-control'
+        if self.behaviour:
+            kwargs['data-behaviour'] = self.behaviour
+        return super(self.__class__, self).__call__(**kwargs)
+
+    def _value(self):
+        return u''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = json.loads(valuelist[0])
+        else:
+            self.data = []
+
 class BrainTreeEncryptedTextInput(wtf.TextInput):
     def __call__(self, field, **kwargs):
         kwargs.setdefault('id', field.id)

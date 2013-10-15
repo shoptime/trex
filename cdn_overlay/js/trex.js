@@ -2,6 +2,10 @@
     var Trex = function() {};
     Trex = window.Trex = new Trex();
 
+    Trex.opt = {
+        auto_bind_form_elements: true
+    };
+
     Trex._loaded_modules = ['trex'];
 
     Trex._register_module = function(this_module) {

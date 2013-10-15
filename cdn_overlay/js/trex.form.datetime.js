@@ -791,5 +791,7 @@
     }
 
     Trex.form._bind_functions.push(bind);
-    bind();
+    if (Trex.opt.auto_bind_form_elements) {
+        bind();
+    }
 })(window, jQuery);
