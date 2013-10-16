@@ -454,7 +454,7 @@ class Flask(flask.Flask):
     def drop_collections(self):
         for name in self.db.collection_names():
             if not name.startswith('system.'):
-                self.db[name].drop()
+                self.db[name].remove()
 
 #
 # Exception handling
