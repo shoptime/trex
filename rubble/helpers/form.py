@@ -4,6 +4,8 @@ from __future__ import absolute_import
 from trex.rubble import global_harness as harness, TestFailureException
 from .browser import *
 from .assertions import *
+import os
+from app import app
 
 def fill(_selector='[name="%(key)s"]', **kwargs):
     for key, value in kwargs.items():
@@ -21,6 +23,8 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
             el = find('[name="%s"][value="%s"]' % (key, value))
             el.length_is(1, message="Couldn't find checkbox %s=%s" % (key, value))
             el.click()
+        elif el[0].attr('type') == 'file':
+            el.type(os.path.join(app.root_path, 'test', 'data', value), clear_first=False)
         else:
             el.type(value)
 
