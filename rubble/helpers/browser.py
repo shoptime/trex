@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from flask import url_for
 from trex.rubble import global_harness as harness
 from .assertions import is_equal, is_like, message
+from selenium.webdriver.common.keys import Keys
 
 def browser_for(browser):
     if isinstance(browser, basestring):
