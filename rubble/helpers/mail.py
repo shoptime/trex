@@ -51,4 +51,9 @@ def compare(email, match):
     if 'body_re' in match and not re.search(match['body_re'], email.text_body, re.S):
         return False
 
+    valid_keys = set(['to', 'subject', 'subject_re', 'body', 'body_re'])
+    found_keys = set(match.keys())
+    if found_keys - valid_keys != set():
+        harness().handle_error(TestFailureException("Developer mistake: trying to use a key to check emails with that doesn't exist: %s" % (found_keys - valid_keys), observed=found_keys, expected=valid_keys))
+
     return True
