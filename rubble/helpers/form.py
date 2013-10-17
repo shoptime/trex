@@ -30,7 +30,7 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
             el.type(value)
 
 def submit():
-    find('.form-group button[type="submit"]').length_is(1).click()
+    find('.form-group button[type="submit"], .modal .modal-footer button.btn-primary').length_is(1).click()
 
 def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
     find('.form-group.has-error').length_is(len(kwargs.keys()), message="Correct number of errors")
