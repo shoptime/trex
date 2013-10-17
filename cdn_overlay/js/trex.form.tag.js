@@ -5,7 +5,33 @@
     var module = Trex.form.tag = new Trex._TrexModule();
     var log = new Trex.Logger('trex.form.tag');
 
-    module.opt_for = {};
+    module.opt_for = {
+        email: {
+            format_text: function(tag) {
+                if (tag.get('name')) {
+                    return tag.get('name') + ' <' + tag.id + '>';
+                }
+                return tag.id;
+            },
+            paste_parser: function(s) {
+                var list = [];
+                var regex = /(?:"([^"]+)")? ?<?(.*?@[^>,]+)>?\s*,?\s*/g;
+                var m;
+                var position = 0;
+                while (m = regex.exec(s)) {
+                    if (m[1]) { m[1] = m[1].replace(/^\s+|\s+$/g, ''); }
+                    if (m[2]) { m[2] = m[2].replace(/^\s+|\s+$/g, ''); }
+                    list.push([m[2], m[1]]);
+                    position += m[0].length;
+                }
+                var remaining = s.substr(position);
+                if (remaining) {
+                    list.push(remaining);
+                }
+                return list;
+            }
+        }
+    };
 
     Trex.form.tag.tag = function() { Backbone.Model.apply(this, arguments); };
     module.tag = Backbone.Model.extend({

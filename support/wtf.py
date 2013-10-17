@@ -723,7 +723,7 @@ class TagField(wtf.TextAreaField):
             self.source_data = []
         self.behaviour = behaviour
 
-        super(self.__class__, self).__init__(label, validators, **kwargs)
+        super(TagField, self).__init__(label, validators, **kwargs)
 
     def __call__(self, **kwargs):
         kwargs['data-source-data'] = json.dumps(self.source_data)
@@ -731,7 +731,7 @@ class TagField(wtf.TextAreaField):
         kwargs['class'] = 'trex-tag-field form-control'
         if self.behaviour:
             kwargs['data-behaviour'] = self.behaviour
-        return super(self.__class__, self).__call__(**kwargs)
+        return super(TagField, self).__call__(**kwargs)
 
     def _value(self):
         return u''
@@ -741,6 +741,21 @@ class TagField(wtf.TextAreaField):
             self.data = json.loads(valuelist[0])
         else:
             self.data = []
+
+class EmailTagField(TagField):
+    def __init__(self, label='', validators=None, behaviour=None, **kwargs):
+        if behaviour is None:
+            behaviour = 'email'
+        super(EmailTagField, self).__init__(label, validators, behaviour=behaviour, **kwargs)
+
+    def process_formdata(self, valuelist):
+        super(EmailTagField, self).process_formdata(valuelist)
+        invalid = []
+        for email in self.data:
+            if not bool(EMAIL_REGEX.match(email)):
+                invalid.append(email)
+        if len(invalid):
+            raise wtf.ValidationError("Invalid emails: %s" % ", ".join(invalid))
 
 class BrainTreeEncryptedTextInput(wtf.TextInput):
     def __call__(self, field, **kwargs):
