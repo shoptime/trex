@@ -48,7 +48,7 @@ def compare(email, match):
     if 'body' in match and email.text_body != match['body']:
         return False
 
-    if 'body_re' in match and not re.search(match['body_re'], email.text_body):
+    if 'body_re' in match and not re.search(match['body_re'], email.text_body, re.S):
         return False
 
     return True
