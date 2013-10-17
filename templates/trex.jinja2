@@ -119,7 +119,7 @@
         {{ field(class="form-control", **kwargs) | safe }}
         {%- endif -%}
         {% if field.errors %}
-        <span class="help-block">
+        <span class="help-block help-block-error">
         {% for error in field.errors %}{{ error }} {% endfor %}
         </span>
         {% endif %}
@@ -142,7 +142,7 @@
 <div id="form-group-{{ field.id }}" class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
     {{ field(class="form-control", **kwargs) | safe }}
     {% if field.errors %}
-    <span class="help-block">
+    <span class="help-block help-block-error">
     {% for error in field.errors %}{{ error }} {% endfor %}
     </span>
     {% endif %}

@@ -20,9 +20,10 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
         elif el[0].attr('type') == 'checkbox':
             for subel in el.filter_by_selected():
                 subel.click()
-            el = find('[name="%s"][value="%s"]' % (key, value))
-            el.length_is(1, message="Couldn't find checkbox %s=%s" % (key, value))
-            el.click()
+            if value is not None:
+                el = find('[name="%s"][value="%s"]' % (key, value))
+                el.length_is(1, message="Couldn't find checkbox %s=%s" % (key, value))
+                el.click()
         elif el[0].attr('type') == 'file':
             el.type(os.path.join(app.root_path, 'test', 'data', value), clear_first=False)
         else:
@@ -40,4 +41,4 @@ def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
         parent = el.parent()
         while not re.search(r'\bform-group\b', parent.attr('class')):
             parent = parent.parent()
-        parent.find('.help-block').text_is(value)
+        parent.find('.help-block-error')[0].text_is(value)
