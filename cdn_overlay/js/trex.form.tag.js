@@ -29,6 +29,15 @@
                     list.push(remaining);
                 }
                 return list;
+            },
+            model_for_text: function(text) {
+                var list = this.opt.paste_parser(text);
+                if (list.length) {
+                    return new this.collection.model({id: list[0][0], name: list[0][1]});
+                }
+                else {
+                    return new this.collection.model({id: text});
+                }
             }
         }
     };
@@ -38,17 +47,16 @@
         constructor: module.tag,
         _class: 'Trex.form.tag.tag',
         matches: function(query) {
-            var query = query.toLowerCase();
             var name = this.get('name');
             var id = this.id;
 
             var match_regex = new RegExp('\\b' + query.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"), 'i');
-            if (name && match_regex.test(name)) { 
+            if (name && match_regex.test(name)) {
                 return true;
-            } 
-            if (id && match_regex.test(id)) { 
+            }
+            if (id && match_regex.test(id)) {
                 return true;
-            } 
+            }
             return false;
         }
     });
@@ -105,7 +113,10 @@
                 format_text: null, // function that converts a model to string
                 collection_class: module.tags,
                 collection: null, // instance of this.opt.collection_class
-                name: null
+                name: null,
+                model_for_text: function(text) {
+                    return new this.collection.model({id: text});
+                }
             }, opt);
 
             if (!this.opt.name) {
@@ -193,7 +204,7 @@
                 text = this.$('textarea').val();
             }
             text = text.replace(/^\s+|\s+$/g, '');
-            var model = new this.collection.model({id: text});
+            var model = this.opt.model_for_text.call(this, text);
             this.collection.add(model);
             this.add_tag(model.id);
             this.$('textarea').val('');
