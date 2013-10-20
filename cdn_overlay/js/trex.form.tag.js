@@ -98,7 +98,7 @@
                 var $target = this.$(e.currentTarget);
                 $target.siblings().removeClass('selected');
                 $target.addClass('selected');
-            },
+            }
         },
 
         format_text: function(model) {
@@ -427,7 +427,7 @@
                 }
                 this.previous_text = text;
             }
-        },
+        }
     });
 
     function bind(context) {
