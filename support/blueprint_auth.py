@@ -162,6 +162,15 @@ def lost_password():
     class Form(wtf.Form):
         email = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
 
+        def validate_email(form, field):
+            try:
+                m.User.active.get(email=field.data.lower())
+            except m.DoesNotExist:
+                raise wtf.ValidationError("No account for that email address exists")
+
+    if not app.settings.getboolean('trex', 'notify_user_of_invalid_email_on_recovery_attempt'):
+        delattr(Form, 'validate_email')
+
     form = Form()
 
     if form.validate_on_submit():
