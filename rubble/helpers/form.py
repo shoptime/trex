@@ -21,9 +21,12 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
             for subel in el.filter_by_selected():
                 subel.click()
             if value is not None:
-                el = find('[name="%s"][value="%s"]' % (key, value))
-                el.length_is(1, message="Couldn't find checkbox %s=%s" % (key, value))
-                el.click()
+                if not isinstance(value, list):
+                    value = [value]
+                for subvalue in value:
+                    el = find('[name="%s"][value="%s"]' % (key, subvalue))
+                    el.length_is(1, message="Couldn't find checkbox %s=%s" % (key, subvalue))
+                    el.click()
         elif el[0].attr('type') == 'file':
             el.type(os.path.join(app.root_path, 'test', 'data', value), clear_first=False)
         else:
