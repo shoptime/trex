@@ -206,6 +206,10 @@ class Harness(object):
                     obj.post_run()
                     end_time = time.time()
                     print "# %s took %0.1f seconds" % (obj.__class__.__name__, end_time-start_time)
+                except:
+                    for key, browser in self.browsers.items():
+                        browser.screenshot(message="Uncaught exception screenshot (%s): " % key)
+                    raise
                 finally:
                     obj.teardown()
                     for function in _global_teardown_test_methods:
