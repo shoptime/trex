@@ -126,6 +126,9 @@ class Harness(object):
         # Stops the "accesslog" output from the server
         logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+        # Stops the excessive logging from boto
+        logging.getLogger('boto').setLevel(logging.ERROR)
+
         # Stops lots of crappy selenium logging
         logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(logging.WARNING)
 
@@ -141,6 +144,8 @@ class Harness(object):
 
     def handle_error(self, exception):
         self.error_count += 1
+        for key, browser in self.browsers.items():
+            browser.screenshot(message="Exception screenshot (%s): " % key)
         if self.fail_method == 'exception':
             raise exception
         if self.fail_method == 'ipdb':

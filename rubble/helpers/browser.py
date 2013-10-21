@@ -65,6 +65,9 @@ def execute_script(script, browser=None):
 def wait_for_ajax(browser=None):
     browser_for(browser).wait_for_ajax()
 
+def screenshot(browser=None):
+    browser_for(browser).screenshot()
+
 def table_like(head, body, table=None):
     message("verifying table contents")
     if not table:
@@ -87,4 +90,3 @@ def table_like(head, body, table=None):
                 continue
             observed_cell.text_is(expected_cell)
 
-# TODO - screenshot

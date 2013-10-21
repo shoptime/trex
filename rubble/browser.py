@@ -8,7 +8,10 @@ from selenium.webdriver import Remote
 from selenium.webdriver.support.select import Select
 import copy
 from furl import furl
+from app import app
 from .helpers.assertions import *
+import boto.s3.connection
+from ..support import token
 
 class Browser(object):
     def __init__(self, harness, selenium_server_url, selenium_browser, width=1024, height=600):
@@ -82,12 +85,36 @@ class Browser(object):
         WebDriverWait(self.selenium, 10).until_not(lambda x: x.execute_script('return jQuery.active'))
         return self
 
+    def screenshot(self, message="Screenshot: "):
+        if 's3_access_key' not in app.settings.options('test'):
+            print "No screenshot S3 instance configured - skipping screenshot"
+
+        if not hasattr(self, 's3_connection'):
+            if 's3_host' in app.settings.options('test'):
+                self.s3_connection = boto.s3.connection.S3Connection(
+                    app.settings.get('test', 's3_access_key'),
+                    app.settings.get('test', 's3_secret_key'),
+                    host = app.settings.get('test', 's3_host'),
+                )
+            else:
+                self.s3_connection = boto.s3.connection.S3Connection(
+                    app.settings.get('test', 's3_access_key'),
+                    app.settings.get('test', 's3_secret_key'),
+                )
+
+        bucket = self.s3_connection.get_bucket(app.settings.get('test', 's3_bucket'))
+        filename = "%s-%s.png" % (token.create_url_token(), self.harness.current_test_object.__class__.__name__)
+
+        key = bucket.new_key(filename)
+        key.metadata['Content-Type'] = 'image/png'
+        key.metadata['Cache-Control'] = 'public, max-age=86400'
+        key.set_contents_from_string(self.selenium.get_screenshot_as_png())
+        key.make_public()
+        print "%s%s" % (message, key.generate_url(expires_in=0, query_auth=False))
+
 #browser
-#    wait_for_ajax
 #    refresh
 #    source
-#    screenshot
-
 
 class WebElementSet(object):
 # TODO - implement these methods?
