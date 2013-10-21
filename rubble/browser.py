@@ -92,7 +92,6 @@ class Browser(object):
 class WebElementSet(object):
 # TODO - implement these methods?
 #element
-#    wait_for_visible
 #    wait_for_hidden
     def __init__(self, browser, elements=None, selector=None):
         self.browser  = browser
@@ -293,6 +292,24 @@ class WebElementSet(object):
     @require_one_element
     def visible(self):
         return self.elements[0].is_displayed()
+
+    def is_visible(self, message=None):
+        if message is None:
+            message = "Is visible: %s" % self
+        is_equal(self.visible(), True, message)
+        return self
+
+    def is_hidden(self, message=None):
+        if message is None:
+            message = "Is hidden: %s" % self
+        is_equal(self.visible(), False, message)
+        return self
+
+    def wait_for_visible(self):
+        def inner_wait(driver):
+            return self.visible()
+        WebDriverWait(self.browser.selenium, 10).until(inner_wait)
+        return self
 
     @require_one_element
     def enabled(self):

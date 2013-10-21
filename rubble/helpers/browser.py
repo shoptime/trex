@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from flask import url_for
 from trex.rubble import global_harness as harness
 from .assertions import is_equal, is_like, message
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 
 def browser_for(browser):
@@ -39,6 +40,12 @@ def endpoint_is(endpoint, browser=None):
 
 def wait_for_bootstrap_modal(browser=None):
     return browser_for(browser).wait_for_bootstrap_modal()
+
+def wait_for_element_exists(selector, browser=None):
+    browser = browser_for(browser)
+    def inner_wait(driver):
+        return browser.find(selector).length() > 0
+    WebDriverWait(browser.selenium, 10).until(inner_wait)
 
 def current_url(browser=None):
     return browser_for(browser).url()
