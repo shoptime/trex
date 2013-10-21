@@ -88,6 +88,7 @@ class Browser(object):
     def screenshot(self, message="Screenshot: "):
         if 's3_access_key' not in app.settings.options('test'):
             print "No screenshot S3 instance configured - skipping screenshot"
+            return
 
         if not hasattr(self, 's3_connection'):
             if 's3_host' in app.settings.options('test'):
