@@ -26,6 +26,16 @@ class Browser(object):
         )
         self.selenium.set_window_size(width, height)
 
+    def __enter__(self):
+        self.harness.browser_stack.append(self)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.harness.browser_stack[-1] != self:
+            raise Exception("Unexpected browser on the top of the stack")
+        self.harness.browser_stack.pop()
+        return
+
     def shutdown(self):
         self.selenium.quit()
 
