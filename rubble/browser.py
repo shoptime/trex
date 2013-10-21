@@ -308,7 +308,7 @@ class WebElementSet(object):
     def wait_for_visible(self):
         def inner_wait(driver):
             return self.visible()
-        WebDriverWait(self.browser.selenium, 10).until(inner_wait)
+        WebDriverWait(self.browser.selenium, 30).until(inner_wait)
         return self
 
     @require_one_element
