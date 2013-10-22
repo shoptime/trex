@@ -34,6 +34,7 @@ bash trex/bin/install-deps.sh
 app compile_static
 
 # Run tests
+echo "Executing app $test_harness" "${*:2}"
 app "$test_harness" "${*:2}"
 
 # Reload for other things that hit this hive instance
