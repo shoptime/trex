@@ -187,9 +187,6 @@ class Harness(object):
 
     def _run(self, test_classes):
         try:
-            # Call init_harness methods
-            for function in _global_init_harness_methods:
-                function()
             for cls in test_classes:
                 self.current_test_object = obj = cls(harness=self)
                 try:

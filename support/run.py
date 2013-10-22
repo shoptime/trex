@@ -171,6 +171,10 @@ class Manager(script.Manager):
                 else:
                     print "[%d] Process complete" % os.getpid()
 
+            print "Initialising the harness"
+            for function in trex.rubble._global_init_harness_methods:
+                function()
+
             if processes > 1:
                 procs = []
                 for i in range(processes):
