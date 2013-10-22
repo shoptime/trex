@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-if [ "$1" != "" ]; then
-    test_harness="$1"
-else
+if [ "$1" == "" ]; then
     test_harness='test'
+else
+    test_harness="$1"
 fi
 
 # Basic prep
@@ -34,7 +34,7 @@ bash trex/bin/install-deps.sh
 app compile_static
 
 # Run tests
-app $test_harness
+app "$test_harness" "${*:2}"
 
 # Reload for other things that hit this hive instance
 touch site.wsgi
