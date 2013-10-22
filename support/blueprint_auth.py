@@ -163,6 +163,9 @@ def lost_password():
         email = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
 
         def validate_email(form, field):
+            if len(field.errors):
+                # We don't need to check for account if the field is already invalid
+                return
             try:
                 m.User.active.get(email=field.data.lower())
             except m.DoesNotExist:
