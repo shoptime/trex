@@ -45,6 +45,12 @@ class Browser(object):
     def back(self):
         self.selenium.back()
 
+    def refresh(self):
+        self.selenium.refresh()
+
+    def source(self):
+        return self.selenium.page_source
+
     def get(self, uri):
         self.selenium.get(uri)
 
@@ -112,10 +118,6 @@ class Browser(object):
         key.set_contents_from_string(self.selenium.get_screenshot_as_png())
         key.make_public()
         print "%s%s" % (message, key.generate_url(expires_in=0, query_auth=False))
-
-#browser
-#    refresh
-#    source
 
 class WebElementSet(object):
 # TODO - implement these methods?

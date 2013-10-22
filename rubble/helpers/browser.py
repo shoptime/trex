@@ -15,6 +15,12 @@ def browser_for(browser):
 def back(browser=None):
     browser_for(browser).back()
 
+def refresh(browser=None):
+    browser_for(browser).refresh()
+
+def source(browser=None):
+    return browser_for(browser).source()
+
 def get(path, browser=None):
     browser = browser_for(browser)
     uri = harness().base_uri.copy().join(str(path))
