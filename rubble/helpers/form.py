@@ -37,7 +37,7 @@ def select_by_label(select_name, label):
     select.select_by_value(select.find('option').filter_by_text(label).attr('value'))
 
 def submit():
-    find('.form-group button[type="submit"], .modal .modal-footer button.btn-primary').length_is(1).click()
+    find('.form-group button[type="submit"]').length_is(1).click()
 
 def submit_modal():
     find('.modal .modal-footer button.btn-primary').length_is(1).click()
