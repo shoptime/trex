@@ -53,6 +53,10 @@ def wait_for_element_exists(selector, browser=None):
         return browser.find(selector).length() > 0
     WebDriverWait(browser.selenium, 10).until(inner_wait)
 
+def wait_for_lambda(l, browser=None):
+    browser = browser_for(browser)
+    WebDriverWait(browser.selenium, 10).until(l)
+
 def current_url(browser=None):
     return browser_for(browser).url()
 
