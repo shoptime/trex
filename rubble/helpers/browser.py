@@ -6,6 +6,7 @@ from trex.rubble import global_harness as harness
 from .assertions import is_equal, is_like, message
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
+from furl import furl
 
 def browser_for(browser):
     if isinstance(browser, basestring):
@@ -61,6 +62,7 @@ def current_url(browser=None):
     return browser_for(browser).url()
 
 def url_is(expected, browser=None):
+    expected = furl(expected)
     is_equal(current_url(browser), expected, message="Browser URL is_equal")
 
 def url_like(expected, browser=None):
