@@ -38,6 +38,10 @@ def select_by_label(select, label):
 def submit():
     find('.form-group button[type="submit"], .modal .modal-footer button.btn-primary').length_is(1).click()
 
+def submit_modal():
+    find('.modal .modal-footer button.btn-primary').length_is(1).click()
+    wait_for_ajax()
+
 def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
     find('.form-group.has-error').length_is(len(kwargs.keys()), message="Correct number of errors")
     for key, value in kwargs.items():
