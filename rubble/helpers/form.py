@@ -32,7 +32,8 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
         else:
             el.type(value)
 
-def select_by_label(select, label):
+def select_by_label(select_name, label):
+    select = find('[name="%s"]' % select_name).length_is(1)
     select.select_by_value(select.find('option').filter_by_text(label).attr('value'))
 
 def submit():
