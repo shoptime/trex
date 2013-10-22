@@ -35,7 +35,11 @@ app compile_static
 
 # Run tests
 echo "Executing app $test_harness" "${*:2}"
-app "$test_harness" "${*:2}"
+if [ "$2" != "" ]; then
+    app "$test_harness" "${*:2}"
+else
+    app "$test_harness"
+fi
 
 # Reload for other things that hit this hive instance
 touch site.wsgi
