@@ -14,6 +14,7 @@ import mimetypes
 import random
 from itertools import izip, cycle
 import binascii
+from jinja2 import Markup
 
 class BaseDocument(Document):
     meta = dict(abstract=True)
@@ -269,6 +270,12 @@ def xor_hex_string(s, key):
 class FlashMessage(EmbeddedDocument):
     message  = StringField(required=True)
     category = StringField(required=True, default='message')
+    markup   = BooleanField(required=True, default=False)
+
+    def get_message(self):
+        if self.markup:
+            return Markup(self.message)
+        return self.message
 
 class BaseIdentity(BaseDocument):
     """
@@ -330,7 +337,10 @@ class BaseIdentity(BaseDocument):
     flashes = ListField(EmbeddedDocumentField(FlashMessage))
 
     def flash(self, message, category=None):
-        self.flashes.append(FlashMessage(message=message, category=category))
+        flash = FlashMessage(message=message, category=category)
+        if isinstance(message, Markup):
+            flash.markup = True
+        self.flashes.append(flash)
         self.save()
 
     def get_flashes(self):
