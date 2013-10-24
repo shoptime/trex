@@ -19,6 +19,12 @@ def back(browser=None):
 def refresh(browser=None):
     browser_for(browser).refresh()
 
+def title(browser=None):
+    return browser_for(browser).title()
+
+def title_is(expected, browser=None):
+    is_equal(title(browser), expected, message="Title is_equal")
+
 def source(browser=None):
     return browser_for(browser).source()
 

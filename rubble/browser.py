@@ -48,6 +48,9 @@ class Browser(object):
     def refresh(self):
         self.selenium.refresh()
 
+    def title(self):
+        return self.selenium.title
+
     def source(self):
         return self.selenium.page_source
 
