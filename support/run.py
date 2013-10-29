@@ -188,14 +188,19 @@ class Manager(script.Manager):
                         raise Exception("Failed to start %d" % proc.name)
                     procs.append(proc)
 
+                failed = False
                 while len(procs):
                     for proc in procs:
                         proc.join(0.5)
                         if not proc.is_alive():
                             procs.remove(proc)
                             if proc.exitcode:
+                                failed = True
                                 for proc in procs:
                                     os.kill(proc.pid, signal.SIGQUIT)
+
+                if failed:
+                    raise SystemExit(1)
             else:
                 run_tests(0, 1)
 
