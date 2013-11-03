@@ -11,6 +11,7 @@ from mongoengine import Document, StringField, IntField, DynamicDocument
 import mongoengine
 from .mongoengine import QuantumField
 from . import quantum
+from datetime import datetime
 
 class CronLock(Document):
     name     = StringField(unique=True, required=True)
@@ -157,6 +158,13 @@ class remove_old_file_uploads(CronJob):
         cut_off = quantum.now('UTC').subtract(hours=24)
         for upload in TrexUpload.objects(created__lte=cut_off, preserved=False):
             upload.delete()
+
+class remove_old_sessions(CronJob):
+  """Remove old sessions"""
+
+  def run(self):
+      res = app.db.identity.remove({'expires': { '$lte': datetime.utcnow()}}, w=1)
+      log.info(res or 'Nothing done')
 
 def cron_daemon(cron_jobs, base_interval=60, max_interval=600, failure_multiplier=1.5):
     if not app.debug:
