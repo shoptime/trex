@@ -37,7 +37,7 @@ class CronJob(object):
         old_job = CronLock.objects(name=self.__class__.__name__, expires__lt=quantum.now()).first()
         if old_job:
             old_job.delete()
-            raise TimeoutException("%s timed out, forcing lock removal")
+            raise TimeoutException("%s timed out, forcing lock removal" % self.__class__.__name__)
 
     def run_wrapped(self):
         context = self.app.test_request_context('__cron__', base_url=self.app.settings.get('server', 'url'))
