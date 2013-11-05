@@ -12,6 +12,10 @@
         if ($el.length) { Trex._check_deps.apply(Trex, args); }
     };
 
+    if ( !Backbone ) {
+        return;
+    }
+
     Trex.util.ViewCollection = function() { Backbone.View.apply(this, arguments); };
     Trex.util.ViewCollection = Backbone.View.extend({
         constructor: Trex.util.ViewCollection,
@@ -139,4 +143,4 @@
             Backbone.View.prototype.remove.apply(this, arguments);
         }
     });
-})(window, Backbone);
+})(window, typeof(Backbone) === 'undefined' ? null : Backbone);
