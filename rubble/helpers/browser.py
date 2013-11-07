@@ -72,7 +72,7 @@ def url_is(expected, browser=None):
     is_equal(current_url(browser), expected, message="Browser URL is_equal")
 
 def url_like(expected, browser=None):
-    is_like(current_url(browser), expected, message="Browser URL is_like")
+    is_like(str(current_url(browser)), expected, message="Browser URL is_like")
 
 def flash_is(expected, browser=None):
     browser_for(browser).find('.flash>div').text_is(expected, message="Flash text matches")
