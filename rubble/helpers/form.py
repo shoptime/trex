@@ -32,12 +32,18 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
         else:
             el.type(value)
 
+def fill_bs2(*args, **kwargs):
+    fill(*args, **kwargs)
+
 def select_by_label(select_name, label):
     select = find('[name="%s"]' % select_name).length_is(1)
     select.select_by_value(select.find('option').filter_by_text(label).attr('value'))
 
 def submit():
-    find('.form-group button[type="submit"]').length_is(1).click()
+    find('.form-group button[type="submit"]').filter_by_visible().length_is(1).click()
+
+def submit_bs2():
+    find('.form-actions button[type="submit"]').filter_by_visible().length_is(1).click()
 
 def submit_modal():
     find('.modal .modal-footer button.btn-primary').length_is(1).click()
@@ -53,3 +59,14 @@ def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
         while not re.search(r'\bform-group\b', parent.attr('class')):
             parent = parent.parent()
         parent.find('.help-block-error')[0].text_is(value)
+
+def check_errors_bs2(**kwargs):
+    find('.control-group.error').length_is(len(kwargs.keys()), message='Correct number of errors')
+    for key, value in kwargs.items():
+        el = find('.error [name="%(key)s"]' % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
+        if not len(el):
+            failure("Couldn't find form element: %s" % key)
+        parent = el.parent()
+        while not re.search(r'\bcontrol-group\b', parent.attr('class')):
+            parent = parent.parent()
+        parent.find('.help-inline').text_is(value)
