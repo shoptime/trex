@@ -96,7 +96,11 @@ class QueuedCronJob(CronJob):
             if job:
                 # handle it here
                 self.lock_job(job)
-                self.process_job(job)
+                try:
+                    self.process_job(job)
+                except:
+                    job.reset()
+                    raise
                 self.unlock_job(job)
 
                 run_time = time.time() - begin_time
@@ -151,6 +155,13 @@ class CronJobQueue(DynamicDocument):
         job.save()
 
         return True, job
+
+    def reset(self):
+        self.started = None
+        self.locked_by_host = None
+        self.locked_by_pid = None
+        self.progress = 0
+        self.save(safe=True)
 
 class remove_old_file_uploads(CronJob):
     def run(self):
