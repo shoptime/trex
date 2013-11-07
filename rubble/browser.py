@@ -221,6 +221,15 @@ class WebElementSet(object):
                 found.append(el)
         return self.new(found, selector=selector_desc)
 
+    def filter_by_visible(self, selector_desc=None):
+        if not selector_desc:
+            selector_desc = ":visible"
+        found = []
+        for el in self.elements:
+            if el.is_displayed():
+                found.append(el)
+        return self.new(found, selector=selector_desc)
+
     def parent(self):
         return self.find('xpath:..', selector_desc='parent')
 
