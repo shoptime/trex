@@ -176,28 +176,3 @@ class remove_old_sessions(CronJob):
   def run(self):
       res = app.db.identity.remove({'expires': { '$lte': datetime.utcnow()}}, w=1)
       log.info(res or 'Nothing done')
-
-def cron_daemon(cron_jobs, base_interval=60, max_interval=600, failure_multiplier=1.5):
-    if not app.debug:
-        app.log_to_file('cron.log')
-
-    log.info('Starting cron daemon')
-
-    interval = base_interval
-
-    while True:
-        context = app.test_request_context('__cron__', base_url=app.settings.get('server', 'url'))
-        context.push()
-
-        try:
-            cron_jobs()
-            interval = base_interval
-        except Exception:
-            log.error(traceback.format_exc())
-            interval *= failure_multiplier
-
-        context.pop()
-        if interval > max_interval:
-            interval = max_interval
-
-        time.sleep(interval)
