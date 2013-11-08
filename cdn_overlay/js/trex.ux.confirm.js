@@ -2,6 +2,18 @@
     var Trex = window.Trex;
     Trex._register_module("trex.ux.confirm", "trex");
 
+    function bind(context) {
+        $('button.trex-post-simple-confirm', context).each(function() {
+            var $button = $(this);
+            $(this).wrap('<span class="trex-post-simple-confirm-wrapper" style="display: inline-block; position: relative" />');
+        });
+    }
+
+    Trex.form._bind_functions.push(bind);
+    if (Trex.opt.auto_bind_form_elements) {
+        bind();
+    }
+
     $('body').on('click', 'button.trex-post, .dropdown-menu a.trex-post', function(e) {
         e.preventDefault();
         $('<form method="post"></form>')
@@ -53,10 +65,6 @@
         ;
     });
 
-    $('button.trex-post-simple-confirm').each(function() {
-        var $button = $(this);
-        $(this).wrap('<span class="trex-post-simple-confirm-wrapper" style="display: inline-block; position: relative" />');
-    });
     $(document).on('click', 'button.trex-post-simple-confirm', function(e) {
         e.preventDefault();
         var cleaned_up = false;
