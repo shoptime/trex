@@ -57,11 +57,17 @@
                         }
                         else if ( data.state == 'ok' ) {
                             $modal.find('.modal-footer .success').show();
-                            if ( data.action === 'reload' ) {
-                                window.location.reload();
-                                return;
+                            var action = data.action || $button.data('action');
+                            switch (action) {
+                                case 'reload':
+                                    window.location.reload();
+                                    break;
+                                case 'close-modal':
+                                    $modal.modal('hide');
+                                    break;
+                                default:
+                                    throw Error("Unknown action '" + action + "' returned by server");
                             }
-                            throw Error("Unknown action '" + data.action + "' returned by server");
                         }
                         else {
                             throw Error('Unknown state returned from server');
