@@ -7,6 +7,7 @@ from .assertions import is_equal, is_like, message
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from furl import furl
+import re
 
 def browser_for(browser):
     if isinstance(browser, basestring):
@@ -107,6 +108,8 @@ def table_like(head, body, table=None):
 
     is_equal(len(body_rows), len(body), "Correct number of body rows")
 
+    retype = type(re.compile('a'))
+
     for observed_row, expected_row in zip(body_rows, body):
         observed_cells = observed_row.find('td, th')
         is_equal(len(observed_cells), len(expected_row), "Correct number of body cells")
@@ -114,5 +117,8 @@ def table_like(head, body, table=None):
             if expected_cell is None:
                 # Don't care about content
                 continue
-            observed_cell.text_is(expected_cell)
+            if isinstance(expected_cell, retype):
+                observed_cell.text_like(expected_cell)
+            else:
+                observed_cell.text_is(expected_cell)
 

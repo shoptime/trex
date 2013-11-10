@@ -259,6 +259,8 @@ class Harness(object):
             self.server_process.join()
 
 class TestFailureException(Exception):
+    retype = type(re.compile('a'))
+
     def __init__(self, message, observed=None, expected=None):
         self.message = message
         self.observed = observed
@@ -270,8 +272,12 @@ class TestFailureException(Exception):
         else:
             out = self.message
         if self.observed is not None or self.expected is not None:
+            if isinstance(self.expected, self.retype):
+                expected = self.expected.pattern
+            else:
+                expected = self.expected
             observed_out = re.sub(r'(?!\A)^', '              ', pformat(self.observed), flags=re.MULTILINE)
-            expected_out = re.sub(r'(?!\A)^', '              ', pformat(self.expected), flags=re.MULTILINE)
+            expected_out = re.sub(r'(?!\A)^', '              ', pformat(expected), flags=re.MULTILINE)
             out += "\n    Observed: %s" % observed_out
             out += "\n    Expected: %s" % expected_out
         return out

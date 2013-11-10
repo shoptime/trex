@@ -126,6 +126,9 @@ class WebElementSet(object):
 # TODO - implement these methods?
 #element
 #    wait_for_hidden
+
+    retype = type(re.compile('a'))
+
     def __init__(self, browser, elements=None, selector=None):
         self.browser  = browser
         if isinstance(selector, list):
@@ -272,7 +275,7 @@ class WebElementSet(object):
 
     def text_like(self, regexp, message=None):
         if message is None:
-            message = "%s text like: %s" % (self, regexp)
+            message = "%s text like: %s" % (self, isinstance(regexp, self.retype) and regexp.pattern or regexp)
         is_like(self.text(), regexp, message=message)
         return self
 
