@@ -29,6 +29,7 @@ import random
 import urllib
 import csv
 import StringIO
+import inspect
 
 app = None
 
@@ -452,9 +453,14 @@ class Flask(flask.Flask):
             db.close()
 
     def drop_collections(self):
-        for name in self.db.collection_names():
-            if not name.startswith('system.'):
-                self.db[name].remove()
+        for model in self.enumerate_models():
+            model.objects.delete()
+
+    def enumerate_models(self):
+        import app.model
+        for name, cls in inspect.getmembers(app.model, inspect.isclass):
+            if cls.__module__ == 'app.model' and isinstance(cls, mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
+                yield cls
 
 #
 # Exception handling
