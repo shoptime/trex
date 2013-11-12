@@ -13,8 +13,8 @@ def error(site, tag, message):
                     'message': '[[colour=light_blue]%s[colour=reset]] [colour=light_red]%s[colour=reset]: %s' % (site, tag, message),
                     'method': 'msg',
                 },
+                timeout= 2,
             )
-            raise Exception("break")
         except Exception as e:
             log.error("NOTIFY [%s]: %s" % (tag, message))
             log.error("Last notify was logged because request to the notify bot failed: %s" % e)
@@ -31,6 +31,7 @@ def info(site, tag, message):
                     'message': '[[colour=light_blue]%s[colour=reset]] %s: %s' % (site, tag, message),
                     'method': 'msg',
                 },
+                timeout = 2,
             )
         except Exception as e:
             log.info("NOTIFY [%s]: %s" % (tag, message))

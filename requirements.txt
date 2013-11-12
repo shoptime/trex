@@ -18,7 +18,7 @@ pymongo
 python-dateutil
 python-postmark
 pytz
-requests
+requests>=2.0.0
 selenium
 sendgrid-python
 termcolor
