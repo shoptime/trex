@@ -593,7 +593,7 @@ class PhoneNumberWidget(object):
                 'class': 'input-country-code',
                 'type': 'text',
                 'value': value[0],
-                'placeholder': self.placeholder,
+                'placeholder': self.placeholder is not None and self.placeholder or '',
                 'maxlength': 4,
             })
             country_code_input = wtf.widgets.HTMLString('<input %s>' % cc_input_args)
