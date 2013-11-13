@@ -636,20 +636,29 @@ class PhoneNumberField(wtf.Field):
     def __init__(self, label='', validators=None, country_codes=[], placeholder=None, **kwargs):
         self.country_codes = country_codes
         self.widget = PhoneNumberWidget(country_code_as_select=len(country_codes) > 0, placeholder=placeholder)
-
         super(PhoneNumberField, self).__init__(label, validators, **kwargs)
+
+        if self.default is None:
+            self.default = ('', '')
 
     def _value(self):
         if self.raw_data:
             return self.raw_data
         else:
             if self.data:
-                parts = self.data.split(' ', 2)
+                if type(self.data) in [str, unicode]:
+                    parts = self.data.split(' ', 2)
+                elif type(self.data) == tuple:
+                    parts = self.data
+                else:
+                    raise Exception("Unknown type for data: %s" % type(self.data))
                 if self.country_codes:
                     parts[0] = parts[0][1:]
+                number = re.sub('^0*', '', parts[1])
+                parts = (parts[0], number)
                 return parts
             else:
-                return ('', '')
+                return self.default
 
     def process_formdata(self, valuelist):
         if valuelist:
