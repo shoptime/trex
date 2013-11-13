@@ -729,6 +729,7 @@ class TagField(wtf.TextAreaField):
         kwargs['data-source-data'] = json.dumps(self.source_data)
         kwargs['data-existing'] = json.dumps(self.data)
         kwargs['class'] = 'trex-tag-field form-control'
+        kwargs['disabled'] = 'disabled'
         if self.behaviour:
             kwargs['data-behaviour'] = self.behaviour
         return super(TagField, self).__call__(**kwargs)
