@@ -479,14 +479,14 @@ class BaseIdentity(BaseDocument):
         Check whether this session is expired
         """
         # Has the session passed its activity expiry?
-        if self.expires > quantum.now():
-            return False
+        if self.expires < quantum.now():
+            return True
 
         # What about its final session expiry?
         if self.created.at('UTC').add(seconds=settings.getint('identity', 'session_timeout')) < quantum.now('UTC'):
-            return False
+            return True
 
-        return True
+        return False
 
     def login(self, user):
         """
