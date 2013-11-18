@@ -103,7 +103,7 @@ def teardown_test():
     return decorator
 
 class Harness(object):
-    def __init__(self, instance_number=None, fail_method='exception'):
+    def __init__(self, instance_number=None, fail_method='exception', debug_mail=False):
         global _global_harness
         _global_harness = self
 
@@ -131,6 +131,10 @@ class Harness(object):
 
         # Stops lots of crappy selenium logging
         logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(logging.WARNING)
+
+        # Stops verbos mail logging
+        if not debug_mail:
+            logging.getLogger('trex.support.mail').setLevel(logging.WARNING)
 
         # Empty the test database to get things rolling
         app.db.connection.drop_database(app.db.name)

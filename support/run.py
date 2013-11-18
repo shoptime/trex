@@ -142,8 +142,9 @@ class Manager(script.Manager):
 
         @self.option('-p', '--processes', action='store', default=1, help='How many parallel processes to run')
         @self.option('-f', '--fail-method', action='store', default=None, help='What to do on a test/assertion failure [exception|ipdb|print]')
+        @self.option('-m', '--debug-mail', action='store_true', default=False, help='Dump debug info about emails that the app tries to send')
         @self.option('tests', action='store', nargs='*', default=None)
-        def rubble(processes, fail_method, tests):
+        def rubble(processes, fail_method, debug_mail, tests):
             """Run the new test harness"""
             import trex.rubble
 
@@ -163,7 +164,7 @@ class Manager(script.Manager):
                     raise SystemExit(3)
                 signal.signal(signal.SIGQUIT, sig_quit_handler)
                 tests = trex.rubble.split_tests_by_instance_number(test_classes, instance_number, instance_total)
-                harness = trex.rubble.Harness(instance_number=instance_number, fail_method=fail_method)
+                harness = trex.rubble.Harness(instance_number=instance_number, fail_method=fail_method, debug_mail=debug_mail)
                 harness.run(tests)
                 if harness.error_count:
                     print "[%d] Process complete with errors" % os.getpid()
