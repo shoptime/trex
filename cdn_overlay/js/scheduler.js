@@ -51,14 +51,17 @@
                 case 'next-week':
                     this.opt.startWeek.add('weeks', 1);
                     this.render();
+                    this.trigger('change_week', this.opt.startWeek);
                     break;
                 case 'prev-week':
                     this.opt.startWeek.subtract('weeks', 1);
                     this.render();
+                    this.trigger('change_week', this.opt.startWeek);
                     break;
                 case 'today':
                     this.opt.startWeek = this.startOfWeek(now());
                     this.render();
+                    this.trigger('change_week', this.opt.startWeek);
                     break;
             }
         },
