@@ -41,6 +41,7 @@ class InvalidLoginException(Exception):
 
 class BaseUser(BaseDocument):
     meta = {
+        'ordering': ['display_name'],
         'indexes': [('email',), ('token',)],
         'abstract': True,
     }
