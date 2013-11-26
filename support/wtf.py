@@ -397,14 +397,15 @@ class StarRatingField(wtf.IntegerField):
         return super(StarRatingField, self).__call__(*args, **kwargs)
 
 class DependentSelectField(wtf.SelectField):
-    def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', **kwargs):
+    def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', _form=None, **kwargs):
         kwargs['coerce'] = lambda x: x is not None and str(x) or None
-        super(DependentSelectField, self).__init__(label, validators, **kwargs)
+        super(DependentSelectField, self).__init__(label, validators, _form=_form, **kwargs)
         if parent_field is None:
             raise Exception("You must specify a parent field")
         self.parent_field = parent_field
         self.select_text = select_text
         self.choice_dict = self.choices
+        self._form = _form
         self.choices = []
 
     def pre_validate(self, form):
@@ -439,6 +440,12 @@ class DependentSelectField(wtf.SelectField):
         kwargs['data-parent'] = self.parent_field
         kwargs['data-choices'] = json.dumps(self.choice_dict)
         kwargs['data-select-text'] = self.select_text
+
+        # Prepopulate the choices based on the current parent field value
+        parent_field = self._form._fields.get(self.parent_field)
+        if parent_field and parent_field.data in self.choice_dict:
+            self.choices = self.choice_dict[parent_field.data]
+
         return super(DependentSelectField, self).__call__(*args, **kwargs)
 
 class ChosenSelectField(wtf.SelectField):
