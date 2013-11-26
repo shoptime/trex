@@ -197,7 +197,7 @@ class Harness(object):
                     for function in _global_init_test_methods:
                         function(obj)
                     obj.setup()
-                    banner = "%s - %s" % (obj.__class__.__name__, obj.run.__code__.co_filename)
+                    banner = "[%d] %s - %s" % (os.getpid(), obj.__class__.__name__, obj.run.__code__.co_filename)
                     print
                     print banner
                     print re.sub('.', '-', banner)

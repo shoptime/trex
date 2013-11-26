@@ -161,6 +161,7 @@ class Manager(script.Manager):
 
             def run_tests(instance_number, instance_total):
                 def sig_quit_handler(signum, frame):
+                    print "[%d] Got SIGQUIT - exiting now" % os.getpid()
                     raise SystemExit(3)
                 signal.signal(signal.SIGQUIT, sig_quit_handler)
                 tests = trex.rubble.split_tests_by_instance_number(test_classes, instance_number, instance_total)
@@ -191,11 +192,12 @@ class Manager(script.Manager):
 
                 failed = False
                 while len(procs):
+                    #print "%d processes alive. Failed=%s (%s)" % (len(procs), failed, ", ".join([str(proc.pid) for proc in procs]))
                     for proc in procs:
                         proc.join(0.5)
                         if not proc.is_alive():
                             procs.remove(proc)
-                            if proc.exitcode:
+                            if proc.exitcode and not failed:
                                 failed = True
                                 for proc in procs:
                                     os.kill(proc.pid, signal.SIGQUIT)
