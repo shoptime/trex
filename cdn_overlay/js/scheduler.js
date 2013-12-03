@@ -271,10 +271,19 @@
         add: function(evt) {
             var $column = this.event_column_for(evt.date());
             if (!$column) { return; }
-            var view = this.event_views[evt.cid] = new Trex.Scheduler.SpanView({
-                model: evt,
-                scheduler: this
-            });
+            var view;
+            if (evt.get('isHighlight')) {
+                view = this.event_views[evt.cid] = new Trex.Scheduler.SpanHighlightView({
+                    model: evt,
+                    scheduler: this
+                });
+            }
+            else {
+                view = this.event_views[evt.cid] = new Trex.Scheduler.SpanView({
+                    model: evt,
+                    scheduler: this
+                });
+            }
             $column.append(view.$el);
             this.balance_date(evt.date());
         },
@@ -318,8 +327,13 @@
         },
         // TODO - debounce this?
         balance_date: function(date) {
-            var events = this.model.filter(function(evt) { return evt.cid in this.event_views && date.isSame(evt.date(), 'day'); }, this);
-            var $column = this.event_column_for(date);
+            var events = this.model.filter(function(evt) {
+                if (!(this.event_views[evt.cid] instanceof Trex.Scheduler.SpanView)) {
+                    // We only want to be balancing SpanViews
+                    return false;
+                }
+                return evt.cid in this.event_views && date.isSame(evt.date(), 'day');
+            }, this);
             var timelist = _.flatten(_.map(events, function(evt) {
                 return [
                     [evt.start().format(), 'start', evt],
@@ -363,6 +377,34 @@
                     view.render();
                 }
             }, this);
+        }
+    });
+
+    Trex.Scheduler.SpanHighlightView = function() { Backbone.View.apply(this, arguments); };
+    Trex.Scheduler.SpanHighlightView = Backbone.View.extend({
+        constructor: Trex.Scheduler.SpanHighlightView,
+        log: new Trex.Logger('scheduler-span-highlight'),
+        className: 'trex-scheduler-span-highlight',
+        initialize: function(opt) {
+            this.scheduler = opt.scheduler;
+            this.$el.addClass(this.className);
+            this.listenTo(this.model, 'change', this.render);
+            this.render();
+        },
+        render: function() {
+            var start = this.model.start();
+            var end = this.model.end();
+            var start_hours = start.diff(start.clone().startOf('day'), 'hours', true);
+            var duration_hours = end.diff(start, 'hours', true);
+            this.$el
+                .removeClass(_.filter((this.$el.attr('class')||'').split(/\s+/), function(cls) { return cls.match(/^trex-scheduler-eventtype-/); }).join(' '))
+                .addClass('trex-scheduler-eventtype-' + this.model.get('type'))
+                .css({
+                    top: start_hours * this.scheduler.opt.hourHeight,
+                    height: duration_hours * this.scheduler.opt.hourHeight,
+                })
+            ;
+            this.$('.time').text(start.format(this.scheduler.opt.spanFormat) + '-' + end.format(this.scheduler.opt.spanFormat));
         }
     });
 
@@ -527,6 +569,7 @@
             canDrag: true,
             canOpen: true,
             dragging: false,
+            isHighlight: false,
             // Deltas for minutes/days used while dragging
             start_dm: 0,
             end_dm: 0,
