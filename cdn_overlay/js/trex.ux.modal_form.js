@@ -26,6 +26,10 @@
                 $modal.remove();
             });
         });
+        var modal_visible = $.Deferred();
+        $modal.on('shown.bs.modal', function() {
+            modal_visible.resolve();
+        });
 
         function handle_render(data) {
             if ( data.state != 'render' ) {
@@ -35,7 +39,7 @@
             var $content = $('<div>' + data.content + '</div>');
             var $form = $content.find('form');
             $modal.find('.modal-body').html($content.children());
-            $modal.on('shown.bs.modal', function() {
+            modal_visible.then(function() {
                 Trex.form.bind_widgets($form);
                 $form.find('.form-control').first().focus();
             });
