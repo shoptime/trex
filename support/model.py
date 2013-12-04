@@ -33,6 +33,66 @@ class BaseDocument(Document):
         kwargs['__auto_convert'] = False
         return super(BaseDocument, self).__init__(*args, **kwargs)
 
+class HiddenAttribute(object):
+    def __init__(self, message):
+        self.message = message
+
+    def __get__(self, instance, owner):
+        raise AttributeError(self.message)
+
+    def __set__(self, obj, val):
+        raise AttributeError(self.message)
+
+class ForeverDocument(Document):
+    meta = dict(abstract=True)
+
+    _archived = QuantumField()
+
+    def is_archived(self):
+        return self._archived is not None
+
+    def __init__(self, *args, **kwargs):
+        # This is to prevent mongoengine doing weird conversions on new values
+        # passed in the constructor
+        kwargs['__auto_convert'] = False
+        return super(Document, self).__init__(*args, **kwargs)
+
+    objects = HiddenAttribute("objects is disabled for ForeverDocuments. Please use either .active or .all")
+
+    @queryset_manager
+    def active(cls, queryset):
+        return queryset.filter(_archived=None)
+
+    @classmethod
+    def get_active_404(cls, *args, **kwargs):
+        """Identical to cls.objects.get(...) except raises a flask 404 instead of mongoengine DoesNotExist"""
+        try:
+            return cls.active.get(*args, **kwargs)
+        except DoesNotExist:
+            abort(404)
+
+    @queryset_manager
+    def all(cls, queryset):
+        return queryset()
+
+    @classmethod
+    def get_all_404(cls, *args, **kwargs):
+        """Identical to cls.objects.get(...) except raises a flask 404 instead of mongoengine DoesNotExist"""
+        try:
+            return cls.all.get(*args, **kwargs)
+        except DoesNotExist:
+            abort(404)
+
+    def delete(self):
+        raise Exception("delete is invalid for ForeverDocuments. Please use either real_delete() or archive()")
+
+    def archive(self):
+        self._archived = quantum.now()
+        self.save()
+
+    def real_delete(self, *args, **kwargs):
+        super(Document, self).delete(*args, **kwargs)
+
 class InvalidRoleException(Exception):
     pass
 
