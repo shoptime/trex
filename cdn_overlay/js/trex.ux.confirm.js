@@ -26,12 +26,13 @@
 
     $('body').on('click', 'button.trex-post-confirm, .dropdown-menu a.trex-post-confirm', function(e) {
         e.preventDefault();
-        var href = $(this).data('href');
+        var $e = $(this);
+        var href = $e.prop('href') || $e.data('href');
 
         var modal = $('<div class="modal fade"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><a href="" class="close">&times</a><h3 class="modal-title"></h3></div><div class="modal-body"><p></p></div><div class="modal-footer"><a class="cancel btn btn-default">Cancel</a> <a class="confirm btn btn-primary">Confirm</a></div></div></div></div>');
         modal
-            .find('.modal-header h3').text($(this).data('title')).end()
-            .find('.modal-body p').text($(this).data('body')).end()
+            .find('.modal-header h3').text($e.data('title')).end()
+            .find('.modal-body p').text($e.data('body')).end()
             .find('.modal-footer .cancel, .modal-header .close').click(function() {
                 modal.modal('hide');
                 return false;
@@ -47,13 +48,13 @@
                 return false;
             }).end()
         ;
-        if ( $(this).data('confirm-label') ) {
+        if ( $e.data('confirm-label') ) {
             modal.find('.modal-footer .confirm').text($(this).data('confirm-label'));
         }
-        if ( $(this).data('confirm-label-class') ) {
+        if ( $e.data('confirm-label-class') ) {
             modal.find('.modal-footer .confirm').removeClass('btn-primary').addClass($(this).data('confirm-label-class'));
         }
-        if ( $(this).data('cancel-label') ) {
+        if ( $e.data('cancel-label') ) {
             modal.find('.modal-footer .cancel').text($(this).data('cancel-label'));
         }
         modal
