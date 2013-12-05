@@ -33,16 +33,6 @@ class BaseDocument(Document):
         kwargs['__auto_convert'] = False
         return super(BaseDocument, self).__init__(*args, **kwargs)
 
-class HiddenAttribute(object):
-    def __init__(self, message):
-        self.message = message
-
-    def __get__(self, instance, owner):
-        raise AttributeError(self.message)
-
-    def __set__(self, obj, val):
-        raise AttributeError(self.message)
-
 class ForeverDocument(Document):
     meta = dict(abstract=True)
 
@@ -57,7 +47,16 @@ class ForeverDocument(Document):
         kwargs['__auto_convert'] = False
         return super(Document, self).__init__(*args, **kwargs)
 
-    objects = HiddenAttribute("objects is disabled for ForeverDocuments. Please use either .active or .all")
+    @queryset_manager
+    def objects(cls, queryset):
+        import mongoengine
+        import inspect
+        import os
+
+        mongoengine_location = os.path.dirname(mongoengine.__file__)
+        if inspect.currentframe().f_back.f_back.f_code.co_filename.startswith(mongoengine_location):
+            return queryset()
+        raise AttributeError("objects is disabled for ForeverDocuments. Please use either .active or .all")
 
     @queryset_manager
     def active(cls, queryset):

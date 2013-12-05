@@ -454,7 +454,10 @@ class Flask(flask.Flask):
 
     def drop_collections(self):
         for model in self.enumerate_models():
-            model.objects.delete()
+            if issubclass(model, trex.support.model.ForeverDocument):
+                model.all.delete()
+            else:
+                model.objects.delete()
 
     def enumerate_models(self):
         import app.model
