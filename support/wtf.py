@@ -802,6 +802,29 @@ class BrainTreeSelectField(wtf.SelectField):
     def pre_validate(self, form):
         pass
 
+class FileType(object):
+    type_lookup = dict(
+        pdf = ['application/pdf'],
+        doc = ['application/msword'],
+        ppt = ['application/vnd.ms-powerpoint'],
+        jpg = ['image/jpeg'],
+        png = ['image/png'],
+    )
+
+    def __init__(self, types=[], message=None):
+        self.types = types
+        if not message:
+            message = 'Uploaded file is not of an allowed file type.'
+        self.message = message
+
+    def __call__(self, form, field):
+        filetype = field.data and field.data.content_type or ''
+        for allowed_type in self.types:
+            if filetype in self.type_lookup[allowed_type]:
+                return
+
+        raise wtf.ValidationError(self.message)
+
 blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
 
 @blueprint.route('/xhr', methods=['POST'], endpoint='xhr', auth=auth.login)
