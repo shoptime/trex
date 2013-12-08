@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from trex.flask import app
 from trex.flask import AuthBlueprint, render_html
 from .. import auth
-from flask import abort, redirect, url_for
+from flask import abort, redirect, url_for, g
 from flask.ext import wtf
 from trex.support import token
 from .audit import audit
@@ -66,6 +66,9 @@ def deactivate(user_token):
     except m.DoesNotExist:
         abort(404)
 
+    if not g.user.has_role(user.role):
+        return abort(404)
+
     user.is_active = False
     user.password = None
     user.save()
@@ -79,6 +82,9 @@ def reset_password(user_token):
         user = m.User.active.get(token=user_token)
     except m.DoesNotExist:
         abort(404)
+
+    if not g.user.has_role(user.role):
+        return abort(404)
 
     new_password = token.create_token(length=8)
 
