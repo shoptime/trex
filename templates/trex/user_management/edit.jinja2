@@ -2,6 +2,15 @@
 {% extends 'base.jinja2' %}
 {% set page_title = 'User management' %}
 {% block content %}
-<h2>User management</h2>
-{{ trex.form_render(form, 'Save user') }}
+<ol class="breadcrumb">
+    <li><a href="{{ url_for('trex.user_management.index') }}">User management</a></li>
+    <li class="active">{% if add %}Add user{% else %}Edit user{% endif %}</a>
+</ol>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            {{ trex.form_render(form, add and 'Create user' or 'Save user') }}
+        </div>
+    </div>
+</div>
 {% endblock %}

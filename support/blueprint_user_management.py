@@ -70,7 +70,7 @@ def edit(user_token=None):
             audit("Added user %s" % user.display_name, ['User Management'], [user])
         return redirect(url_for('.index'))
 
-    return dict(form=form)
+    return dict(form=form, add=user_token is None)
 
 @blueprint.route('/<user_token>/deactivate', methods=['POST'], auth=auth.has_flag('trex.user_management'))
 def deactivate(user_token):

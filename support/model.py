@@ -159,6 +159,9 @@ class BaseUser(BaseDocument):
     def url_for_edit_user(self, **kwargs):
         return url_for('trex.user_management.edit', user_token=self.token, **kwargs)
 
+    def role_label(self):
+        return BaseUser.roles()[self.role]['label']
+
     def get_role(self, role):
         try:
             return self.roles()[role]
@@ -187,6 +190,9 @@ class BaseUser(BaseDocument):
                 return True
 
         return False
+
+    def country_label(self):
+        return pytz.country_names[self.country]
 
     def check_login(self, entered_password):
         if not self.is_active:
