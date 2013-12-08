@@ -13,7 +13,7 @@ def error(site, tag, message):
                     'message': '[[colour=light_blue]%s[colour=reset]] [colour=light_red]%s[colour=reset]: %s' % (site, tag, message),
                     'method': 'msg',
                 },
-                timeout= 2,
+                timeout = 2,
             )
         except Exception as e:
             log.error("NOTIFY [%s]: %s" % (tag, message))
