@@ -6,7 +6,7 @@ from trex.flask import AuthBlueprint, render_html
 from .. import auth
 from flask import abort, redirect, url_for, g
 from flask.ext import wtf
-from trex.support import token
+from trex.support import token, wtf as twtf
 from .audit import audit
 import app.model as m
 
@@ -32,12 +32,23 @@ def edit(user_token=None):
     else:
         user = m.User()
 
-    role_choices = [ (x[0], x[1]['label']) for x in sorted(m.User.roles().items(), key=lambda x: x[1]['level']) ]
+    if not g.user.has_role(user.role):
+        return abort(404)
+
+    role_choices = [ (x[0], x[1]['label']) for x in sorted(m.User.roles().items(), key=lambda x: x[1]['level']) if g.user.has_role(x[0]) ]
 
     class Form(wtf.Form):
         display_name = wtf.TextField('Display name', [wtf.Required()])
         email        = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
         role         = wtf.SelectField('Role', [wtf.Required()], choices=role_choices)
+        country      = wtf.SelectField('Country', [wtf.Required()], choices=twtf.country_choices())
+        timezone     = twtf.DependentSelectField(
+            'Time Zone',
+            [wtf.Required()],
+            parent_field = 'country',
+            select_text = '',
+            choices = twtf.timezone_dependent_choices(),
+        )
 
         def validate_email(form, field):
             existing = m.User.objects(email=field.data).first()
@@ -48,8 +59,10 @@ def edit(user_token=None):
 
     if form.validate_on_submit():
         user.display_name = form.display_name.data
-        user.email = form.email.data
-        user.role = form.role.data
+        user.email        = form.email.data
+        user.role         = form.role.data
+        user.country      = form.country.data
+        user.timezone     = form.timezone.data
         user.save()
         if user_token:
             audit("Updated user %s" % user.display_name, ['User Management'], [user])

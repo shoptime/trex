@@ -15,6 +15,7 @@ import random
 from itertools import izip, cycle
 import binascii
 from jinja2 import Markup
+import pytz
 
 class BaseDocument(Document):
     meta = dict(abstract=True)
@@ -113,6 +114,8 @@ class BaseUser(BaseDocument):
     last_login   = QuantumField()
     role         = StringField(required=True, default='user')
     is_active    = BooleanField(required=True, default=True)
+    country      = StringField(required=True, choices=pytz.country_names.keys())
+    timezone     = StringField(required=True, choices=[x for y in pytz.country_timezones.values() for x in y])
 
     @queryset_manager
     def active(cls, queryset):
