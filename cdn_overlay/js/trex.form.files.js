@@ -13,6 +13,10 @@
             progress: 0,
             error: false
         },
+        has_progress: function() {
+            var progress = this.get('progress');
+            return !isNaN(parseFloat(progress)) && isFinite(progress);
+        },
         pretty_size: function() {
             var kilobyte = 1024;
             var megabyte = kilobyte * 1024;
@@ -318,8 +322,19 @@
                 }
                 else {
                     // File is currently uploading
-                    this.$('.filename, button').hide();
+                    this.$('button').hide();
                     this.$('.uploading').css('display', 'inline-block');
+                    if (this.model.has_progress()) {
+                        var progressbar = this.$('.progress');
+                        if (progressbar.length === 0) {
+                            this.$('.filename').html('<div class="progress"><div class="progress-bar"></div></div>').show();
+                            progressbar = this.$('.progress').css({margin: 0, width: 300});
+                        }
+                        progressbar.find('.progress-bar').css('width', this.model.get('progress') + '%');
+                    }
+                    else {
+                        this.$('.filename').hide();
+                    }
                 }
             }
         });
