@@ -198,8 +198,8 @@
                     return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
                 }
             }))();
-            if ($widget.find('input:hidden').val()) {
-                _.each(JSON.parse($widget.find('input:hidden').val()), function(data) {
+            if ($widget.find('input[type=hidden]').val()) {
+                _.each(JSON.parse($widget.find('input[type=hidden]').val()), function(data) {
                     var model = new Trex.form.files.UploadModel(data);
                     model.set({
                         id: model.cid,
@@ -218,7 +218,7 @@
             });
             files.on('add remove change', function(model) {
                 // Keep the javascript up to date
-                $widget.find('input:hidden').val(JSON.stringify(files.where({error:false})));
+                $widget.find('input[type=hidden]').val(JSON.stringify(files.where({error:false})));
                 if (finished_uploads && files.uploads_complete()) {
                     if (model.get('error')) {
                         finished_uploads.reject();
@@ -285,16 +285,102 @@
             });
         });
 
-        $('.trex-image-widget', context).each(function() {
+        var FileView = Backbone.View.extend({
+            initialize: function(opt) {
+                this.opt = _.extend({}, opt);
+                if (this.model) {
+                    this.listenTo(this.model, 'change', this.render);
+                }
+                this.render();
+            },
+            change_model: function(new_model) {
+                if (this.model) {
+                    this.stopListening(this.model);
+                }
+                this.model = new_model;
+                if (this.model) {
+                    this.listenTo(this.model, 'change', this.render);
+                }
+                this.render();
+            },
+            render: function() {
+                if (!this.model) {
+                    // No file
+                    this.$('.filename, button').hide();
+                    this.$('.uploading').css('display', 'none');
+                    return;
+                }
+                if (this.model.get('url')) {
+                    // Got a file
+                    this.$('button').toggle(this.opt.allow_clear);
+                    this.$('.uploading').css('display', 'none');
+                    this.$('.filename').text(this.model.get('filename')).show();
+                }
+                else {
+                    // File is currently uploading
+                    this.$('.filename, button').hide();
+                    this.$('.uploading').css('display', 'inline-block');
+                }
+            }
+        });
+        var ImageView = FileView.extend({
+            initialize: function(opt) {
+                this.opt = _.extend({
+                    width: parseInt(this.$('.thumbnail').data('width'), 10),
+                    height: parseInt(this.$('.thumbnail').data('height'), 10)
+                }, opt);
+                FileView.prototype.initialize.apply(this, arguments);
+            },
+            render: function() {
+                if (this.model) {
+                    this.$('button').show();
+                    if (this.model.get('url')) {
+                        this.$('.uploading').css('display', 'none');
+                        this.$('.thumbnail').html('<img>').find('img')
+                            .css({
+                                maxWidth: this.opt.width-10,
+                                maxHeight: this.opt.height-10,
+                                verticalAlign: 'center'
+                            })
+                            .attr('src', this.model.get('url'))
+                        ;
+                    }
+                    else {
+                        this.$('.uploading').css('display', 'inline-block');
+                        this.$('.thumbnail')
+                            .html('<span><span>Loading</span></span>')
+                            .find('>span').css({
+                                width: this.opt.width,
+                                height: this.opt.height
+                            })
+                        ;
+                    }
+                }
+                else {
+                    this.$('button').hide();
+                    this.$('.uploading').css('display', 'none');
+                    this.$('.thumbnail')
+                        .html('<span><span>No image</span></span>')
+                        .find('>span').css({
+                            width: this.opt.width,
+                            height: this.opt.height
+                        })
+                    ;
+                }
+            }
+        });
+
+        $('.trex-image-widget, .trex-file-widget', context).each(function() {
             var $widget = $(this);
+            var options = _.extend({}, $widget.data('options'));
             var files = new (Backbone.Collection.extend({
                 model: Trex.form.files.UploadModel,
                 uploads_complete: function() {
                     return this.length == this.filter(function(m) { return m.get('progress') == 100 && m.get('oid'); }).length;
                 }
             }))();
-            if ($widget.find('input:hidden').val()) {
-                var model = new Trex.form.files.UploadModel(JSON.parse($widget.find('input:hidden').val()));
+            if ($widget.find('input[type=hidden]').val()) {
+                var model = new Trex.form.files.UploadModel(JSON.parse($widget.find('input[type=hidden]').val()));
                 model.set({
                     id: model.cid,
                     progress: 100
@@ -312,7 +398,7 @@
             files.on('add remove change reset', function() {
                 // Keep the javascript up to date
                 var model = files.where({error:false})[0];
-                $widget.find('input:hidden').val(model ? JSON.stringify(model) : '');
+                $widget.find('input[type=hidden]').val(model ? JSON.stringify(model) : '');
 
                 if (finished_uploads && files.uploads_complete()) {
                     if (model.get('error')) {
@@ -323,67 +409,21 @@
                     }
                 }
             });
-            var view = new (Backbone.View.extend({
-                el: $widget,
-                model: files.first(),
-                initialize: function(opt) {
-                    this.opt = _.extend({
-                        width: parseInt($widget.find('.thumbnail').data('width'), 10),
-                        height: parseInt($widget.find('.thumbnail').data('height'), 10)
-                    }, opt);
-                    if (this.model) {
-                        this.listenTo(this.model, 'change', this.render);
-                    }
-                    this.render();
-                },
-                change_model: function(new_model) {
-                    if (this.model) {
-                        this.stopListening(this.model);
-                    }
-                    this.model = new_model;
-                    if (this.model) {
-                        this.listenTo(this.model, 'change', this.render);
-                    }
-                    this.render();
-                },
-                render: function() {
-                    if (this.model) {
-                        this.$('button').show();
-                        if (this.model.get('url')) {
-                            this.$('.uploading').css('display', 'none');
-                            this.$('.thumbnail').html('<img>').find('img')
-                                .css({
-                                    maxWidth: this.opt.width-10,
-                                    maxHeight: this.opt.height-10,
-                                    verticalAlign: 'center'
-                                })
-                                .attr('src', this.model.get('url'))
-                            ;
-                        }
-                        else {
-                            this.$('.uploading').css('display', 'inline-block');
-                            this.$('.thumbnail')
-                                .html('<span><span>Loading</span></span>')
-                                .find('>span').css({
-                                    width: this.opt.width,
-                                    height: this.opt.height
-                                })
-                            ;
-                        }
-                    }
-                    else {
-                        this.$('button').hide();
-                        this.$('.uploading').css('display', 'none');
-                        this.$('.thumbnail')
-                            .html('<span><span>No image</span></span>')
-                            .find('>span').css({
-                                width: this.opt.width,
-                                height: this.opt.height
-                            })
-                        ;
-                    }
-                }
-            }))();
+
+            var view;
+            if ($widget.hasClass('trex-image-widget')) {
+                view = new ImageView(_.extend({
+                    el: $widget,
+                    model: files.first(),
+                }, options));
+            }
+            else {
+                view = new FileView(_.extend({
+                    el: $widget,
+                    model: files.first(),
+                }, options));
+            }
+            window.f = files;
             window.v = view;
 
             $widget.on('change.trexImageWidget', 'input[type=file]', function(e) {

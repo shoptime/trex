@@ -16,6 +16,7 @@ import pytz
 import operator
 import re
 import logging
+from cgi import escape
 log = logging.getLogger(__name__)
 
 # Stolen from mongoengine
@@ -498,6 +499,69 @@ class FileListField(wtf.Field):
         else:
             self.data = []
 
+class FileWidget(object):
+    def __call__(self, field, **kwargs):
+        data = dict(
+            widget_args = wtf.widgets.html_params(**{
+                'class': 'trex-file-widget',
+                'data-xhr-url': url_for('trex.upload.xhr'),
+                'data-iframe-url': url_for('trex.upload.iframe'),
+                'data-options': tjson.dumps(dict(
+                    allow_clear = field.allow_clear,
+                )),
+            }),
+            input_args = wtf.widgets.html_params(**{
+                'id': field.id,
+                'name': field.name,
+                'type': 'hidden',
+                'value': kwargs.get('value', field._value()),
+            }),
+            button_args = wtf.widgets.html_params(**{
+                'type': 'button',
+                'class': field.allow_clear and 'btn btn-default' or 'btn btn-default hide',
+            }),
+            file_input_name = "%s_file_input" % field.name,
+            filename = escape(field.data and field.data.file.filename or ''),
+        )
+
+        return wtf.widgets.HTMLString("""
+<div %(widget_args)s>
+    <div class="filename">%(filename)s</div>
+    <a class="add-file btn btn-default">Upload file <input name="%(file_input_name)s" type="file"></a>
+    <button %(button_args)s>Clear file</button>
+    <span class="uploading"></span>
+    <input %(input_args)s>
+</div>
+""" % data)
+
+class FileField(wtf.Field):
+    widget = FileWidget()
+
+    def _value(self):
+        if self.data:
+            return ejson.dumps(self.data)
+        else:
+            return ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            if valuelist[0]:
+                data = json.loads(valuelist[0])
+                if isinstance(self.object_data, TrexUpload) and str(self.object_data.id) == data['oid']:
+                    # Even if we don't own this one, it was provided as the form
+                    # default, so we'll let the user pass it through untouched.
+                    self.data = self.object_data
+                else:
+                    self.data = TrexUpload.objects(user=g.user, id=data['oid']).first()
+            else:
+                self.data = None
+        else:
+            self.data = None
+
+    def __init__(self, label='', validators=None, allow_clear=True, **kwargs):
+        super(FileField, self).__init__(label, validators, **kwargs)
+        self.allow_clear = allow_clear
+
 class ImageWidget(object):
     def __init__(self, width=120, height=120):
         self.width = int(width)
@@ -506,7 +570,7 @@ class ImageWidget(object):
     def __call__(self, field, **kwargs):
         data = dict(
             widget_args = wtf.widgets.html_params(**{
-                'class':'trex-image-widget',
+                'class': 'trex-image-widget',
                 'data-xhr-url': url_for('trex.upload.xhr'),
                 'data-iframe-url': url_for('trex.upload.iframe'),
             }),
@@ -538,14 +602,8 @@ class ImageWidget(object):
 </div>
 """ % data)
 
-class ImageField(wtf.Field):
+class ImageField(FileField):
     widget = ImageWidget()
-
-    def _value(self):
-        if self.data:
-            return ejson.dumps(self.data)
-        else:
-            return ''
 
     def process(self, *args, **kwargs):
         super(ImageField, self).process(*args, **kwargs)
@@ -553,22 +611,6 @@ class ImageField(wtf.Field):
             # Provide temporary access to the upload for this user (so they can
             # view the existing image)
             TrexUploadTemporaryAccess(upload=self.data, user=g.user).save()
-
-
-    def process_formdata(self, valuelist):
-        if valuelist:
-            if valuelist[0]:
-                data = json.loads(valuelist[0])
-                if isinstance(self.object_data, TrexUpload) and str(self.object_data.id) == data['oid']:
-                    # Even if we don't own this one, it was provided as the form
-                    # default, so we'll let the user pass it through untouched.
-                    self.data = self.object_data
-                else:
-                    self.data = TrexUpload.objects(user=g.user, id=data['oid']).first()
-            else:
-                self.data = None
-        else:
-            self.data = None
 
 class PhoneNumberWidget(object):
     def __init__(self, country_code_as_select=False, placeholder=None, *args, **kwargs):
