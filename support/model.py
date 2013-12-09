@@ -679,7 +679,7 @@ class TrexUpload(BaseDocument):
         fh.seek(0)
         upload.file.put(
             fh,
-            content_type = content_Type,
+            content_type = content_type,
             filename     = os.path.basename(filename),
         )
         upload.save()
