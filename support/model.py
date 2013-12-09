@@ -10,7 +10,7 @@ from flask import g, url_for, abort
 import re
 import hashlib
 from . import token, quantum
-import mimetypes
+import magic
 import random
 from itertools import izip, cycle
 import binascii
@@ -674,9 +674,12 @@ class TrexUpload(BaseDocument):
             user = for_user,
             data = data,
         )
+        fh = open(filename, 'r')
+        content_type = magic.from_buffer(fh.read(1024), mime=True)
+        fh.seek(0)
         upload.file.put(
-            open(filename, 'r'),
-            content_type = mimetypes.guess_type(filename)[0],
+            fh,
+            content_type = content_Type,
             filename     = os.path.basename(filename),
         )
         upload.save()

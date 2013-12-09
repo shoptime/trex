@@ -16,6 +16,7 @@ premailer
 pycrypto
 pymongo
 python-dateutil
+python-magic
 python-postmark
 pytz
 requests>=2.0.0

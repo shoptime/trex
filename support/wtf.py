@@ -15,8 +15,9 @@ import json
 import pytz
 import operator
 import re
-import logging
 from cgi import escape
+import magic
+import logging
 log = logging.getLogger(__name__)
 
 # Stolen from mongoengine
@@ -882,8 +883,9 @@ def upload_xhr():
     upload = TrexUpload(user=g.user)
     upload.file.put(
         request.data,
-        content_type = request.content_type,
-        filename     = request.headers.get('X-FileName'),
+        content_type         = magic.from_buffer(request.data[:1024], mime=True),
+        browser_content_type = request.content_type,
+        filename             = request.headers.get('X-FileName'),
     )
     upload.save()
 
@@ -902,10 +904,14 @@ def upload_iframe():
     if not file:
         abort(500)
 
+    content_type = magic.from_buffer(file.read(1024), mime=True)
+    file.seek(0)
+
     upload.file.put(
         file.stream,
-        content_type = file.content_type,
-        filename     = file.filename,
+        content_type         = content_type,
+        browser_content_type = file.content_type,
+        filename             = file.filename,
     )
     upload.save()
 
