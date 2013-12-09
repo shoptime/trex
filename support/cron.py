@@ -168,11 +168,12 @@ class remove_old_file_uploads(CronJob):
         from trex.support.model import TrexUpload
         cut_off = quantum.now('UTC').subtract(hours=24)
         for upload in TrexUpload.objects(created__lte=cut_off, preserved=False):
+            log.debug("Removing upload: %s" % upload.token)
             upload.delete()
 
 class remove_old_sessions(CronJob):
-  """Remove old sessions"""
+    """Remove old sessions"""
 
-  def run(self):
-      res = app.db.identity.remove({'expires': { '$lte': datetime.utcnow()}}, w=1)
-      log.info(res or 'Nothing done')
+    def run(self):
+        res = app.db.identity.remove({'expires': { '$lte': datetime.utcnow()}}, w=1)
+        log.info(res or 'Nothing done')
