@@ -18,7 +18,7 @@
         deps.shift(); // Pop off deps_for
         var missing_deps = [];
         _.each(deps, function(dep) {
-            if (Trex._loaded_modules.indexOf(dep) === -1) {
+            if (_.indexOf(Trex._loaded_modules, dep) === -1) {
                 missing_deps.push(dep);
             }
         });
