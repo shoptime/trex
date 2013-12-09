@@ -92,6 +92,10 @@ def execute_script(script, browser=None):
 def wait_for_ajax(browser=None):
     browser_for(browser).wait_for_ajax()
 
+def wait_for_modal_form(browser=None):
+    browser_for(browser).wait_for_bootstrap_modal()
+    browser_for(browser).wait_for_ajax()
+
 def screenshot(browser=None):
     browser_for(browser).screenshot()
 
