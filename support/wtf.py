@@ -860,7 +860,14 @@ class FileType(object):
         self.message = message
 
     def __call__(self, form, field):
-        filetype = field.data and field.data.content_type or ''
+        if not field.data:
+            # Nothing to validate
+            return
+
+        if not isinstance(field.data, TrexUpload):
+            raise TypeError("Can only validate TrexUpload objects")
+
+        filetype = field.data.file.content_type
         for allowed_type in self.types:
             if filetype in self.type_lookup[allowed_type]:
                 return
