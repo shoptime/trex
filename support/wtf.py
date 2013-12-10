@@ -502,14 +502,20 @@ class FileListField(wtf.Field):
 
 class FileWidget(object):
     def __call__(self, field, **kwargs):
+        options = dict(
+            allow_clear = field.allow_clear,
+        )
+
+        type_validators = [x for x in field.validators if isinstance(x, FileType)]
+        if len(type_validators):
+            options['type_validators'] = type_validators[0].for_browser()
+
         data = dict(
             widget_args = wtf.widgets.html_params(**{
                 'class': 'trex-file-widget',
                 'data-xhr-url': url_for('trex.upload.xhr'),
                 'data-iframe-url': url_for('trex.upload.iframe'),
-                'data-options': tjson.dumps(dict(
-                    allow_clear = field.allow_clear,
-                )),
+                'data-options': tjson.dumps(options),
             }),
             input_args = wtf.widgets.html_params(**{
                 'id': field.id,
@@ -846,19 +852,85 @@ class BrainTreeSelectField(wtf.SelectField):
         pass
 
 class FileType(object):
-    type_lookup = dict(
-        pdf = ['application/pdf'],
-        doc = ['application/msword'],
-        ppt = ['application/vnd.ms-powerpoint'],
-        jpg = ['image/jpeg'],
-        png = ['image/png'],
+    type_details = dict(
+        pdf = dict(
+            name = 'PDF',
+            mime_types = ['application/pdf'],
+            rules = [
+                ('application/pdf', None),
+                (None, 'pdf'),
+            ]
+        ),
+        doc = dict(
+            name = 'Word Document',
+            mime_types = ['application/msword'],
+            rules = [
+                ('application/msword', None),
+                (None, 'doc'),
+                (None, 'docx'),
+            ]
+        ),
+        ppt = dict(
+            name = 'PowerPoint',
+            mime_types = ['application/vnd.ms-powerpoint'],
+            rules = [
+                ('application/vnd.ms-powerpoint', None),
+                (None, 'ppt'),
+                (None, 'pptx'),
+            ]
+        ),
+        image = dict(
+            name = 'Image',
+            subtypes = ['jpg', 'png'],
+        ),
+        jpg = dict(
+            name = 'JPEG',
+            mime_types = ['image/jpeg'],
+            rules = [
+                ('image/jpeg', None),
+                (None, 'jpg'),
+                (None, 'jpeg'),
+            ]
+        ),
+        png = dict(
+            name = 'PNG',
+            mime_types = ['image/png'],
+            rules = [
+                ('image/png', None),
+                (None, 'png'),
+            ]
+        ),
     )
 
     def __init__(self, types=[], message=None):
         self.types = types
+        self.mime_types = []
+        self.rules = []
+
+        for type_name in self.types:
+            self._add_type(type_name)
+
         if not message:
-            message = 'Uploaded file is not of an allowed file type.'
+            message = 'Uploaded file must be one of: %s' % ", ".join([self.type_details[x]['name'] for x in self.types])
+
         self.message = message
+
+    def _add_type(self, type_name):
+        if type_name not in self.type_details:
+            raise Exception("Invalid type: %s" % type_name)
+
+        type_data = self.type_details[type_name]
+        self.mime_types.extend(type_data.get('mime_types', []))
+        self.rules.extend(type_data.get('rules', []))
+        if 'subtypes' in type_data:
+            for subtype_name in type_data['subtypes']:
+                self._add_type(subtype_name)
+
+    def for_browser(self):
+        return dict(
+            rules   = self.rules,
+            message = self.message,
+        )
 
     def __call__(self, form, field):
         if not field.data:
@@ -868,12 +940,8 @@ class FileType(object):
         if not isinstance(field.data, TrexUpload):
             raise TypeError("Can only validate TrexUpload objects")
 
-        filetype = field.data.file.content_type
-        for allowed_type in self.types:
-            if filetype in self.type_lookup[allowed_type]:
-                return
-
-        raise wtf.ValidationError(self.message)
+        if field.data.file.content_type not in self.mime_types:
+            raise wtf.ValidationError(self.message)
 
 blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
 
