@@ -62,9 +62,9 @@ class CDNPlugin(object):
 
 class CDN_CSS(CDNPlugin):
     def preprocess(self, info):
-        self.info = info
         if info.mime != 'text/css':
             return
+        self.info = info
         info.data = re.sub(r'''url \( (["']?) ([^)]+) \1 \)''', self.url_replace, info.file_data(), flags=re.X)
 
     def url_replace(self, match):
@@ -209,6 +209,9 @@ class CDNFile(object):
         self.extension = None
         self.basename = None
         self.mime = None
+
+    def __repr__(self):
+        return "<trex.cdn.CDNFile object \"%s\">" % self.uri
 
     def file_data(self):
         if self.data is not None:
