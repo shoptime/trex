@@ -317,7 +317,7 @@
                 if (this.model) {
                     this.listenTo(this.model, 'change', this.render);
                 }
-                this.render();
+                this.render(true);
             },
             change_model: function(new_model) {
                 if (this.model) {
@@ -329,15 +329,17 @@
                 }
                 this.render();
             },
-            render: function() {
+            render: function(initial_render) {
                 if (!this.model) {
                     // No file
                     this.$('.filename, button').hide();
                     this.$('.uploading').css('display', 'none');
                     return;
                 }
-                this.$el.closest('.form-group').toggleClass('has-error', this.model.get('error'));
-                this.$el.closest('.form-group').find('.help-block-error').remove();
+                if (initial_render !== true) {
+                    this.$el.closest('.form-group').toggleClass('has-error', this.model.get('error'));
+                    this.$el.closest('.form-group').find('.help-block-error').remove();
+                }
                 if (this.model.get('error')) {
                     this.$('.filename, button').hide();
                     $('<span class="help-block help-block-error"></span>').text(this.model.get('error_message') || 'An error occured uploading.').appendTo(this.$el);
