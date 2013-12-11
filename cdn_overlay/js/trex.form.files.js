@@ -317,7 +317,6 @@
                 if (this.model) {
                     this.listenTo(this.model, 'change', this.render);
                 }
-                this.render(true);
             },
             change_model: function(new_model) {
                 if (this.model) {
@@ -329,90 +328,68 @@
                 }
                 this.render();
             },
+            state: function() {
+                if (!this.model) { return 'empty'; }
+                if (this.model.get('error')) { return 'error'; }
+                if (this.model.get('url')) { return 'valid'; }
+                return 'uploading';
+            },
             render: function(initial_render) {
-                if (!this.model) {
-                    // No file
-                    this.$('.filename, button').hide();
-                    this.$('.uploading').css('display', 'none');
+                var state = this.state();
+
+                // Ensure correct "Clear" button visibility
+                this.$('button').toggle(state == 'valid' && this.opt.allow_clear);
+
+                // Ensure correct uploading spinner visibility
+                this.$('.uploading').css('display', state == 'uploading' ? 'inline-block' : 'none');
+
+                // Ensure correct error visibility
+                this.$el.closest('.form-group').toggleClass('has-error', state == 'error');
+                this.$el.closest('.form-group').find('.help-block-error').remove();
+                if (state == 'error') {
+                    $('<span class="help-block help-block-error"></span>').text(this.model.get('error_message') || 'An error occured uploading.').appendTo(this.$el);
+                }
+
+                switch (state) {
+                    case 'valid':
+                        this.render_file_display();
+                        break;
+                    case 'uploading':
+                        this.render_progress();
+                        break;
+                    case 'empty':
+                        this.render_empty();
+                        break;
+                    default:
+                        this.$('.file-display').hide();
+                }
+            },
+            render_empty: function() {
+                this.$('.file-display').hide();
+            },
+            render_file_display: function() {
+                this.$('.file-display').text(this.model.get('filename')).show();
+            },
+            render_progress: function() {
+                if (!this.model.has_progress()) {
+                    // Browser isn't indicating progress, we'll just make-do with the upload spinner
+                    this.$('.file-display').hide();
                     return;
                 }
-                if (initial_render !== true) {
-                    this.$el.closest('.form-group').toggleClass('has-error', this.model.get('error'));
-                    this.$el.closest('.form-group').find('.help-block-error').remove();
+                var progressbar = this.$('.file-display .progress');
+                if (progressbar.length === 0) {
+                    this.$('.file-display').html('<div class="progress"><div class="progress-bar"></div></div>').show();
+                    progressbar = this.$('.progress').css({margin: 0, width: 300});
                 }
-                if (this.model.get('error')) {
-                    this.$('.filename, button').hide();
-                    $('<span class="help-block help-block-error"></span>').text(this.model.get('error_message') || 'An error occured uploading.').appendTo(this.$el);
-                    this.$('.uploading').css('display', 'none');
-                }
-                else if (this.model.get('url')) {
-                    // Got a file
-                    this.$('button').toggle(this.opt.allow_clear);
-                    this.$('.uploading').css('display', 'none');
-                    this.$('.filename').text(this.model.get('filename')).show();
-                }
-                else {
-                    // File is currently uploading
-                    this.$('button').hide();
-                    this.$('.uploading').css('display', 'inline-block');
-                    if (this.model.has_progress()) {
-                        var progressbar = this.$('.progress');
-                        if (progressbar.length === 0) {
-                            this.$('.filename').html('<div class="progress"><div class="progress-bar"></div></div>').show();
-                            progressbar = this.$('.progress').css({margin: 0, width: 300});
-                        }
-                        progressbar.find('.progress-bar').css('width', this.model.get('progress') + '%');
-                    }
-                    else {
-                        this.$('.filename').hide();
-                    }
-                }
+                progressbar.find('.progress-bar').css('width', this.model.get('progress') + '%');
             }
         });
         var ImageView = FileView.extend({
-            initialize: function(opt) {
-                this.opt = _.extend({
-                    width: parseInt(this.$('.thumbnail').data('width'), 10),
-                    height: parseInt(this.$('.thumbnail').data('height'), 10)
-                }, opt);
-                FileView.prototype.initialize.apply(this, arguments);
+            render_empty: function() {
+                this.$('.file-display').html('<div class="thumbnail"><span class="no-image">No image</span></div>').show();
             },
-            render: function() {
-                if (this.model) {
-                    this.$('button').show();
-                    if (this.model.get('url')) {
-                        this.$('.uploading').css('display', 'none');
-                        this.$('.thumbnail').html('<img>').find('img')
-                            .css({
-                                maxWidth: this.opt.width-10,
-                                maxHeight: this.opt.height-10,
-                                verticalAlign: 'center'
-                            })
-                            .attr('src', this.model.get('url'))
-                        ;
-                    }
-                    else {
-                        this.$('.uploading').css('display', 'inline-block');
-                        this.$('.thumbnail')
-                            .html('<span><span>Loading</span></span>')
-                            .find('>span').css({
-                                width: this.opt.width,
-                                height: this.opt.height
-                            })
-                        ;
-                    }
-                }
-                else {
-                    this.$('button').hide();
-                    this.$('.uploading').css('display', 'none');
-                    this.$('.thumbnail')
-                        .html('<span><span>No image</span></span>')
-                        .find('>span').css({
-                            width: this.opt.width,
-                            height: this.opt.height
-                        })
-                    ;
-                }
+            render_file_display: function() {
+                this.$('.file-display').html('<div class="thumbnail"><img></div>').show().find('img').attr('src', this.model.get('url'));
             }
         });
 

@@ -626,13 +626,16 @@ class TrexUpload(BaseDocument):
         self.file.delete()
         super(TrexUpload, self).delete()
 
+    def url(self):
+        return url_for('trex.upload.view', token=self.token)
+
     def to_ejson(self):
         return dict(
             oid      = self.id,
             filename = self.file.filename,
             size     = self.file.length,
             mime     = self.file.content_type,
-            url      = url_for('trex.upload.view', token=self.token)
+            url      = self.url(),
         )
 
     @classmethod

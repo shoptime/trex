@@ -501,6 +501,14 @@ class FileListField(wtf.Field):
             self.data = []
 
 class FileWidget(object):
+    def __init__(self, class_name='trex-file-widget'):
+        self.class_name = class_name
+
+    def file_display(self, field):
+        if not field.data:
+            return ''
+        return escape(field.data.file.filename)
+
     def __call__(self, field, **kwargs):
         options = dict(
             allow_clear = field.allow_clear,
@@ -512,7 +520,7 @@ class FileWidget(object):
 
         data = dict(
             widget_args = wtf.widgets.html_params(**{
-                'class': 'trex-file-widget',
+                'class': self.class_name,
                 'data-xhr-url': url_for('trex.upload.xhr'),
                 'data-iframe-url': url_for('trex.upload.iframe'),
                 'data-options': tjson.dumps(options),
@@ -525,15 +533,19 @@ class FileWidget(object):
             }),
             button_args = wtf.widgets.html_params(**{
                 'type': 'button',
-                'class': field.allow_clear and 'btn btn-default' or 'btn btn-default hide',
+                'class': (field.allow_clear and field.data) and 'btn btn-default' or 'btn btn-default hide',
+            }),
+            file_display_args = wtf.widgets.html_params(**{
+                'class': 'file-display',
+                'style': not self.file_display(field) and 'display: none;' or '',
             }),
             file_input_name = "%s_file_input" % field.name,
-            filename = escape(field.data and field.data.file.filename or ''),
+            file_display = self.file_display(field),
         )
 
         return wtf.widgets.HTMLString("""
 <div %(widget_args)s>
-    <div class="filename">%(filename)s</div>
+    <div %(file_display_args)s">%(file_display)s</div>
     <a class="add-file btn btn-default">Upload file <input name="%(file_input_name)s" type="file"></a>
     <button %(button_args)s>Clear file</button>
     <span class="uploading"></span>
@@ -569,45 +581,14 @@ class FileField(wtf.Field):
         super(FileField, self).__init__(label, validators, **kwargs)
         self.allow_clear = allow_clear
 
-class ImageWidget(object):
-    def __init__(self, width=120, height=120):
-        self.width = int(width)
-        self.height = int(height)
+class ImageWidget(FileWidget):
+    def __init__(self, class_name='trex-file-widget trex-image-widget', **kwargs):
+        super(ImageWidget, self).__init__(class_name=class_name, *kwargs)
 
-    def __call__(self, field, **kwargs):
-        data = dict(
-            widget_args = wtf.widgets.html_params(**{
-                'class': 'trex-image-widget',
-                'data-xhr-url': url_for('trex.upload.xhr'),
-                'data-iframe-url': url_for('trex.upload.iframe'),
-            }),
-            thumbnail_args = wtf.widgets.html_params(**{
-                'class': 'thumbnail',
-                'style': 'max-width: %dpx; max-height: %dpx' % (self.width, self.height),
-                'data-width': str(self.width),
-                'data-height': str(self.height),
-            }),
-            span_args = wtf.widgets.html_params(**{
-                'style': 'width: %dpx; height: %dpx' % (self.width, self.height),
-            }),
-            input_args = wtf.widgets.html_params(**{
-                'id': field.id,
-                'name': field.name,
-                'type': 'hidden',
-                'value': kwargs.get('value', field._value()),
-            }),
-            file_input_name = "%s_file_input" % field.name,
-        )
-
-        return wtf.widgets.HTMLString("""
-<div %(widget_args)s>
-    <span %(thumbnail_args)s><span %(span_args)s></span></span>
-    <a class="add-file btn btn-default">Upload Image <input name="%(file_input_name)s" type="file"></a>
-    <button type="button" class="btn btn-default">Clear image</button>
-    <span class="uploading"></span>
-    <input %(input_args)s>
-</div>
-""" % data)
+    def file_display(self, field):
+        if not field.data:
+            return '<div class="thumbnail"><span class="no-image">No image</span></div>'
+        return '<div class="thumbnail"><img %s></div>' % wtf.widgets.html_params(src=field.data.url())
 
 class ImageField(FileField):
     widget = ImageWidget()
