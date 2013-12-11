@@ -361,7 +361,26 @@ class Flask(flask.Flask):
         self.logger.setLevel(logging.DEBUG)
         log_handler = logging.StreamHandler()
         log_handler.setLevel(logging.DEBUG)
-        log_handler.setFormatter(self.logger_formatter)
+        if sys.stdout.isatty():
+            from termcolor import colored
+
+            class ColoredFormatter(logging.Formatter):
+                def format(self, record):
+                    levelname = record.levelname
+                    formatted = logging.Formatter.format(self, record)
+                    if levelname == 'INFO':
+                        return colored(formatted, 'green')
+                    if levelname in ['WARNING', 'ERROR', 'CRITICAL']:
+                        return colored(formatted, 'red')
+
+                    return formatted
+
+            log_handler.setFormatter(ColoredFormatter(
+                '%(asctime)s [%(process)5d] [%(name)20.20s] %(levelname)8s - %(message)s '
+                '[in %(pathname)s:%(lineno)d]'
+            ))
+        else:
+            log_handler.setFormatter(self.logger_formatter)
 
         # Set the root handler, and clear the app-specific one
         logging.root.handlers = []  # When init_application is called more than once, we don't want to acrue handlers
