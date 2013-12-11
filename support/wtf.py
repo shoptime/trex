@@ -892,7 +892,10 @@ class FileType(object):
             self._add_type(type_name)
 
         if not message:
-            message = 'Uploaded file must be one of: %s' % ", ".join([self.type_details[x]['name'] for x in self.types])
+            if len(self.types) == 1:
+                message = 'Uploaded file must be of type %s' % self.type_details[self.types[0]]['name']
+            else:
+                message = 'Uploaded file must be one of: %s' % ", ".join([self.type_details[x]['name'] for x in self.types])
 
         self.message = message
 
