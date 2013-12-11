@@ -334,7 +334,7 @@
                 if (this.model.get('url')) { return 'valid'; }
                 return 'uploading';
             },
-            render: function(initial_render) {
+            render: function() {
                 var state = this.state();
 
                 // Ensure correct "Clear" button visibility

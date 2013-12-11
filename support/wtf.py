@@ -533,7 +533,8 @@ class FileWidget(object):
             }),
             button_args = wtf.widgets.html_params(**{
                 'type': 'button',
-                'class': (field.allow_clear and field.data) and 'btn btn-default' or 'btn btn-default hide',
+                'class': 'btn btn-default',
+                'style': not (field.allow_clear and field.data) and 'display: none;' or '',
             }),
             file_display_args = wtf.widgets.html_params(**{
                 'class': 'file-display',
