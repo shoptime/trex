@@ -130,6 +130,35 @@ def render_upload():
 
     return decorator(decorated)
 
+def render_thumbnail(width=None, height=None, fit="contain"):
+    if width is None and height is None:
+        raise Exception("Must specify at least one of width/height for render_thumbnail")
+
+    if fit not in ["cover", "contain", "stretch"]:
+        raise Exception("fit must be one of cover, contain, or stretch for render_thumbnail")
+
+    if fit in ["cover", "stretch"] and (width is None or height is None):
+        raise Exception("fit=%s requires both width and height to be set for render_thumbnail" % fit)
+
+    def decorated(f, *args, **kwargs):
+        upload = f(*args, **kwargs)
+
+        if upload is None:
+            return flask.abort(404)
+
+        if isinstance(upload, app.response_class):
+            return upload
+
+        if not isinstance(upload, trex.support.model.TrexUpload):
+            raise Exception("Can't render upload from %s" % upload)
+
+        if not upload.can_thumbnail():
+            raise Exception("Upload doesn't support thumbnailing" % upload)
+
+        return upload.generate_thumbnail_response(width=width, height=height, fit=fit)
+
+    return decorator(decorated)
+
 def render_json(cachable=False):
     def decorated(f, *args, **kwargs):
         response = f(*args, **kwargs)

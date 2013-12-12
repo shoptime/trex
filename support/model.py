@@ -16,6 +16,8 @@ from itertools import izip, cycle
 import binascii
 from jinja2 import Markup
 import pytz
+from PIL import Image
+from cStringIO import StringIO
 
 class BaseDocument(Document):
     meta = dict(abstract=True)
@@ -628,6 +630,54 @@ class TrexUpload(BaseDocument):
 
     def url(self):
         return url_for('trex.upload.view', token=self.token)
+
+    def can_thumbnail(self):
+        if self.file.content_type.startswith('image/'):
+            return True
+        return False
+
+    def generate_thumbnail_response(self, width, height, fit):
+        from app import app
+
+        if self.file.content_type.startswith('image/'):
+            image = Image.open(self.file.get())
+            orig_width, orig_height = image.size
+
+            if fit == 'stretch':
+                image = image.resize((width, height), Image.ANTIALIAS)
+            elif fit == 'contain':
+                if not width:
+                    width = float(height) * float(orig_width) / float(orig_height)
+                if not height:
+                    height = float(width) * float(orig_height) / float(orig_width)
+                image.thumbnail((width, height), Image.ANTIALIAS)
+            elif fit == 'cover':
+                target_aspect = float(width) / float(height)
+                source_aspect = float(orig_width) / float(orig_height)
+                if source_aspect > target_aspect:
+                    target_width = target_aspect * orig_height
+                    image = image.crop((int(float(orig_width / 2) - target_width / 2), 0, int(float(orig_width / 2) + target_width / 2), orig_height))
+                else:
+                    target_height = orig_width / target_aspect
+                    image = image.crop((0, int(float(orig_height / 2) - target_height / 2), orig_width, int(float(orig_height / 2) + target_height / 2)))
+
+                image.thumbnail((width, height), Image.ANTIALIAS)
+
+            else:
+                raise NotImplementedError("No fit method %s" % fit)
+
+            if image.mode == 'P':
+                fp = StringIO()
+                image.save(fp, 'png')
+                fp.seek(0)
+                return app.response_class(fp, 200, {'Content-Type': 'image/png'})
+            else:
+                fp = StringIO()
+                image.save(fp, 'jpeg')
+                fp.seek(0)
+                return app.response_class(fp, 200, {'Content-Type': 'image/jpeg'})
+
+        raise NotImplemented("Can't thumbnail type %s" % self.file.content_type)
 
     def to_ejson(self):
         return dict(

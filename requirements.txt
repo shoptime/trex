@@ -12,6 +12,7 @@ jinja2
 markdown
 mongoengine>=0.7
 passlib
+pillow
 premailer
 pycrypto
 pymongo
