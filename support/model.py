@@ -5,7 +5,7 @@ from mongoengine import *
 from .mongoengine import QuantumField
 import os
 from trex.support import pcrypt
-from trex.support.mongoengine import LowerCaseEmailField
+from trex.support.mongoengine import LowerCaseEmailField, serve_file
 from flask import g, url_for, abort
 import re
 import hashlib
@@ -16,8 +16,10 @@ from itertools import izip, cycle
 import binascii
 from jinja2 import Markup
 import pytz
-from PIL import Image
-from cStringIO import StringIO
+from .thumbnailers import ImageThumbnailer
+
+class CantGenerateThumbnail(Exception):
+    pass
 
 class BaseDocument(Document):
     meta = dict(abstract=True)
@@ -613,6 +615,8 @@ class BaseIdentity(BaseDocument):
             session.logout()
 
 class TrexUpload(BaseDocument):
+    thumb_plugins = [ImageThumbnailer]
+
     meta = dict(
         collection = 'trex.upload',
         indexes    = [('token',)],
@@ -632,52 +636,25 @@ class TrexUpload(BaseDocument):
         return url_for('trex.upload.view', token=self.token)
 
     def can_thumbnail(self):
-        if self.file.content_type.startswith('image/'):
-            return True
+        for plugin in self.thumb_plugins:
+            if plugin.can_thumbnail(self):
+                return True
         return False
 
     def generate_thumbnail_response(self, width, height, fit):
-        from app import app
+        try:
+            thumbnail = TrexUploadThumbnail.objects.get(upload=self, width=width, height=height, fit=fit)
+        except DoesNotExist:
+            thumbnail = self._create_thumbnail_model(width, height, fit)
 
-        if self.file.content_type.startswith('image/'):
-            image = Image.open(self.file.get())
-            orig_width, orig_height = image.size
+        return serve_file(thumbnail, 'file')
 
-            if fit == 'stretch':
-                image = image.resize((width, height), Image.ANTIALIAS)
-            elif fit == 'contain':
-                if not width:
-                    width = float(height) * float(orig_width) / float(orig_height)
-                if not height:
-                    height = float(width) * float(orig_height) / float(orig_width)
-                image.thumbnail((width, height), Image.ANTIALIAS)
-            elif fit == 'cover':
-                target_aspect = float(width) / float(height)
-                source_aspect = float(orig_width) / float(orig_height)
-                if source_aspect > target_aspect:
-                    target_width = target_aspect * orig_height
-                    image = image.crop((int(float(orig_width / 2) - target_width / 2), 0, int(float(orig_width / 2) + target_width / 2), orig_height))
-                else:
-                    target_height = orig_width / target_aspect
-                    image = image.crop((0, int(float(orig_height / 2) - target_height / 2), orig_width, int(float(orig_height / 2) + target_height / 2)))
+    def _create_thumbnail_model(self, width, height, fit):
+        for plugin in self.thumb_plugins:
+            if plugin.can_thumbnail(self):
+                return plugin.generate_thumbnail(self, width, height, fit)
 
-                image.thumbnail((width, height), Image.ANTIALIAS)
-
-            else:
-                raise NotImplementedError("No fit method %s" % fit)
-
-            if image.mode == 'P':
-                fp = StringIO()
-                image.save(fp, 'png')
-                fp.seek(0)
-                return app.response_class(fp, 200, {'Content-Type': 'image/png'})
-            else:
-                fp = StringIO()
-                image.save(fp, 'jpeg')
-                fp.seek(0)
-                return app.response_class(fp, 200, {'Content-Type': 'image/jpeg'})
-
-        raise NotImplemented("Can't thumbnail type %s" % self.file.content_type)
+        raise CantGenerateThumbnail("Can't thumbnail type %s" % self.file.content_type)
 
     def to_ejson(self):
         return dict(
@@ -801,3 +778,20 @@ class TrexUploadTemporaryAccess(BaseDocument):
     created = QuantumField(required=True, default=quantum.now)
     upload  = ReferenceField('TrexUpload', required=True, reverse_delete_rule=CASCADE)
     user    = ReferenceField('User', required=True)
+
+class TrexUploadThumbnail(BaseDocument):
+    meta = dict(
+        collection = 'trex.upload.thumbnail',
+        indexes    = [('upload',)],
+    )
+
+    created = QuantumField(required=True, default=quantum.now)
+    width   = IntField()
+    height  = IntField()
+    fit     = StringField(required=True, choices=['stretch', 'cover', 'contain'])
+    upload  = ReferenceField('TrexUpload', required=True, reverse_delete_rule=CASCADE, unique_with=['width', 'height', 'fit'])
+    file    = FileField(required=True, collection_name='trex.upload.thumbnail')
+
+    def delete(self):
+        self.file.delete()
+        super(TrexUploadThumbnail, self).delete()
