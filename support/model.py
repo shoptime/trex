@@ -16,7 +16,7 @@ from itertools import izip, cycle
 import binascii
 from jinja2 import Markup
 import pytz
-from .thumbnailers import ImageThumbnailer
+from .thumbnailers import ImageThumbnailer, PDFThumbnailer
 
 class CantGenerateThumbnail(Exception):
     pass
@@ -615,7 +615,7 @@ class BaseIdentity(BaseDocument):
             session.logout()
 
 class TrexUpload(BaseDocument):
-    thumb_plugins = [ImageThumbnailer]
+    thumb_plugins = [ImageThumbnailer, PDFThumbnailer]
 
     meta = dict(
         collection = 'trex.upload',
