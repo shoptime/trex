@@ -125,6 +125,10 @@ class BaseUser(BaseDocument):
     def active(cls, queryset):
         return queryset.filter(is_active=True)
 
+    @queryset_manager
+    def inactive(cls, queryset):
+        return queryset.filter(is_active=False)
+
     @classmethod
     def roles(cls):
         return dict(
@@ -223,7 +227,7 @@ class BaseUser(BaseDocument):
                 password = new_password,
             )
         )
-        g.identity.flash("Password emailed to %s" % self.email)
+        return "Password emailed to %s" % self.email
 
     def to_ejson(self):
         data = self.to_mongo()

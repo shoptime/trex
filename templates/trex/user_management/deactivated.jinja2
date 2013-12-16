@@ -1,0 +1,50 @@
+{% import 'trex.jinja2' as trex with context %}
+{% extends 'base.jinja2' %}
+{% set page_title = 'Deactivated users' %}
+{% block content %}
+<ol class="breadcrumb">
+    <li><a href="{{ url_for('trex.user_management.index') }}">User management</a></li>
+    <li class="active">Deactivated users</a>
+</ol>
+<h2>Deactivated users</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Country</th>
+            <th>Last Login</th>
+            <th class="cell-controls"></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for user in users.order_by('created') %}
+        <tr>
+            <td>{{ user.display_name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role_label() }}</td>
+            <td>{{ user.country_label() }}</td>
+            {% if user.last_login %}
+            <td class="trex-moment" data-moment="{{ user.last_login.as_utc() | moment_stamp }}"></td>
+            {% else %}
+            <td class="text-muted">never</td>
+            {% endif %}
+            <td>
+                {% if g.user.has_role(user.role) %}
+                <button class="btn btn-default btn-sm trex-post-simple-confirm"
+                    type="button"
+                    data-href="{{ url_for('.reactivate', user_token=user.token) }}">
+                    Re-activate
+                </button>
+                {% endif %}
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="6" class="text-center">There are no deactivated users</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

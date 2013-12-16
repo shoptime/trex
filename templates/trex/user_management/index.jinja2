@@ -2,6 +2,9 @@
 {% extends 'base.jinja2' %}
 {% set page_title = 'User management' %}
 {% block content %}
+<ol class="breadcrumb">
+    <li class="active">User management</a>
+</ol>
 {% if add_url %}
 <a class="btn btn-primary pull-right" href="{{ add_url }}"><i class="icon-plus glyphicon glyphicon-plus"></i> Add user</a>
 {% endif %}
@@ -122,4 +125,7 @@
     {% endfor %}
     </tbody>
 </table>
+<div class="text-center">
+    <a class="btn btn-default" href="{{ url_for('.deactivated') }}"><i class="icon-eye-close glyphicon glyphicon-eye-close"></i> Deactivated users</a>
+</div>
 {% endblock %}

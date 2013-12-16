@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 from trex.flask import app
-from trex.flask import AuthBlueprint, render_html
+from trex.flask import AuthBlueprint, render_html, flash
 from .. import auth
 from flask import abort, redirect, url_for, g
 from flask.ext import wtf
@@ -88,6 +88,7 @@ def deactivate(user_token):
     m.Identity.destroy_sessions_for_user(user)
     audit("Deactivated user %s" % user.display_name, ['User Management'], [user])
 
+    flash('User deactivated', category='success')
     return redirect(url_for('.index'))
 
 @blueprint.route('/<user_token>/reset-password', methods=['POST'], auth=auth.has_flag('trex.user_management'))
@@ -105,8 +106,37 @@ def reset_password(user_token):
     user.set_password(new_password)
     user.save()
     audit("Reset user password %s" % user.display_name, ['User Management'], [user])
+    flash_message = user.notify_password_reset(new_password)
+
+    flash(flash_message, category='success')
+    return redirect(url_for('.index'))
+
+@blueprint.route('/deactivated', auth=auth.has_flag('trex.user_management'))
+@render_html('trex/user_management/deactivated.jinja2')
+def deactivated():
+    return dict(
+        users = m.User.inactive(),
+    )
+
+@blueprint.route('/<user_token>/reactivate', methods=['POST'], auth=auth.has_flag('trex.user_management'))
+def reactivate(user_token):
+    try:
+        user = m.User.inactive.get(token=user_token)
+    except m.DoesNotExist:
+        abort(404)
+
+    if not g.user.has_role(user.role):
+        return abort(404)
+
+    new_password = token.create_token(length=8)
+    user.set_password(new_password)
+    user.is_active = True
+    user.save()
+
+    audit("Reactivated user %s and issued new password" % user.display_name, ['User Management'], [user])
     user.notify_password_reset(new_password)
 
+    flash("User reactivated and new password issued", category='success')
     return redirect(url_for('.index'))
 
 app.register_blueprint(blueprint)
