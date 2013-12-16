@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from decorator import decorator
 import flask
 import os.path
-from ConfigParser import ConfigParser
+from ConfigParser import ConfigParser, NoOptionError
 import codecs
 import md5
 import warnings
@@ -351,6 +351,18 @@ class Flask(flask.Flask):
                 return title
 
             return default
+
+        @self.template_filter()
+        def quantum(q, format, empty_text='-', user=None):
+            try:
+                format_str = app.settings.get('quantum', 'format_%s' % format)
+            except NoOptionError:
+                raise Exception('Tried to use format type "%s" for the quantum filter, which is not defined in configuration' % format)
+            if not q:
+                return empty_text
+            if not user:
+                user = flask.g.user
+            return q.at(user.timezone).as_local().strftime(format_str)
 
         def puffer():
             """
