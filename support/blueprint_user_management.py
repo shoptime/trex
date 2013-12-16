@@ -85,6 +85,7 @@ def deactivate(user_token):
     user.is_active = False
     user.password = None
     user.save()
+    m.Identity.destroy_sessions_for_user(user)
     audit("Deactivated user %s" % user.display_name, ['User Management'], [user])
 
     return redirect(url_for('.index'))
