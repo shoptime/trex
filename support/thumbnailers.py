@@ -4,6 +4,7 @@ from __future__ import absolute_import
 
 from PIL import Image
 from cStringIO import StringIO
+from mongoengine import NotUniqueError
 import subprocess
 
 class ImageThumbnailer(object):
@@ -44,20 +45,23 @@ class ImageThumbnailer(object):
         else:
             raise NotImplementedError("No fit method %s" % fit)
 
+        fp = StringIO()
+
         if image.mode == 'P':
-            fp = StringIO()
             image.save(fp, 'png')
             fp.seek(0)
             thumbnail.file.put(fp, content_type='image/png')
-            thumbnail.save()
-            return thumbnail
         else:
-            fp = StringIO()
             image.save(fp, 'jpeg')
             fp.seek(0)
             thumbnail.file.put(fp, content_type='image/jpeg')
+
+        try:
             thumbnail.save()
-            return thumbnail
+        except NotUniqueError:
+            return TrexUploadThumbnail.objects.get(upload=trex_upload, width=width, height=height, fit=fit)
+
+        return thumbnail
 
 class PDFThumbnailer(object):
     @classmethod
