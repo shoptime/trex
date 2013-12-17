@@ -1,0 +1,141 @@
+{% import 'trex.jinja2' as trex with context %}
+{% extends 'base.jinja2' %}
+{% set page_title = 'User management' %}
+{% block content %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+    <li class="active">User management</li>
+</ol>
+{% endblock %}
+{% block top_controls %}
+{% if add_url %}
+<a class="btn btn-primary pull-right" href="{{ add_url }}"><i class="icon-plus glyphicon glyphicon-plus"></i> Add user</a>
+{% endif %}
+{% endblock %}
+{% block heading %}
+<h2>User management</h2>
+{% endblock %}
+{% block table %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Country</th>
+            <th>Last Login</th>
+            <th class="cell-controls"></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for user in users.order_by('created') %}
+        <tr>
+            <td>{{ user.display_name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role_label() }}</td>
+            <td>{{ user.country_label() }}</td>
+            {% if user.last_login %}
+            <td class="trex-moment" data-moment="{{ user.last_login.as_utc() | moment_stamp }}"></td>
+            {% else %}
+            <td class="text-muted">never</td>
+            {% endif %}
+            <td>
+                {% if g.user.has_role(user.role) %}
+                {% if trex_bootstrap_version == 3 %}
+                <div class="btn-group">
+                    <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
+                        Action <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                        <li><a href="{{ user.url_for_edit_user() }}"><i class="glyphicon glyphicon-edit"></i> Edit</a></li>
+                        <li>
+                            <a class="trex-post-confirm"
+                                href="{{ url_for('.reset_password', user_token=user.token) }}"
+                                data-title="Confirm password reset"
+                                data-body="This will generate a new password for {{ user.email }} and email it to them"
+                                data-confirm-label="Reset password"
+                                data-confirm-label-class="btn-danger">
+                                <i class="glyphicon glyphicon-envelope"></i> {% if user.password %}Reset password{% else %}Set initial password{% endif %}
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        {% if g.user.has_flag('trex.user_management_login_as') and g.user != user %}
+                        <li>
+                            <a class="trex-post-confirm"
+                                href="{{ url_for('trex.auth.login_as', user_token=user.token) }}"
+                                data-title="Confirm log in as"
+                                data-body="This will log you in as {{ user.display_name }} &lt;{{ user.email }}&gt;. Are you sure you wish to proceed?"
+                                data-confirm-label="Log in"
+                                data-confirm-label-class="btn-danger">
+                                <i class="glyphicon glyphicon-log-in"></i>
+                                Log in as
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        {% endif %}
+                        <li>
+                            <a class="trex-post-confirm"
+                                href="{{ url_for('.deactivate', user_token=user.token) }}"
+                                data-title="Confirm deactivate user"
+                                data-body="Are you sure you want to deactivate {{ user.email }}?"
+                                data-confirm-label="Deactivate user"
+                                data-confirm-label-class="btn-danger">
+                                <i class="glyphicon glyphicon-eye-close"></i> Deactivate...
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% else %}
+                <a class="btn btn-default btn-small" href="{{ user.url_for_edit_user() }}"><i class="icon-cog"></i> edit</a>
+                <button
+                    class="btn btn-small btn-danger trex-post-confirm"
+                    data-href="{{ url_for('.deactivate', user_token=user.token) }}"
+                    data-title="Confirm deactivate user"
+                    data-body="Are you sure you want to deactivate {{ user.email }}"
+                    data-confirm-label="Deactivate user"
+                    data-confirm-label-class="btn-danger"
+                >
+                    <i class="icon-white icon-remove"></i> deactivate
+                </button>
+                <button
+                    class="btn btn-small btn-inverse trex-post-confirm"
+                    data-href="{{ url_for('.reset_password', user_token=user.token) }}"
+                    data-title="Confirm password reset"
+                    data-body="This will generate a new password for {{ user.email }} and email it to them"
+                    data-confirm-label="Reset password"
+                    data-confirm-label-class="btn-danger"
+                >
+                    <i class="icon-white icon-lock"></i>
+                    {% if user.password %}
+                    Reset password
+                    {% else %}
+                    Set initial password
+                    {% endif %}
+                </button>
+                {% if g.user.has_flag('trex.user_management_login_as') and g.user != user %}
+                <button
+                    class="btn btn-small trex-post-confirm"
+                    data-href="{{ url_for('trex.auth.login_as', user_token=user.token) }}"
+                    data-title="Confirm log in as"
+                    data-body="This will log you in as {{ user.email }}. Are you sure you wish to proceed?"
+                    data-confirm-label="Log in"
+                    data-confirm-label-class="btn-danger"
+                >
+                    <i class="icon-arrow-right"></i>
+                    Log in as
+                </button>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+{% block bottom_controls %}
+<div class="text-center">
+    <a class="btn btn-default" href="{{ url_for('.deactivated') }}"><i class="icon-eye-close glyphicon glyphicon-eye-close"></i> Deactivated users</a>
+</div>
+{% endblock %}
+{% endblock %}
