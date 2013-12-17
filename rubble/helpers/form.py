@@ -30,7 +30,7 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
                     el.click()
         elif el[0].attr('type') == 'file':
             el.type(os.path.join(app.root_path, 'test', 'data', value), clear_first=False)
-        elif re.search(r'\btrex-date-field\b', el[0].attr('class')):
+        elif el[0].attr('class') is not None and re.search(r'\btrex-date-field\b', el[0].attr('class')):
             el[0].type(value.strftime('%Y-%m-%d'))
             if el.length() == 2 and re.search(r'\btrex-time-field\b', el[1].attr('class')):
                 el[1].type(value.strftime('%H:%M %p'))
