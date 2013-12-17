@@ -44,7 +44,7 @@ def flash(message, category=None):
         raise Exception("No identity exists")
     flask.g.identity.flash(message, category)
 
-def render_html(template=None, add_etag=False):
+def render_html(template=None, add_etag=False, stream=False):
     def decorated(f, *args, **kwargs):
         response = f(*args, **kwargs)
 
@@ -65,7 +65,14 @@ def render_html(template=None, add_etag=False):
             response['html_id'] = 'endpoint-%s' % flask.request.endpoint.replace('.', '-')
 
         try:
-            out = flask.render_template(template_name, **response)
+            if stream:
+                app.update_template_context(response)
+                t = app.jinja_env.get_template(template_name)
+                ts = t.stream(response)
+                ts.enable_buffering(5)
+                out = flask.Response(flask.stream_with_context(ts))
+            else:
+                out = flask.render_template(template_name, **response)
         except TemplateNotFound:
             if response.get('_wiki'):
                 return flask.abort(404)
