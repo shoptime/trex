@@ -27,13 +27,13 @@ def check_authentication(*args, **kwargs):
     if g.identity:
         g.user = g.identity.actor
 
-    if not request.method in ['GET', 'HEAD']:
+    if not request.method in ['GET', 'HEAD', 'OPTIONS']:
         # Check for CSRF token
         csrf_token = request.form.get('_csrf_token')
         if not csrf_token:
             csrf_token = request.headers.get('X-CSRFToken')
 
-        if not csrf_token or not g.identity.check_csrf(csrf_token):
+        if not g.identity.check_csrf(csrf_token):
             # Refuse submit
             flash("Please try again")
             # Reset CSRF to prevent discovery attacks

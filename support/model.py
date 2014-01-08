@@ -454,7 +454,7 @@ class BaseIdentity(BaseDocument):
         """
         Check a (possibly shadowed) CSRF token
         """
-        if not verify_csrf_token(s):
+        if not s or not verify_csrf_token(s):
             return False
 
         s = s.decode('ascii')
@@ -469,7 +469,6 @@ class BaseIdentity(BaseDocument):
         # Hash for comparison prevents string timing attacks
         return hashlib.sha256(token).digest() == hashlib.sha256(self.csrf_token).digest()
 
-
     @classmethod
     def from_request(cls, request):
         """
@@ -478,6 +477,14 @@ class BaseIdentity(BaseDocument):
 
         # Get session ID from cookie
         session_id = request.cookies.get(settings.get('identity', 'cookie_key'))
+
+        return cls.from_session_id(session_id)
+
+    @classmethod
+    def from_session_id(cls, session_id):
+        """
+        Load the session from the supplied session_id
+        """
 
         #   No session ID? return new session
         if not session_id:
