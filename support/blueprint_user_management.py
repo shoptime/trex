@@ -28,7 +28,7 @@ def edit(user_token=None):
         try:
             user = m.User.active.get(token=user_token)
         except m.DoesNotExist:
-            abort(404)
+            return abort(404)
     else:
         user = m.User()
 
