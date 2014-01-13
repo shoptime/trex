@@ -731,6 +731,25 @@ class TrexUpload(BaseDocument):
         upload.save()
         return upload
 
+    @classmethod
+    def from_buffer(cls, buf, filename=None, for_user=None, data=None):
+        if not for_user:
+            for_user = g.user
+        if not data:
+            data = {}
+        upload = cls(
+            user = for_user,
+            data = data,
+        )
+        content_type = magic.from_buffer(str(buf), mime=True)
+        upload.file.put(
+            str(buf),
+            content_type = content_type,
+            filename     = filename,
+        )
+        upload.save()
+        return upload
+
     def update_reference(self, document, field_name):
         field = document._fields[field_name]
         if not isinstance(field, ReferenceField):
