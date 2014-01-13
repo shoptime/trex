@@ -248,11 +248,9 @@ class Manager(script.Manager):
             cronjob = cls(self.app)
             cronjob.run_wrapped()
 
-        try:
+        if os.path.exists(os.path.join(self.app.root_path, 'support', 'run.py')):
             app_run = importlib.import_module('app.support.run', 'app.support')
             app_run.register_methods(self)
-        except ImportError:
-            pass
 
     def run(self, *args, **kwargs):
         if 'default_command' not in kwargs:
