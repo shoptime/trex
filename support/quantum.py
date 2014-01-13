@@ -231,6 +231,9 @@ def from_datetime(dt, timezone=None):
     if not timezone:
         timezone = default_timezone()
 
+    if dt.tzinfo:
+        return Quantum(dt.astimezone(pytz.UTC).replace(tzinfo=None), timezone)
+
     if not timezone:
         raise QuantumException("Can't parse without a valid timezone")
 
