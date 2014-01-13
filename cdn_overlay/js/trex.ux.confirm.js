@@ -1,6 +1,6 @@
 (function(window, $) {
     var Trex = window.Trex;
-    Trex._register_module("trex.ux.confirm", "trex");
+    Trex._register_module("trex.ux.confirm", "trex", "trex.form");
 
     function bind(context) {
         $('button.trex-post-simple-confirm', context).each(function() {
