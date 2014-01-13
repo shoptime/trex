@@ -173,7 +173,7 @@ class BaseUser(BaseDocument):
         return url_for('trex.user_management.edit', user_token=self.token, **kwargs)
 
     def role_label(self):
-        return BaseUser.roles()[self.role]['label']
+        return self.roles()[self.role]['label']
 
     def get_role(self, role):
         try:
