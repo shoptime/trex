@@ -3,13 +3,23 @@ import mongoengine
 from flask import request, abort
 from . import quantum
 from datetime import datetime, date, time
+import re
+RE_COMPILED_TYPE = type(re.template('hello'))
 
 class LowerCaseEmailField(mongoengine.EmailField):
     def to_mongo(self, *args, **kwargs):
         return super(self.__class__, self).to_mongo(*args, **kwargs).lower()
 
     def prepare_query_value(self, *args, **kwargs):
-        return super(self.__class__, self).prepare_query_value(*args, **kwargs).lower()
+        value = super(self.__class__, self).prepare_query_value(*args, **kwargs)
+
+        if isinstance(value, basestring):
+            return value.lower()
+
+        if isinstance(value, RE_COMPILED_TYPE):
+            return re.template(value.pattern, value.flags | re.IGNORECASE)
+
+        return value
 
 class QuantumField(mongoengine.fields.BaseField):
     """A Quantum field.
