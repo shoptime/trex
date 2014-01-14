@@ -203,6 +203,10 @@ def _send_sendgrid(
         app.logger.info('Sendgrid message: to=%(to)s subject=%(subject)s html=%(html)s text=%(text)s', dict(to=message.to, subject=message.subject, html=_truncate(message.html), text=_truncate(message.text)))
         return
 
+    categories = app.settings.getlist('sendgrid', 'categories')
+    if categories:
+        message.add_category(categories)
+
     s.web.send(message)
 
 def _truncate(string):
