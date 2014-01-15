@@ -360,16 +360,17 @@ class Flask(flask.Flask):
             return default
 
         @self.template_filter()
-        def quantum(q, format, empty_text='-', user=None):
+        def quantum(q, format, empty_text='-', user=None, timezone=None):
             try:
                 format_str = app.settings.get('quantum', 'format_%s' % format)
             except NoOptionError:
                 raise Exception('Tried to use format type "%s" for the quantum filter, which is not defined in configuration' % format)
             if not q:
                 return empty_text
-            if not user:
-                user = flask.g.user
-            return q.at(user.timezone).as_local().strftime(format_str)
+            if not timezone:
+                if not user:
+                    timezone = flask.g.user.timezone
+            return q.at(timezone).as_local().strftime(format_str)
 
         def puffer():
             """
