@@ -203,7 +203,15 @@ def _send_sendgrid(
         doc.save()
 
     if test:
-        app.logger.info('Sendgrid message: to=%(to)s subject=%(subject)s html=%(html)s text=%(text)s', dict(to=message.to, subject=message.subject, html=_truncate(message.html), text=_truncate(message.text)))
+        app.logger.info(
+            'Sendgrid message: to=%(to)s subject=%(subject)s html=%(html_chars)s chars text: \n%(text)s',
+            dict(
+                to=message.to,
+                subject=message.subject,
+                html_chars=message.html and len(message.html) or 0,
+                text=_truncate(message.text)
+            )
+        )
         return
 
     categories = app.settings.getlist('sendgrid', 'categories')
@@ -214,8 +222,8 @@ def _send_sendgrid(
 
 def _truncate(string):
     string = str(string)
-    if len(string) > 100:
-        return string[0:100] + '...'
+    if len(string) > 200:
+        return string[0:200] + '...'
     return string
 
 def html_sample(template, tplvars):
