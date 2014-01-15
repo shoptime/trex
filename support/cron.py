@@ -111,7 +111,7 @@ class QueuedCronJob(CronJob):
                 # no jobs.. we're done for this time
                 break
 
-    def process_job(job):
+    def process_job(self, job):
         raise NotImplementedError("Need to implement QueuedCronJob.process_job()")
 
     def lock_job(self, job):
