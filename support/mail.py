@@ -47,7 +47,7 @@ def send(
         custom_headers = None,
         attachments    = None,
         test           = False,
-        service        = 'postmark'
+        service        = None,
         ):
     """
     Send email immediately. If postmark.test_override is set in the config then it will always generate test mode regardless
@@ -74,6 +74,9 @@ def send(
         if test:
             log.debug('Not sending to %s, this address matches ignore_send_regex' % to)
         return
+
+    if service is None:
+        service = app.settings.get('mail', 'default_service')
 
     if service == 'postmark':
         return _send_postmark(
@@ -210,6 +213,7 @@ def _send_sendgrid(
     s.web.send(message)
 
 def _truncate(string):
+    string = str(string)
     if len(string) > 100:
         return string[0:100] + '...'
     return string
