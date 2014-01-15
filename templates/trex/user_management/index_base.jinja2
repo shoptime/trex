@@ -28,7 +28,7 @@
         </tr>
     </thead>
     <tbody>
-    {% for user in users.order_by('created') %}
+    {% for user in users %}
         <tr>
             <td>{{ user.display_name }}</td>
             <td>{{ user.email }}</td>
@@ -39,7 +39,7 @@
             {% else %}
             <td class="text-muted">never</td>
             {% endif %}
-            <td>
+            <td class="cell-controls">
                 {% if g.user.has_role(user.role) %}
                 {% if trex_bootstrap_version == 3 %}
                 <div class="btn-group">
@@ -132,6 +132,7 @@
     {% endfor %}
     </tbody>
 </table>
+{{ trex.pager(users) }}
 {% endblock %}
 {% block bottom_controls %}
 <div class="text-center">
