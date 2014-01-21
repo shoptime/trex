@@ -130,11 +130,12 @@ class DateField(wtf.DateField):
     def process_formdata(self, valuelist):
         if valuelist:
             date_str = ' '.join(valuelist)
-            try:
-                self.data = quantum.parse_date(date_str, format=self.format)
-            except ValueError:
-                self.data = None
-                raise ValueError(self.gettext('Not a valid date value'))
+            if date_str.strip():
+                try:
+                    self.data = quantum.parse_date(date_str, format=self.format)
+                except ValueError:
+                    self.data = None
+                    raise ValueError(self.gettext('Not a valid date value'))
 
     def __call__(self, *args, **kwargs):
         kwargs['class'] = 'trex-date-field form-control'
