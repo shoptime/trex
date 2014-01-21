@@ -175,9 +175,10 @@ class BaseUser(BaseDocument):
     def role_label(self):
         return self.roles()[self.role]['label']
 
-    def get_role(self, role):
+    @classmethod
+    def role_data_for(cls, role):
         try:
-            return self.roles()[role]
+            return cls.roles()[role]
         except KeyError:
             raise InvalidRoleException("Invalid role: %s" % role)
 
@@ -185,8 +186,8 @@ class BaseUser(BaseDocument):
         if self.role == role:
             return True
 
-        my_role = self.get_role(self.role)
-        target_role = self.get_role(role)
+        my_role = self.role_data_for(self.role)
+        target_role = self.role_data_for(role)
 
         return my_role['level'] > target_role['level']
 
@@ -194,7 +195,7 @@ class BaseUser(BaseDocument):
         return self.role == role
 
     def has_flag(self, flag):
-        my_role = self.get_role(self.role)
+        my_role = self.role_data_for(self.role)
         if flag in my_role.get('flags', []):
             return True
 
