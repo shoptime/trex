@@ -66,6 +66,9 @@
                                 case 'reload':
                                     window.location.reload();
                                     break;
+                                case 'redirect':
+                                    window.location = data.url || $button.data('url');
+                                    break;
                                 case 'close-modal':
                                     $modal.modal('hide');
                                     break;
