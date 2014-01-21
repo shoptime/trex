@@ -50,6 +50,7 @@
     }); // }}}
 
     Trex.form.files.do_xhr_upload = function(url, file_input, collection, options) { // {{{
+        options = _.extend({}, options);
         var models = [];
         _.each(file_input.files, function(file) {
             var model = new Trex.form.files.UploadModel();
