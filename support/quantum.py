@@ -158,8 +158,14 @@ city_list = [  # {{{
 
 override_timezone = []
 
+
 class QuantumException(Exception):
     pass
+
+
+class InsufficientHolidaysException(Exception):
+    pass
+
 
 def default_timezone():
     if len(override_timezone):
@@ -506,6 +512,66 @@ class QuantumDate(object):
     def subtract(self, years=0, months=0, days=0):
         rd = dateutil.relativedelta.relativedelta(years=years, months=months, days=days)
         return QuantumDate(self.date - rd)
+
+    def add_working_days(self, days, holidays):
+        """
+        Adds a given number of working days. Holidays is supplied as an iterator and will discount those
+        days also from the working day list.
+
+        The holidays iterator MUST cover the full span of the calculation. If the calculation runs out of
+        holidays it will assume the holiday data-set is incomplete and raise an exception
+
+        >>> holidays = [QuantumDate(datetime.date(2014, 2, 11)), QuantumDate(datetime.date(2014, 2, 12)), QuantumDate(datetime.date(2014, 3, 13))]
+
+        Test 1 working day, which should be tomorrow from the 3rd of Feb 2014 (a Monday)
+
+        >>> QuantumDate(datetime.date(2014, 2, 3)).add_working_days(1, holidays)
+        <QuantumDate(2014-02-04)>
+
+        Test 4 working days, which should give us Friday 7th
+
+        >>> QuantumDate(datetime.date(2014, 2, 3)).add_working_days(4, holidays)
+        <QuantumDate(2014-02-07)>
+
+        Test 5 working days, which should give us Monday 10th
+
+        >>> QuantumDate(datetime.date(2014, 2, 3)).add_working_days(5, holidays)
+        <QuantumDate(2014-02-10)>
+
+        Test 6 working days, which will have to jump over holidays on the 11th and 12th to give us the 13th
+
+        >>> QuantumDate(datetime.date(2014, 2, 3)).add_working_days(6, holidays)
+        <QuantumDate(2014-02-13)>
+
+        :param days: Number of days to offset
+        :type days: int
+        :param holidays: An iterator of QuantumDate's that are to be treated as holidays
+        :type holidays: iterator
+        :return: End date
+        :rtype: quantum
+        """
+
+        # TODO: Question: is it a working day the day it is received? what if it's received after 5PM?
+
+        # First we iterate between holidays, so we go from today until the first holiday, then to the next,
+        # each day we check the conditions and exit if we meet them.
+        # We do it this way so we don't have to guess how many holidays to retrieve from the iterator.
+        count = 0
+        current = self
+        for next_holiday in holidays:
+            while current < next_holiday:
+                if not current.weekday() in [5, 6]:
+                    # Not a holiday, not a weekend, so it counts!
+                    count += 1
+                    if count > days:
+                        return current
+                current = current.add(0, 0, 1)
+
+            # Skip the holiday
+            current = current.add(0, 0, 1)
+
+        # If we reach this point it means we ran out of holidays but still have days to count. This is an error condition
+        raise InsufficientHolidaysException("Attempted to calculate working days but ran out of holidays. Update your holiday data-set")
 
     def start_of(self, period, first_day_of_week=1):
         valid_periods = ['week', 'month', 'year']
