@@ -60,6 +60,8 @@ def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
     for key, value in kwargs.items():
         el = find(_selector % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
         if not len(el):
+            el = find(_selector % dict(key=key + '_file_input')).filter_by_lambda(lambda el: el.get_attribute('type') == 'file')
+        if not len(el):
             failure("Couldn't find form element: %s" % key)
         parent = el.parent()
         while not re.search(r'\bform-group\b', parent.attr('class')):
