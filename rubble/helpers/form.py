@@ -17,24 +17,24 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
         elif el[0].attr('type') == 'radio':
             el = find('[name="%s"][value="%s"]' % (key, value))
             el.length_is(1, message="Couldn't find radio button %s=%s" % (key, value))
-            el.click()
+            el.scroll_to().click()
         elif el[0].attr('type') == 'checkbox':
             for subel in el.filter_by_selected():
-                subel.click()
+                subel.scroll_to().click()
             if value is not None:
                 if not isinstance(value, list):
                     value = [value]
                 for subvalue in value:
                     el = find('[name="%s"][value="%s"]' % (key, subvalue))
                     el.length_is(1, message="Couldn't find checkbox %s=%s" % (key, subvalue))
-                    el.click()
+                    el.scroll_to().click()
         elif el[0].attr('type') == 'file':
             el.type(os.path.join(app.root_path, 'test', 'data', value), clear_first=False)
         elif el[0].attr('class') is not None and re.search(r'\btrex-date-field\b', el[0].attr('class')):
             el[0].type(value.strftime('%Y-%m-%d'))
             if el.length() == 2 and re.search(r'\btrex-time-field\b', el[1].attr('class')):
                 el[1].type(value.strftime('%H:%M %p'))
-            find('label[for="%s"]' % key).click() # Unfocus the widgets
+            find('label[for="%s"]' % key).scroll_to().click() # Unfocus the widgets
         else:
             el.type(value)
 
@@ -46,7 +46,7 @@ def select_by_label(select_name, label):
     select.select_by_value(select.find('option').filter_by_text(label).attr('value'))
 
 def submit():
-    find('.form-group button[type="submit"]').filter_by_visible().length_is(1).click()
+    find('.form-group button[type="submit"]').filter_by_visible().length_is(1).scroll_to().click()
 
 def submit_bs2():
     find('.form-actions button[type="submit"]').filter_by_visible().length_is(1).click()
