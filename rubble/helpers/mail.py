@@ -17,7 +17,7 @@ def begin_capturing():
 def check(*matches):
     message("Checking emails")
 
-    emails = set([x.get_postmark_obj() for x in CapturedEmail.objects])
+    emails = set(CapturedEmail.objects)
 
     is_equal(len(emails), len(matches), "Correct number of emails")
 
@@ -29,7 +29,7 @@ def check(*matches):
                 found_match = True
                 break
         if not found_match:
-            harness().handle_error(TestFailureException("Failed to find match for specified email", observed=[x.to_json_message() for x in emails], expected=match))
+            harness().handle_error(TestFailureException("Failed to find match for specified email", observed=[x.as_string() for x in emails], expected=match))
 
     CapturedEmail.objects.delete()
 

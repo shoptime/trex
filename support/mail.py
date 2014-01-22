@@ -19,11 +19,13 @@ from postmark.core import PMMailUnprocessableEntityException
 import sendgrid
 import pickle
 from trex.flask import app
-from mongoengine import Document, StringField
+from mongoengine import Document, StringField, ValidationError
 from flask import render_template
 from premailer import transform
 import re
 from email.utils import parseaddr
+from .mongoengine import QuantumField
+from . import quantum
 import json
 import logging
 
@@ -153,8 +155,7 @@ def _send_postmark(
     )
 
     if capturing or app.in_test_mode:
-        doc = CapturedEmail()
-        doc.postmark_obj = pickle.dumps(pm)
+        CapturedEmail.from_postmark_object(pm)
         doc.save()
 
     if test:
@@ -198,9 +199,7 @@ def _send_sendgrid(
         message.add_bcc(bcc)
 
     if capturing or app.in_test_mode:
-        doc = CapturedEmail()
-        doc.sendgrid_obj = pickle.dumps(message)
-        doc.save()
+        CapturedEmail.from_sendgrid_object(message)
 
     if test:
         app.logger.info(
@@ -259,10 +258,49 @@ def begin_capturing():
 def end_capturing():
     global capturing
     capturing = False
-    return [ x.get_postmark_obj() for x in CapturedEmail.objects.all() ]
+    return CapturedEmail.objects
 
 class CapturedEmail(Document):
-    postmark_obj = StringField(required=True)
+    created   = QuantumField(required=True, default=quantum.now)
 
-    def get_postmark_obj(self):
-        return pickle.loads(str(self.postmark_obj))
+    to        = StringField(required=True)
+    cc        = StringField(required=True)
+    bcc       = StringField(required=True)
+    subject   = StringField(required=True)
+    text_body = StringField(required=True)
+    html_body = StringField()
+
+    def as_string(self):
+        data = {}
+        for key in ['to', 'cc', 'bcc', 'subject', 'text_body']:
+            if getattr(self, key, None):
+                data[key] = getattr(self, key)
+        return json.dumps(data)
+
+    @classmethod
+    def from_postmark_object(cls, obj):
+        email = cls(
+            to        = obj.to,
+            cc        = obj.cc or '',
+            bcc       = obj.bcc or '',
+            subject   = obj.subject,
+            text_body = obj.text_body,
+            html_body = obj.html_body,
+        )
+
+        email.save()
+        return email
+
+    @classmethod
+    def from_sendgrid_object(cls, obj):
+        email = cls(
+            to        = ", ".join(obj.to),
+            cc        = ", ".join(obj.cc),
+            bcc       = ", ".join(obj.bcc),
+            subject   = obj.subject,
+            text_body = obj.text,
+            html_body = obj.html,
+        )
+
+        email.save()
+        return email
