@@ -463,6 +463,9 @@ class QuantumDate(object):
     def year(self):
         return self.date.year
 
+    def weekday(self):
+        return self.date.weekday()
+
     def __hash__(self):
         return self.date.__hash__()
 
@@ -521,7 +524,7 @@ class QuantumDate(object):
         The holidays iterator MUST cover the full span of the calculation. If the calculation runs out of
         holidays it will assume the holiday data-set is incomplete and raise an exception
 
-        >>> holidays = [QuantumDate(datetime.date(2014, 2, 11)), QuantumDate(datetime.date(2014, 2, 12)), QuantumDate(datetime.date(2014, 3, 13))]
+        >>> holidays = [QuantumDate(datetime.date(2014, 2, 1)), QuantumDate(datetime.date(2014, 2, 11)), QuantumDate(datetime.date(2014, 2, 12)), QuantumDate(datetime.date(2014, 3, 13))]
 
         Test 1 working day, which should be tomorrow from the 3rd of Feb 2014 (a Monday)
 
@@ -567,8 +570,9 @@ class QuantumDate(object):
                         return current
                 current = current.add(0, 0, 1)
 
-            # Skip the holiday
-            current = current.add(0, 0, 1)
+            # Skip the holiday if it's today
+            if current == next_holiday:
+                current = current.add(0, 0, 1)
 
         # If we reach this point it means we ran out of holidays but still have days to count. This is an error condition
         raise InsufficientHolidaysException("Attempted to calculate working days but ran out of holidays. Update your holiday data-set")
