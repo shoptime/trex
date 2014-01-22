@@ -28,7 +28,8 @@ class CronJob(object):
 
     def __init__(self, app):
         self.app = app
-        self.app.log_to_file('cron.log')
+        if not self.app.debug:
+            self.app.log_to_file('cron.log')
 
     def run(self):
         raise NotImplementedError("Need to implement CronJob.run()")
