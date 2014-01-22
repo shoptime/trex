@@ -291,6 +291,11 @@ class WebElementSet(object):
         return self
 
     @require_one_element
+    def scroll_to(self):
+        self.browser.execute_script('window.scrollTo(0, %d)' % self.elements[0].location['y'])
+        return self
+
+    @require_one_element
     def click(self):
         self.elements[0].click()
         return self
