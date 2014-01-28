@@ -104,6 +104,47 @@ class BootstrapRadioInput(wtf.Input):
         html_string = super(BootstrapRadioInput, self).__call__(field, **kwargs)
         return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
+class TextAreaListWidget(object):
+    def __call__(self, field, **kwargs):
+        output = '<div class="trex-textarea-list-widget %s>' % wtf.widgets.html_params(id=field.id)
+
+        def render_item(value):
+            output = '<div class="item">'
+            output += '<textarea class="form-control" %s>%s</textarea>' % (wtf.widgets.html_params(name=field.name), value)
+            output += '<button type="button" class="btn btn-danger pull-right">&times</button>'
+            output += '</div>'
+            return output
+
+        for value in kwargs.get('value', field._value()):
+            output += render_item(value)
+
+        output += '<div class="add-item" %s>' % wtf.widgets.html_params(**{'data-template': render_item('')})
+        output += '<button type="button" class="btn btn-default btn-block">%s</button>' % field.add_label
+        output += '</div>'
+        output += '</div>'
+
+        return wtf.widgets.HTMLString(output)
+
+
+class TextAreaListField(wtf.Field):
+    widget = TextAreaListWidget()
+
+    def __init__(self, label='', validators=None, add_label='Add item', **kwargs):
+        self.add_label = add_label
+        super(TextAreaListField, self).__init__(label, validators, **kwargs)
+
+    def _value(self):
+        if self.data:
+            return self.data
+        else:
+            return []
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = valuelist
+        else:
+            self.data = []
+
 class DateField(wtf.DateField):
     def __init__(self, label='', validators=None, date_format='yyyy-mm-dd', default_mode='day', **kwargs):
         self.default_mode = default_mode

@@ -20,5 +20,6 @@
         Trex.util.check_element_deps('.trex-image-widget', 'trex.form.files');
         Trex.util.check_element_deps('.trex-star-rating-field', 'trex.form.star_rating');
         Trex.util.check_element_deps('.trex-tag-field', 'trex.form.tag');
+        Trex.util.check_element_deps('.trex-textarea-list-widget', 'trex.form.textarea_list');
     });
 })(window, jQuery);
