@@ -3,7 +3,7 @@
     Trex._register_module("trex.form.textarea_list", "trex.form");
 
     function bind(context) {
-        var $elements = $('.trex-textarea-list.widget', context);
+        var $elements = $('.trex-textarea-list-widget', context);
         $elements.on('click', '.item button', function(e) {
             e.preventDefault();
             $(e.currentTarget).closest('.item').remove();
