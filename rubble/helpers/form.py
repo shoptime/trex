@@ -34,7 +34,9 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
             el[0].type(value.strftime('%Y-%m-%d'))
             if el.length() == 2 and re.search(r'\btrex-time-field\b', el[1].attr('class')):
                 el[1].type(value.strftime('%H:%M %p'))
-            find('label[for="%s"]' % key).scroll_to().click() # Unfocus the widgets
+                find('label[for="%s"]' % key).scroll_to().click() # Unfocus the widgets
+            else:
+                el[0].click() # Unfocus the date widget
         else:
             el.type(value)
 
