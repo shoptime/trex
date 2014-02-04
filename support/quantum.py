@@ -301,10 +301,14 @@ class Quantum(object):
         return self.dt <= other.dt
 
     def __eq__(self, other):
+        if other is None:
+            return False
         self._check_comparison_type(other)
         return self.dt == other.dt
 
     def __ne__(self, other):
+        if other is None:
+            return True
         self._check_comparison_type(other)
         return self.dt != other.dt
 
@@ -488,10 +492,14 @@ class QuantumDate(object):
         return self.date <= other.date
 
     def __eq__(self, other):
+        if other is None:
+            return False
         self._check_comparison_type(other)
         return self.date == other.date
 
     def __ne__(self, other):
+        if other is None:
+            return True
         self._check_comparison_type(other)
         return self.date != other.date
 
