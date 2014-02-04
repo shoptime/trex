@@ -773,6 +773,11 @@
                     $(this).datepicker('hide');
                 }
             });
+            $(this).on('keydown', function(e) {
+                if (e.which === 9) {
+                    $(this).datepicker('hide');
+                }
+            })
         });
 
         $('.trex-time-field', context).each(function() {
