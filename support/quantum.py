@@ -196,8 +196,12 @@ def now(timezone=None):
         timezone = default_timezone()
     return Quantum(datetime.datetime.utcnow(), timezone)
 
-def today():
-    return QuantumDate(datetime.date.today())
+def today(timezone=None):
+    if not timezone:
+        timezone = default_timezone()
+    if not timezone:
+        raise QuantumException("Can't get current date without specifying a timezone to get it in")
+    return Quantum(datetime.datetime.utcnow(), timezone).date()
 
 def parse(datestring, timezone=None, format='%Y-%m-%dT%H:%M:%S', relaxed=False):
     if not timezone:
@@ -335,7 +339,6 @@ class Quantum(object):
         else:
             raise TypeError("Expected a Quantum or QuantumDelta object for subtraction")
 
-
     def __repr__(self):
         return "<%s(%s, %s)>" % (self.__class__.__name__, self.dt, (self.tz or 'no timezone'))
 
@@ -364,7 +367,7 @@ class Quantum(object):
         return dt
 
     def as_unix(self):
-        return calendar.timegm(self.as_utc().timetuple()) + float(self.as_utc().microsecond)/1000000
+        return calendar.timegm(self.as_utc().timetuple()) + float(self.as_utc().microsecond) / 1000000
 
     def add(self, years=0, months=0, days=0, hours=0, minutes=0, seconds=0, microseconds=0):
         if self.tz is None:
@@ -378,6 +381,9 @@ class Quantum(object):
         if self.tz is None:
             raise QuantumException("Can't manipulate a Quantum that has no timezone set")
         return self.add(years=-years, months=-months, days=-days, hours=-hours, minutes=-minutes, seconds=-seconds, microseconds=-microseconds)
+
+    def date(self):
+        return QuantumDate(self.as_local().date())
 
     def start_of(self, period, first_day_of_week=1):
         valid_periods = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year']
