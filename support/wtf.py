@@ -110,8 +110,8 @@ class TextAreaListWidget(object):
 
         def render_item(value):
             output = '<div class="item">'
-            output += '<textarea class="form-control" %s>%s</textarea>' % (wtf.widgets.html_params(name=field.name), value)
             output += '<button type="button" class="btn btn-danger pull-right">&times</button>'
+            output += '<textarea class="form-control" %s>%s</textarea>' % (wtf.widgets.html_params(name=field.name), value)
             output += '</div>'
             return output
 
