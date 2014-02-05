@@ -220,7 +220,7 @@ def _send_sendgrid(
     s.web.send(message)
 
 def _truncate(string):
-    string = str(string)
+    string = unicode(string)
     if len(string) > 200:
         return string[0:200] + '...'
     return string
