@@ -530,7 +530,7 @@ class Flask(flask.Flask):
     def enumerate_models(self):
         import app.model
         for name, cls in inspect.getmembers(app.model, inspect.isclass):
-            if cls.__module__ == 'app.model' and isinstance(cls, mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
+            if isinstance(cls, mongoengine.base.metaclasses.TopLevelDocumentMetaclass) and cls._meta['abstract'] == False:
                 yield cls
 
 #
