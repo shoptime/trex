@@ -177,6 +177,8 @@ class DateField(wtf.DateField):
                 except ValueError:
                     self.data = None
                     raise ValueError(self.gettext('Not a valid date value'))
+            else:
+                self.data = None
 
     def __call__(self, *args, **kwargs):
         kwargs['class'] = 'trex-date-field form-control'
