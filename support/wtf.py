@@ -106,7 +106,7 @@ class BootstrapRadioInput(wtf.Input):
 
 class TextAreaListWidget(object):
     def __call__(self, field, **kwargs):
-        output = '<div class="trex-textarea-list-widget %s>' % wtf.widgets.html_params(id=field.id)
+        output = '<div class="trex-textarea-list-widget" %s>' % wtf.widgets.html_params(id=field.id)
 
         def render_item(value):
             output = '<div class="item">'
