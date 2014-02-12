@@ -628,6 +628,10 @@ class AuthBlueprint(flask.Blueprint):
         setattr(view_func_authed, '__authblueprint_endpoint__', endpoint)
         del options['auth']
         view_func_authed.__name__ = view_func.__name__
+        view_func_authed.allow_cors = options.pop('allow_cors', False)
+
+        if view_func_authed.allow_cors:
+            options['methods'] = ('OPTIONS',) + tuple(options.get('methods', ('GET',)))
 
         super(AuthBlueprint, self).add_url_rule(rule, endpoint, view_func_authed, **options)
 

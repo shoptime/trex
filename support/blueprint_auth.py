@@ -9,9 +9,12 @@ from flask.ext import wtf
 from .audit import audit
 import app.model as m
 from . import quantum, model as trex_model
+from furl import furl
 
 @app.before_request
 def check_authentication(*args, **kwargs):
+    g.is_cors_request = False
+
     # Don't want auth for these
     if request.endpoint in ['static', 'cdn']:
         return
@@ -19,6 +22,39 @@ def check_authentication(*args, **kwargs):
     # Don't want auth for routing exceptions
     if request.routing_exception:
         return
+
+    view_func = app.view_functions.get(request.endpoint, None)
+
+    # Deal with allowing CORS requests. This is implemented such that each
+    # request falls in to one of two categories:
+    # 1. It's a regular request from a browser on the same domain. These
+    #    requests continue untouched and have no additional response headers
+    #    set.
+    # 2. It's a CORS request (i.e. a request from a different domain). These
+    #    requests have all request cookies stripped (to prevent accidently
+    #    granting access where it shouldn't be) and the appropriate response
+    #    headers returned.
+    # The decision on which of the 2 cases any given request should use is
+    # decided by comparing the Origin request header with the server.url
+    # configuration option.
+    if view_func and getattr(view_func, 'allow_cors', False):
+        if request.method == 'OPTIONS' and 'Access-Control-Request-Method' in request.headers:
+            return app.response_class('', status=200, headers={
+                'Allow': ', '.join(request.url_rule.methods),
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': request.headers.get('Access-Control-Request-Headers'),
+            })
+        elif request.method in request.url_rule.methods and 'Origin' in request.headers:
+            origin = furl(request.headers['Origin'])
+            server = furl(app.settings.get('server', 'url'))
+            origin.path = origin.query = origin.fragment = ''
+            server.path = server.query = server.fragment = ''
+            if str(origin) != str(server):
+                # Before allowing CORS, we nuke all incoming cookies (of which
+                # there shouldn't be any anyway)
+                request.cookies = {}
+
+                g.is_cors_request = True
 
     g.identity = m.Identity.from_request(request)
 
@@ -44,7 +80,9 @@ def check_authentication(*args, **kwargs):
 
 @app.after_request
 def after_request(response):
-    if hasattr(g, 'identity'):
+    if g.is_cors_request:
+        response.headers['Access-Control-Allow-Origin'] = '*'
+    elif hasattr(g, 'identity'):
         g.identity.set_cookie(response)
     return response
 
