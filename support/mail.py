@@ -156,7 +156,6 @@ def _send_postmark(
 
     if capturing or app.in_test_mode:
         CapturedEmail.from_postmark_object(pm)
-        doc.save()
 
     if test:
         log.debug("email content: %s" % json.dumps(pm.to_json_message(), cls=postmark.PMJSONEncoder, indent=4))
