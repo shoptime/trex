@@ -296,7 +296,9 @@ class WebElementSet(object):
         return self
 
     @require_one_element
-    def click(self):
+    def click(self, scroll_to=True):
+        if scroll_to:
+            self.scroll_to()
         self.elements[0].click()
         return self
 
