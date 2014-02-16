@@ -18,7 +18,7 @@ blueprint = AuthBlueprint('trex.user_management', __name__, url_prefix='/admin/u
 def index():
     return dict(
         add_url = m.User.url_for_add_user(),
-        users   = MongoPager(m.User.active(), per_page=10),
+        users   = MongoPager(m.User.active(), per_page=20),
     )
 
 @blueprint.route('/add', methods=['GET', 'POST'], endpoint='add', auth=auth.has_flag('trex.user_management'))
