@@ -196,10 +196,10 @@ def render_csv():
         output = csv.writer(io)
 
         if 'headers' in response:
-            output.writerow(response['headers'])
+            output.writerow([unicode(x).encode('utf-8') for x in response['headers']])
 
         for row in response['rows']:
-            output.writerow(row)
+            output.writerow([unicode(x).encode('utf-8') for x in row])
 
         io.seek(0)
         http_response = flask.Response(io.getvalue(), 200)
