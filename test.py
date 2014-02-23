@@ -382,6 +382,8 @@ class WebElementSet(object):
 
     @require_one_element
     def click(self):
+        # The 100 offset accounts for a fixed header (which things can get hidden behind otherwise
+        self.context.browser.execute_script('window.scrollTo(0, %d-100)' % self.elements[0].location['y'])
         self.elements[0].click()
         return self
 
