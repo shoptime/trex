@@ -263,6 +263,8 @@ class CapturedEmail(Document):
     created   = QuantumField(required=True, default=quantum.now)
 
     to        = StringField(required=True)
+    sender    = StringField(required=True)
+    reply_to  = StringField()
     cc        = StringField(required=True)
     bcc       = StringField(required=True)
     subject   = StringField(required=True)
@@ -279,6 +281,8 @@ class CapturedEmail(Document):
     @classmethod
     def from_postmark_object(cls, obj):
         email = cls(
+            sender    = obj.sender,
+            reply_to  = obj.reply_to,
             to        = obj.to,
             cc        = obj.cc or '',
             bcc       = obj.bcc or '',
@@ -293,6 +297,8 @@ class CapturedEmail(Document):
     @classmethod
     def from_sendgrid_object(cls, obj):
         email = cls(
+            sender    = obj.sender,
+            reply_to  = obj.reply_to,
             to        = ", ".join(obj.to),
             cc        = ", ".join(obj.cc),
             bcc       = ", ".join(obj.bcc),
