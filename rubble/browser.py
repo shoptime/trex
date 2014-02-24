@@ -292,7 +292,8 @@ class WebElementSet(object):
 
     @require_one_element
     def scroll_to(self):
-        self.browser.execute_script('window.scrollTo(0, %d)' % self.elements[0].location['y'])
+        # The 100 offset is to account for any fixed navbar etc
+        self.browser.execute_script('window.scrollTo(0, %d-100)' % self.elements[0].location['y'])
         return self
 
     @require_one_element
