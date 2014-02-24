@@ -34,8 +34,10 @@ def get(path, browser=None):
     uri = harness().base_uri.copy().join(str(path))
     browser.get(str(uri))
 
-def get_for(endpoint, browser=None, **kwargs):
-    get(url_for(endpoint, **kwargs))
+def get_for(ep, browser=None, _lazy=False, **kwargs):
+    if _lazy and endpoint(browser) == ep:
+        return
+    get(url_for(ep, **kwargs))
 
 def add_cookie(name, value, browser=None):
     browser_for(browser).add_cookie(dict(name=name, value=value))

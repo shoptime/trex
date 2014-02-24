@@ -8,7 +8,7 @@ import os
 from app import app
 import re
 
-def fill(_selector='[name="%(key)s"]', **kwargs):
+def fill(_selector='[name="%(key)s"]', _date_format='%Y-%m-%d', _time_format='%H:%M %p', **kwargs):
     for key, value in kwargs.items():
         el = find(_selector % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
         is_equal(el.length() > 0, True, "Couldn't find form element: %s" % key)
@@ -31,12 +31,12 @@ def fill(_selector='[name="%(key)s"]', **kwargs):
         elif el[0].attr('type') == 'file':
             el.type(os.path.join(app.root_path, 'test', 'data', value), clear_first=False)
         elif el[0].attr('class') is not None and re.search(r'\btrex-date-field\b', el[0].attr('class')):
-            el[0].type(value.strftime('%Y-%m-%d'))
+            el[0].type(value.strftime(_date_format))
             if el.length() == 2 and re.search(r'\btrex-time-field\b', el[1].attr('class')):
-                el[1].type(value.strftime('%H:%M %p'))
-                find('label[for="%s"]' % key).scroll_to().click() # Unfocus the widgets
+                el[1].type(value.strftime(_time_format))
+                find('label[for="%s"]' % key).scroll_to().click()  # Unfocus the widgets
             else:
-                el[0].click() # Unfocus the date widget
+                el[0].click()  # Unfocus the date widget
         else:
             el.type(value)
 
