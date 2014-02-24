@@ -158,7 +158,7 @@ def _send_postmark(
         CapturedEmail.from_postmark_object(pm)
 
     if test:
-        log.debug("email content: %s" % json.dumps(pm.to_json_message(), cls=postmark.PMJSONEncoder, indent=4))
+        log.info("email content: %s" % json.dumps(pm.to_json_message(), cls=postmark.PMJSONEncoder, indent=4))
         return
 
     pm.send()
