@@ -146,7 +146,7 @@ class BaseUser(BaseDocument):
             developer = dict(
                 label       = 'Developer',
                 description = 'Site developer',
-                flags       = ['trex.user_management', 'trex.audit_log'],
+                flags       = ['trex.user_management', 'trex.audit_log', 'trex.developer'],
                 level       = 100,
             ),
         )

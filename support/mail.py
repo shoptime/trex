@@ -35,6 +35,48 @@ log = logging.getLogger(__name__)
 # test suite mainly)
 capturing = False
 
+def get_template(name):
+    subclasses = dict([(x.__name__, x) for x in MailTemplate.__subclasses__()])
+    template = subclasses.get(name)
+    if not template:
+        raise Exception("No email template named %s found" % name)
+    return template
+
+def all_template_names():
+    return [x.__name__ for x in MailTemplate.__subclasses__()]
+
+class MailTemplate(object):
+    """Base class for all templated emails"""
+
+    def __init__(self, **kwargs):
+        self.tplvars = kwargs
+
+    @classmethod
+    def create_sample(cls):
+        return cls(**cls.sample_tplvars())
+
+    @classmethod
+    def sample_tplvars(cls):
+        raise NotImplementedError("You need to implement sample_tplvars")
+
+    @property
+    def name(self):
+        return self.__class__.__name__
+
+    def subject(self):
+        raise NotImplementedError("You must implement subject()")
+
+    def text_body(self):
+        return render_template('email/%s-text.jinja2' % self.name, **self.tplvars)
+
+    def html_body(self):
+        return html_to_emailhtml(render_template('email/%s-html.jinja2' % self.name, **self.tplvars))
+
+    def send(self, **kwargs):
+        kwargs['subject'] = self.subject()
+        kwargs['text_body'] = self.text_body()
+        kwargs['html_body'] = self.html_body()
+        send(**kwargs)
 
 def send(
         sender         = None,
