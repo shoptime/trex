@@ -352,7 +352,7 @@ def xor_hex_string(s, key):
 
 class FlashMessage(EmbeddedDocument):
     message  = StringField(required=True)
-    category = StringField(required=True, default='message')
+    category = StringField(required=True, default='success')
     markup   = BooleanField(required=True, default=False)
 
     def get_message(self):
