@@ -3,7 +3,8 @@
     Trex = window.Trex = new Trex();
 
     Trex.opt = {
-        auto_bind_form_elements: true
+        auto_bind_form_elements: true,
+        bs_version: 3
     };
 
     Trex._loaded_modules = ['trex'];
