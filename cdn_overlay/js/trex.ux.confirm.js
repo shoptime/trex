@@ -27,7 +27,7 @@
     $('body').on('click', 'button.trex-post-confirm, .dropdown-menu a.trex-post-confirm', function(e) {
         e.preventDefault();
         var $e = $(this);
-        var href = $e.prop('href') || $e.data('href');
+        var href = $e.data('href') || $e.attr('href');
 
         var modal = $('<div class="modal fade"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><a href="" class="close">&times</a><h3 class="modal-title"></h3></div><div class="modal-body"><p></p></div><div class="modal-footer"><a class="cancel btn btn-default">Cancel</a> <a class="confirm btn btn-primary">Confirm</a></div></div></div></div>');
         modal
