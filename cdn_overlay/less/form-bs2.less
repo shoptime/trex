@@ -7,5 +7,28 @@
 @padding-base-horizontal: 10px;
 @padding-base-vertical: 2px;
 
+.trex-modal-form-modal {
+    .modal-body {
+        position: relative;
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, .5);
+        }
+    }
+    .modal-footer {
+        margin-top: 0;
+
+        .label {
+            display: none;
+            margin-right: 10px;
+        }
+    }
+}
+
 @import "form.less";
 

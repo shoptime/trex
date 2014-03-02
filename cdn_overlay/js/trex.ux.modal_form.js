@@ -2,7 +2,7 @@
     var Trex = window.Trex;
     Trex._register_module("trex.ux.modal_form", "trex", "trex.form");
 
-    $(document).on('click', 'button.trex-modal-form', function(e) {
+    $(document).on('click', 'button.trex-modal-form, .dropdown-menu a.trex-modal-form', function(e) {
         e.preventDefault();
 
         var $button = $(e.currentTarget);
@@ -10,11 +10,20 @@
         var button_id = $button.attr('id');
         var modal_id  = button_id + '-modal';
         var title_id  = button_id + '-modal-title';
-        var $modal    = $('<div class="modal fade trex-modal-form-modal" tabindex="-1" role="dialog" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title"></h4></div><div class="modal-body"><span class="loading"></span> Loading...</div><div class="modal-footer"><span class="loading"></span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
+        var $modal;
+        if (Trex.opt.bs_version === 3) {
+            $modal = $('<div class="modal fade trex-modal-form-modal" tabindex="-1" role="dialog" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title"></h4></div><div class="modal-body"><span class="loading"></span> Loading...</div><div class="modal-footer"><span class="loading"></span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
+        }
+        else if (Trex.opt.bs_version === 2) {
+            $modal = $('<div class="modal hide fade trex-modal-form-modal"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h3 class="modal-title"></h3></div><div class="modal-body"><span class="loading"></span> Loading...</div><div class="modal-footer"><span class="loading"></span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
+        }
+        else {
+            throw Error('Unknown bootstrap version in Trex.opt.bs_version');
+        }
 
         $modal.attr('id', modal_id);
         $modal.attr('aria-labelledby', title_id);
-        $modal.find('.modal-header h4')
+        $modal.find('.modal-header .modal-title')
             .attr('id', title_id)
             .text($button.data('title'));
         $modal.find('.modal-footer .btn-primary')
@@ -34,7 +43,8 @@
         function handle_render(data) {
             if ( data.state != 'render' ) {
                 $modal.find('.modal-body').text('Sorry, this form is currently unavailable');
-                throw Error("Did not receive a 'render' response from server");
+                Trex.log.e("Did not receive a 'render' response from server");
+                return;
             }
             var $content = $('<div>' + data.content + '</div>');
             var $form = $content.find('form');
@@ -50,7 +60,7 @@
                 $modal.find('.modal-body').append('<div class="overlay"></div>');
                 $.ajax({
                     type: 'POST',
-                    url: $button.data('href'),
+                    url: $button.data('href') || $button.attr('href'),
                     data: $form.serialize(),
                     success: function(data) {
                         if ( data.state == 'render' ) {
@@ -100,7 +110,7 @@
         // Load content
         $.ajax({
             type: 'GET',
-            url: $button.data('href'),
+            url: $button.data('href') || $button.attr('href'),
             cache: false,
             success: handle_render,
             error: function() {

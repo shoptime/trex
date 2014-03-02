@@ -98,7 +98,7 @@ def render_html(template=None, add_etag=False, stream=False):
 
     return decorator(decorated)
 
-def render_modal_form(template=None):
+def render_modal_form(template=None, bs_version=3):
     def decorated(f, *args, **kwargs):
         response = f(*args, **kwargs)
 
@@ -110,7 +110,7 @@ def render_modal_form(template=None):
             if template_name is None:
                 template_name = 'trex/templates/modal_form.jinja2'
 
-            out = flask.render_template(template_name, **response)
+            out = flask.render_template(template_name, trex_bootstrap_version=bs_version, **response)
             response = dict(state='render', content=out)
 
         http_response = flask.Response(ejson.dumps(response), 200)
