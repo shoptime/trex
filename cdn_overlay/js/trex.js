@@ -4,7 +4,7 @@
 
     Trex.opt = {
         auto_bind_form_elements: true,
-        bs_version: 3
+        bootstrap_version: 3
     };
 
     Trex._loaded_modules = ['trex'];

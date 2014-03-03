@@ -58,6 +58,7 @@ def render_html(template=None, add_etag=False, stream=False):
             template_name = "%s/%s.jinja2" % (f.__module__.split('.', 3)[2], response.get('_template', f.__name__))
 
         response['app'] = app
+        response['trex_bootstrap_version'] = app.settings.get('trex', 'bootstrap_version')
 
         if flask.request.blueprint:
             response['html_classes'] = [ 'blueprint-%s' % x for x in [ flask.request.blueprint.replace('.', '-') ] ]
@@ -98,7 +99,7 @@ def render_html(template=None, add_etag=False, stream=False):
 
     return decorator(decorated)
 
-def render_modal_form(template=None, bs_version=3):
+def render_modal_form(template=None):
     def decorated(f, *args, **kwargs):
         response = f(*args, **kwargs)
 
@@ -110,7 +111,7 @@ def render_modal_form(template=None, bs_version=3):
             if template_name is None:
                 template_name = 'trex/templates/modal_form.jinja2'
 
-            out = flask.render_template(template_name, trex_bootstrap_version=bs_version, **response)
+            out = flask.render_template(template_name, trex_bootstrap_version=app.settings.get('trex', 'bootstrap_version'), **response)
             response = dict(state='render', content=out)
 
         http_response = flask.Response(ejson.dumps(response), 200)

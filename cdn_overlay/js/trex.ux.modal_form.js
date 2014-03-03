@@ -11,10 +11,10 @@
         var modal_id  = button_id + '-modal';
         var title_id  = button_id + '-modal-title';
         var $modal;
-        if (Trex.opt.bs_version === 3) {
+        if (Trex.opt.bootstrap_version === 3) {
             $modal = $('<div class="modal fade trex-modal-form-modal" tabindex="-1" role="dialog" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title"></h4></div><div class="modal-body"><span class="loading"></span> Loading...</div><div class="modal-footer"><span class="loading"></span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
         }
-        else if (Trex.opt.bs_version === 2) {
+        else if (Trex.opt.bootstrap_version === 2) {
             $modal = $('<div class="modal hide fade trex-modal-form-modal"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h3 class="modal-title"></h3></div><div class="modal-body"><span class="loading"></span> Loading...</div><div class="modal-footer"><span class="loading"></span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
         }
         else {
