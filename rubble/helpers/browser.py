@@ -6,6 +6,7 @@ from trex.rubble import global_harness as harness
 from .assertions import is_equal, is_like, message
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
+from app import app
 from furl import furl
 import re
 
@@ -86,7 +87,11 @@ def url_like(expected, browser=None):
     is_like(str(current_url(browser)), expected, message="Browser URL is_like")
 
 def flash_is(expected, browser=None):
-    browser_for(browser).find('.flash>div').text_is(expected, message="Flash text matches")
+    if app.settings.get('trex', 'bootstrap_version') == '2':
+        expected = u"\xd7\n%s" % expected
+        browser_for(browser).find('.flash').text_is(expected, message='Flash text matches')
+    else:
+        browser_for(browser).find('.flash>div').text_is(expected, message="Flash text matches")
 
 def execute_script(script, browser=None):
     return browser_for(browser).execute_script(script)
