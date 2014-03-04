@@ -88,8 +88,8 @@ def url_like(expected, browser=None):
 
 def flash_is(expected, browser=None):
     if app.settings.get('trex', 'bootstrap_version') == '2':
-        expected = u"\xd7\n%s" % expected
-        browser_for(browser).find('.flash').text_is(expected, message='Flash text matches')
+        expected = u"^\xd7\s+%s$" % re.escape(expected)
+        browser_for(browser).find('.flash').text_like(expected, message='Flash text matches')
     else:
         browser_for(browser).find('.flash>div').text_is(expected, message="Flash text matches")
 
