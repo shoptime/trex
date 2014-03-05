@@ -51,7 +51,7 @@ class Manager(script.Manager):
             # Touch the WSGI file
             os.utime(os.path.join(self.app.root_path, '..', 'site.wsgi'), None)
             # Hit the site to actually trigger the reload
-            r = requests.get('http://localhost/', headers={'Host': furl(self.app.settings.get('server', 'url')).host})
+            r = requests.get(app.settings.get('trex', 'deploy_ping_url'), headers={'Host': furl(self.app.settings.get('server', 'url')).host})
             r.raise_for_status()
 
         @self.command
