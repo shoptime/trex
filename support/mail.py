@@ -339,7 +339,7 @@ class CapturedEmail(Document):
     @classmethod
     def from_sendgrid_object(cls, obj):
         email = cls(
-            sender    = obj.sender,
+            sender    = '%s <%s>' % (obj.from_name, obj.from_address),
             reply_to  = obj.reply_to,
             to        = ", ".join(obj.to),
             cc        = ", ".join(obj.cc),
