@@ -132,7 +132,7 @@ class Harness(object):
         # Stops lots of crappy selenium logging
         logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(logging.WARNING)
 
-        # Stops verbos mail logging
+        # Stops verbose mail logging
         if not debug_mail:
             logging.getLogger('trex.support.mail').setLevel(logging.WARNING)
 
