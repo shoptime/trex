@@ -980,7 +980,7 @@ def upload_xhr():
     upload = TrexUpload(user=g.user)
     upload.file.put(
         request.data,
-        content_type         = magic.from_buffer(request.data[:1024], mime=True),
+        content_type         = magic.from_buffer(request.data[:1048576], mime=True),
         browser_content_type = request.content_type,
         filename             = request.headers.get('X-FileName'),
     )
@@ -1001,7 +1001,7 @@ def upload_iframe():
     if not file:
         abort(500)
 
-    content_type = magic.from_buffer(file.read(1024), mime=True)
+    content_type = magic.from_buffer(file.read(1048576), mime=True)
     file.seek(0)
 
     upload.file.put(
