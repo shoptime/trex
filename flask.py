@@ -484,6 +484,7 @@ class Flask(flask.Flask):
             self.db = pymongo.Connection(str(mongo_url))[mongo_db]
 
         mongoengine.register_connection('default', mongo_db, host=str(mongo_url))
+        mongoengine.connection.get_db(reconnect=True)
 
         register_app(self)
 
