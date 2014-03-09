@@ -18,8 +18,8 @@ class Browser(object):
         self.harness = harness
         self.selenium_server_url = selenium_server_url
         self.selenium_browser = selenium_browser
-        self.width = 1024
-        self.height = 600
+        self.width = width
+        self.height = height
 
         self.selenium = Remote(
             self.selenium_server_url.encode('ascii'),
