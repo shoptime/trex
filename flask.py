@@ -529,6 +529,11 @@ class Flask(flask.Flask):
             else:
                 model.objects.delete()
 
+        # Chop any gridfs support collections
+        for name in app.db.collection_names():
+            if re.search(r'\.(files|chunks)$', name):
+                app.db.drop_collection(name)
+
     def enumerate_models(self):
         import app.model
         import trex.support.model
