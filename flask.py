@@ -531,9 +531,13 @@ class Flask(flask.Flask):
 
     def enumerate_models(self):
         import app.model
-        for name, cls in inspect.getmembers(app.model, inspect.isclass):
-            if isinstance(cls, mongoengine.base.metaclasses.TopLevelDocumentMetaclass) and cls._meta['abstract'] == False:
-                yield cls
+        import trex.support.model
+        import trex.support.cron
+        import trex.support.mail
+        for module in [app.model, trex.support.model, trex.support.cron, trex.support.mail]:
+            for name, cls in inspect.getmembers(module, inspect.isclass):
+                if isinstance(cls, mongoengine.base.metaclasses.TopLevelDocumentMetaclass) and cls._meta['abstract'] == False:
+                    yield cls
 
 #
 # Exception handling
