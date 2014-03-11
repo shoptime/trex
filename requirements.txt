@@ -10,12 +10,12 @@ furl
 httpagentparser
 jinja2
 markdown
-mongoengine>=0.7
+mongoengine<=0.8.4
 passlib
 pillow
 premailer
 pycrypto
-pymongo
+pymongo<2.6.3
 python-dateutil
 python-magic
 python-postmark
