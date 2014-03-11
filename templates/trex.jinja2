@@ -1,4 +1,4 @@
-{% if not trex_bootstrap_version %}{% set trex_bootstrap_version = 2 %}{% endif %}
+{%- set trex_bootstrap_version = app.settings.getint('trex', 'bootstrap_version') -%}
 {% macro pager(pager) %}
 {% if pager.first_page != pager.last_page %}
 {% if trex_bootstrap_version == 3 %}<ul class="pagination">{% else %}<div class="pagination"><ul>{% endif %}
