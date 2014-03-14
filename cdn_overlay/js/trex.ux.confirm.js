@@ -79,6 +79,10 @@
         }
 
         var href = $button.data('href');
+        var onsubmit = $button.data('onsubmit') || $.noop;
+        if ( onsubmit && !href ) {
+            href = '';
+        }
         var $confirm = $('<ul class="dropdown-menu"><li><a></a></li></ul>')
             .css({
                 marginRight: '-2px',
@@ -89,9 +93,10 @@
                 .text('Confirm ' + $button.text())
                 .on('click', function(e) {
                     e.preventDefault();
-                    $('<form method="post"></form>')
+                    $('<form method="post" class="trex-post-simple-confirm-form"></form>')
                         .append($('<input type="hidden" name="_csrf_token">').val($('html').data('csrf-token')))
                         .attr('action', href)
+                        .on('submit', onsubmit)
                         .appendTo('body')
                         .submit()
                     ;
