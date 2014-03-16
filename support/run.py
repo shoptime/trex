@@ -253,6 +253,14 @@ class Manager(script.Manager):
             app_run = importlib.import_module('app.support.run', 'app.support')
             app_run.register_methods(self)
 
+    def handle(self, prog, name, *args, **kwargs):
+        if name == 'runserver':
+            self.app.log_to_papertrail('app')
+        else:
+            self.app.log_to_papertrail(name)
+        super(Manager, self).handle(prog, name, *args, **kwargs)
+
+
     def run(self, *args, **kwargs):
         if 'default_command' not in kwargs:
             kwargs['default_command'] = 'runserver'

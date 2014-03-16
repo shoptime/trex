@@ -30,6 +30,7 @@ import urllib
 import csv
 import StringIO
 import inspect
+import socket
 
 app = None
 
@@ -223,6 +224,7 @@ class Flask(flask.Flask):
     settings = TrexConfigParser()
     db = None
     in_test_mode = False
+    papertrail_handler = None
 
     def check_default_config(self):
         """Asserts that the config in default.ini/base.ini is sane"""
@@ -274,8 +276,8 @@ class Flask(flask.Flask):
 
     def switch_to_wsgi_mode(self):
         self.log_to_file('application.log')
+        self.log_to_papertrail('app')
         self.logger.debug('Switched to WSGI mode')
-
 
     def log_to_file(self, filename):
         log_filename = os.path.abspath(os.path.join(self.root_path, '..', 'logs', filename))
@@ -288,6 +290,20 @@ class Flask(flask.Flask):
             # Nuke the existing StreamHandler
             logging.root.handlers = []
         logging.root.addHandler(file_handler)
+
+    def log_to_papertrail(self, tag):
+        if not self.settings.getboolean('papertrail', 'log_to_papertrail'):
+            # Log to papertrail is disabled by configuration
+            return
+
+        host = self.settings.get('papertrail', 'host')
+        port = self.settings.getint('papertrail', 'port')
+
+        if not self.papertrail_handler:
+            self.papertrail_handler = logging.handlers.SysLogHandler(address=(host, port), facility='local0', socktype=socket.SOCK_DGRAM)
+            self.logger.addHandler(self.papertrail_handler)
+
+        self.papertrail_handler.setFormatter(logging.Formatter('%%(name)s.%(tag)s: %%(levelname)s %%(message)s [in %%(pathname)s:%%(lineno)d]' % dict(tag=tag)))
 
     def __init__(self, *args, **kwargs):
         super(Flask, self).__init__(*args, **kwargs)
