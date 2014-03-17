@@ -133,3 +133,35 @@ def table_like(head, body, table=None):
             else:
                 observed_cell.text_is(expected_cell)
 
+def dl_like(contents, dl=None):
+    message("verifying dl contents")
+    if not dl:
+        dl = find('dl').length_is(1, message="Get the only dl on the page")
+
+    dts = dl.find('dt')
+    dds = dl.find('dd')
+
+    is_equal(len(dts), len(contents), "Correct number of definitions")
+    is_equal(len(dds), len(contents), "Correct number of definitions")
+
+    retype = type(re.compile('a'))
+
+    for observed_dt, observed_dd, expected in zip(dts, dds, contents):
+        if expected is None:
+            # Don't care about this item
+            continue
+
+        expected_dt = expected[0]
+        expected_dd = expected[1]
+
+        if expected_dt is not None:
+            if isinstance(expected_dt, retype):
+                observed_dt.text_like(expected_dt)
+            else:
+                observed_dt.text_is(expected_dt)
+
+        if expected_dd is not None:
+            if isinstance(expected_dd, retype):
+                observed_dd.text_like(expected_dd)
+            else:
+                observed_dd.text_is(expected_dd)
