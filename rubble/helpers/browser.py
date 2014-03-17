@@ -111,9 +111,9 @@ def table_like(head, body, table=None):
     if not table:
         table = find('.table').length_is(1, message="Get the only table on the page")
 
-    head_cells = table.find('thead tr th')
-
-    is_equal(len(head_cells), len(head), "Correct number of header cells")
+    if head is not None:
+        head_cells = table.find('thead tr th')
+        is_equal(len(head_cells), len(head), "Correct number of header cells")
 
     body_rows = table.find('tbody tr')
 
