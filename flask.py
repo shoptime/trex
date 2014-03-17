@@ -539,26 +539,8 @@ class Flask(flask.Flask):
             db.close()
 
     def drop_collections(self):
-        for model in self.enumerate_models():
-            if issubclass(model, trex.support.model.ForeverDocument):
-                model.all.delete()
-            else:
-                model.objects.delete()
-
-        # Chop any gridfs support collections
-        for name in app.db.collection_names():
-            if re.search(r'\.(files|chunks)$', name):
-                app.db.drop_collection(name)
-
-    def enumerate_models(self):
-        import app.model
-        import trex.support.model
-        import trex.support.cron
-        import trex.support.mail
-        for module in [app.model, trex.support.model, trex.support.cron, trex.support.mail]:
-            for name, cls in inspect.getmembers(module, inspect.isclass):
-                if isinstance(cls, mongoengine.base.metaclasses.TopLevelDocumentMetaclass) and cls._meta['abstract'] == False:
-                    yield cls
+        app.db.connection.drop_database(app.db.name)
+        mongoengine.connection.get_db(reconnect=True)
 
 #
 # Exception handling
