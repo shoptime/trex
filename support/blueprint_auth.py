@@ -161,7 +161,7 @@ def logout():
         audit('User ended log-in-as: %s' % g.user.display_name, ['Authentication', 'User Management'], user=g.identity.real, documents=[g.user])
     else:
         g.identity.logout()
-        audit('User logged out in: %s' % g.user.display_name, ['Authentication'])
+        audit('User logged out: %s' % g.user.display_name, ['Authentication'])
         return_to = request.args.get('return_to') or g.user.default_after_logout_url()
 
     return redirect(return_to)
