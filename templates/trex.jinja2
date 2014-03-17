@@ -19,16 +19,8 @@
 {% endmacro %}
 
 {% macro form_render_inline(form, button_label='Submit', id=None, button_class='btn-primary') %}
-<form
-    action=""
-    method="POST"
-    enctype="multipart/form-data"
-    class="wtform form-inline"
-    accept-charset="utf-8"
-    {% if id %}id="{{ id }}"{% endif %}
-    >
-    <input type="hidden" name="_csrf_token" value="{{ g.identity.get_csrf() }}">
-    {{ form.hidden_tag() }}
+    <form {{ form_render_form_tag_attrs(form, 'form-inline', id) }}>
+    {{ form_render_hidden_fields(form) }}
     {% for field in form %}
     {% if trex_bootstrap_version == 3 %}
     {{ form_render_field_inline(field) }}
@@ -43,40 +35,34 @@
 {% endmacro %}
 
 {% macro form_render(form, button_label='Submit', vertical=False, id=None, secondary_action_html=None, button_class='btn-primary', autofocus_field=None) %}
-<form
-    action=""
-    method="POST"
-    enctype="multipart/form-data"
-    class="wtform {% if vertical %}form-vertical{% else %}form-horizontal{% endif %}"
-    accept-charset="utf-8"
-    {% if id %}id="{{ id }}"{% endif %}
-    >
-    <input type="hidden" name="_csrf_token" value="{{ g.identity.get_csrf() }}">
-    {{ form.hidden_tag() }}
+    <form {{ form_render_form_tag_attrs(form, vertical and 'form-vertical' or 'form-horizontal', id) }}>
+    {{ form_render_hidden_fields(form) }}
     {% for field in form %}
     {% if trex_bootstrap_version == 3 %}
         {% if autofocus_field == field.id %}{{ form_render_field_bs3(field, autofocus=true) }}{% else %}{{ form_render_field_bs3(field) }}{% endif %}
     {% else %}
-    {{ form_render_field(field) }}
+        {{ form_render_field(field) }}
     {% endif %}
     {% endfor %}
     {% if button_label is not none %}
-    {% if trex_bootstrap_version == 3 %}
-    <div class="form-group form-actions">
-        <div class="col-sm-offset-4 col-sm-8">
-            <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
-            {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
-        </div>
-    </div>
-    {% else %}
-    <div class="form-actions">
-        <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
-        {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
-    </div>
-    {% endif %}
+        {{ form_render_submit_section(form, button_label, button_class, secondary_action_html) }}
     {% endif %}
 </form>
 {% endmacro %}
+
+{%- macro form_render_form_tag_attrs(form, form_class='form-horizontal', id=None) -%}
+    action=""
+    method="POST"
+    enctype="multipart/form-data"
+    class="wtform {{ form_class }}"
+    accept-charset="utf-8"
+    {% if id %}id="{{ id }}"{% endif %}
+{%- endmacro -%}
+
+{%- macro form_render_hidden_fields(form) -%}
+    <input type="hidden" name="_csrf_token" value="{{ g.identity.get_csrf() }}">
+    {{ form.hidden_tag() }}
+{%- endmacro -%}
 
 {% macro form_render_field(field) %}
 {% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
@@ -105,6 +91,7 @@
 </div>
 {% endif %}
 {% endmacro %}
+
 {% macro form_render_field_bs3(field) %}
 {% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
 <div id="form-group-{{ field.id }}" class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
@@ -136,6 +123,7 @@
 </div>
 {% endif %}
 {% endmacro %}
+
 {% macro form_render_field_inline(field) %}
 {% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
 <div id="form-group-{{ field.id }}" class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
@@ -148,6 +136,22 @@
 </div>
 {% endif %}
 {% endmacro %}
+
+{%- macro form_render_submit_section(form, button_label='Submit', button_class='btn-primary', secondary_action_html=None) -%}
+    {% if trex_bootstrap_version == 3 %}
+        <div class="form-group form-actions">
+            <div class="col-sm-offset-4 col-sm-8">
+                <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
+                {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="form-actions">
+            <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
+            {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
+        </div>
+    {% endif %}
+{%- endmacro -%}
 
 {% macro bootstrap_nav_item(endpoint, label, match=None, match_list=None) -%}
     <li
