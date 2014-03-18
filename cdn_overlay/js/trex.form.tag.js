@@ -15,13 +15,27 @@
             },
             paste_parser: function(s) {
                 var list = [];
-                var regex = /(?:"([^"]+)")? ?<?(.*?@[^>,]+)>?\s*,?\s*/g;
+                var regex = /\s*(?:"([^"]*?)"\s*<([^>]*)>|([^,]*?)\s*<([^>]*)>|(.+?))\s*(?:,\s*|$)/g;
+                //              (          type 1        |        type 2      | t3  )   (  sepr  )
+                // type 1 = "full name, some" <email@address.com>
+                // type 2 = some full name <email@address.com>
+                // type 3 = anything without a comma
+                // sepr   = address separator (either a comma or end of string)
+
                 var m;
                 var position = 0;
+                var parsed_address;
                 while (m = regex.exec(s)) {
-                    if (m[1]) { m[1] = m[1].replace(/^\s+|\s+$/g, ''); }
-                    if (m[2]) { m[2] = m[2].replace(/^\s+|\s+$/g, ''); }
-                    list.push([m[2], m[1]]);
+                    parsed_address = _.filter(m.slice(1), function(x) { return x });
+                    if (parsed_address.length == 2) {
+                        list.push([parsed_address[1], parsed_address[0]]);
+                    }
+                    else if (parsed_address.length == 1) {
+                        list.push([parsed_address[0], '']);
+                    }
+                    else {
+                        log.w("Couldn't parse address: ", parsed_address);
+                    }
                     position += m[0].length;
                 }
                 var remaining = s.substr(position);
