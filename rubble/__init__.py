@@ -22,10 +22,13 @@ _global_teardown_harness_methods = []
 _global_init_test_methods = []
 _global_teardown_test_methods = []
 
+PASSED_TESTS_FILE = os.path.join(app.root_path, '..', '.rubble_passed_tests')
+
+
 def split_tests_by_instance_number(test_classes, number, total):
     return sorted(test_classes, key=lambda x: x.__name__)[number::total]
 
-def load_all_tests():
+def load_all_tests(exclude=None):
     scripts = {}
 
     test_dir = os.path.join(app.root_path, 'test')
@@ -49,20 +52,26 @@ def load_all_tests():
                     if not v.abstract:
                         if k in scripts:
                             raise Exception("Duplicate test named: %s" % k)
+                        if exclude and k in exclude:
+                            continue
                         scripts[k] = v
 
     return set(scripts.values())
 
-def load_tests_by_names(test_names):
+def load_tests_by_names(test_names, exclude=None):
     test_names = set(test_names)
     tests = set()
-    for test in load_all_tests():
+    for test in load_all_tests(exclude=exclude):
         if test.__name__ in test_names:
             test_names.remove(test.__name__)
             tests.add(test)
 
     if len(test_names):
-        raise Exception("Couldn't find named tests: %s" % test_names)
+        # If all test names haven't been consumed, then we were asked to load a test
+        # that doesn't exist - except if those tests were also in the list of ones to
+        # deliberately exclude.
+        if not exclude or test_names != set(exclude):
+            raise Exception("Couldn't find named tests: %s" % test_names)
 
     return tests
 
@@ -205,6 +214,8 @@ class Harness(object):
                     start_time = time.time()
                     obj.run()
                     obj.post_run()
+                    with open(PASSED_TESTS_FILE, 'a') as fh:
+                        fh.write("%s\n" % obj.__class__.__name__)
                     end_time = time.time()
                     print "# %s took %0.1f seconds" % (obj.__class__.__name__, end_time-start_time)
                 except:

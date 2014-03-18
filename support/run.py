@@ -144,10 +144,18 @@ class Manager(script.Manager):
         @self.option('-p', '--processes', action='store', default=1, help='How many parallel processes to run')
         @self.option('-f', '--fail-method', action='store', default=None, help='What to do on a test/assertion failure [exception|ipdb|print]')
         @self.option('-m', '--debug-mail', action='store_true', default=False, help='Dump debug info about emails that the app tries to send')
+        @self.option('-r', '--resume', action='store_true', default=False, help='Resume from the last test which failed')
+        @self.option('-l', '--list-tests', action='store_true', default=False, help='List all tests')
         @self.option('tests', action='store', nargs='*', default=None)
-        def rubble(processes, fail_method, debug_mail, tests):
+        def rubble(processes, fail_method, debug_mail, resume, tests, list_tests):
             """Run the new test harness"""
             import trex.rubble
+
+            if list_tests:
+                test_classes = trex.rubble.load_all_tests()
+                for cls in test_classes:
+                    print cls.__name__
+                sys.exit(0)
 
             start_time = time.time()
 
@@ -155,10 +163,20 @@ class Manager(script.Manager):
                 fail_method = 'exception'
             processes = int(processes)
 
-            if len(tests):
-                test_classes = trex.rubble.load_tests_by_names(tests)
+            exclude_tests = []
+            if resume:
+                with open(trex.rubble.PASSED_TESTS_FILE, 'r') as fh:
+                    exclude_tests = [line.strip() for line in fh.readlines()]
             else:
-                test_classes = trex.rubble.load_all_tests()
+                try:
+                    os.unlink(trex.rubble.PASSED_TESTS_FILE)
+                except OSError:
+                    pass
+
+            if len(tests):
+                test_classes = trex.rubble.load_tests_by_names(tests, exclude=exclude_tests)
+            else:
+                test_classes = trex.rubble.load_all_tests(exclude=exclude_tests)
 
             def run_tests(instance_number, instance_total):
                 def sig_quit_handler(signum, frame):
