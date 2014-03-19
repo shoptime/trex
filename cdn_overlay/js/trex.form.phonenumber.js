@@ -19,9 +19,9 @@
                 .insertAfter($this)
             ;
 
-            var phoneUtil = window.i18n.phonenumbers.PhoneNumberUtil.getInstance();
-            var PNF = window.i18n.phonenumbers.PhoneNumberFormat;
-            var PNT = window.i18n.phonenumbers.PhoneNumberType;
+            var phoneUtil = Trex.i18n.phonenumbers.PhoneNumberUtil.getInstance();
+            var PNF = Trex.i18n.phonenumbers.PhoneNumberFormat;
+            var PNT = Trex.i18n.phonenumbers.PhoneNumberType;
             var $country_field = $();
             if ($this.data('country-field')) {
                 $country_field = $('#' + $this.data('country-field'));
@@ -64,7 +64,7 @@
                     // Empty field, is valid
                     is_valid = true;
                     message = '';
-                    $hidden.val('invalid:' + value);
+                    $hidden.val('');
                 }
                 else if (phone && phoneUtil.isValidNumber(phone)) {
                     // Valid number

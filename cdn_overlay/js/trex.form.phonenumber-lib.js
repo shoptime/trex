@@ -1,3 +1,5 @@
+(function(window) {
+    var goog;
 var COMPILED=!0,goog=goog||{};goog.global=this;goog.exportPath_=function(a,b,c){a=a.split(".");c=c||goog.global;a[0]in c||!c.execScript||c.execScript("var "+a[0]);for(var d;a.length&&(d=a.shift());)a.length||void 0===b?c=c[d]?c[d]:c[d]={}:c[d]=b};goog.define=function(a,b){var c=b;COMPILED||goog.global.CLOSURE_DEFINES&&Object.prototype.hasOwnProperty.call(goog.global.CLOSURE_DEFINES,a)&&(c=goog.global.CLOSURE_DEFINES[a]);goog.exportPath_(a,c)};goog.DEBUG=!0;goog.LOCALE="en";goog.TRUSTED_SITE=!0;
 goog.provide=function(a){if(!COMPILED){if(goog.isProvided_(a))throw Error('Namespace "'+a+'" already declared.');delete goog.implicitNamespaces_[a];for(var b=a;(b=b.substring(0,b.lastIndexOf(".")))&&!goog.getObjectByName(b);)goog.implicitNamespaces_[b]=!0}goog.exportPath_(a)};goog.setTestOnly=function(a){if(COMPILED&&!goog.DEBUG)throw a=a||"",Error("Importing test-only code into non-debug environment"+a?": "+a:".");};
 COMPILED||(goog.isProvided_=function(a){return!goog.implicitNamespaces_[a]&&!!goog.getObjectByName(a)},goog.implicitNamespaces_={});goog.getObjectByName=function(a,b){for(var c=a.split("."),d=b||goog.global,e;e=c.shift();)if(goog.isDefAndNotNull(d[e]))d=d[e];else return null;return d};goog.globalize=function(a,b){var c=b||goog.global,d;for(d in a)c[d]=a[d]};
@@ -861,7 +863,8 @@ i18n.phonenumbers.AsYouTypeFormatter.prototype.attemptToExtractCountryCallingCod
 a!=this.defaultCountry_&&(this.currentMetadata_=this.getMetadataForRegion_(a));this.prefixBeforeNationalNumber_.append(""+b).append(i18n.phonenumbers.AsYouTypeFormatter.SEPARATOR_BEFORE_NATIONAL_NUMBER_);this.extractedNationalPrefix_="";return!0};
 i18n.phonenumbers.AsYouTypeFormatter.prototype.normalizeAndAccrueDigitsAndPlusSign_=function(a,b){var c;a==i18n.phonenumbers.PhoneNumberUtil.PLUS_SIGN?(c=a,this.accruedInputWithoutFormatting_.append(a)):(c=i18n.phonenumbers.PhoneNumberUtil.DIGIT_MAPPINGS[a],this.accruedInputWithoutFormatting_.append(c),this.nationalNumber_.append(c));b&&(this.positionToRemember_=this.accruedInputWithoutFormatting_.getLength());return c};
 i18n.phonenumbers.AsYouTypeFormatter.prototype.inputDigitHelper_=function(a){var b=this.formattingTemplate_.toString();if(0<=b.substring(this.lastMatchPosition_).search(this.DIGIT_PATTERN_)){var c=b.search(this.DIGIT_PATTERN_);a=b.replace(this.DIGIT_PATTERN_,a);this.formattingTemplate_.clear();this.formattingTemplate_.append(a);this.lastMatchPosition_=c;return a.substring(0,this.lastMatchPosition_+1)}1==this.possibleFormats_.length&&(this.ableToFormat_=!1);this.currentFormattingPattern_="";return this.accruedInput_.toString()};
-(function(window) {
     var Trex = window.Trex;
     Trex._register_module("trex.form.phonenumber-lib");
+    Trex.goog = goog;
+    Trex.i18n = i18n;
 })(window);
