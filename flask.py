@@ -539,8 +539,16 @@ class Flask(flask.Flask):
             db.close()
 
     def drop_collections(self):
+        def mongo_drop_collections(base_class):
+            for cls in base_class.__subclasses__():
+                if cls._get_collection_name():
+                    cls.drop_collection()
+                mongo_drop_collections(cls)
+
+        mongo_drop_collections(mongoengine.Document)
         app.db.connection.drop_database(app.db.name)
         mongoengine.connection.get_db(reconnect=True)
+
 
 #
 # Exception handling
