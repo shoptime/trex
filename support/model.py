@@ -236,8 +236,8 @@ class BaseUser(BaseDocument):
         return "Password emailed to %s" % self.email
 
     def to_ejson(self):
-        data = self.to_mongo()
-        del data['password']
+        data = self.to_mongo().to_dict()
+        data.pop('password', None)
         return data
 
 class UserAccountRecovery(BaseDocument):

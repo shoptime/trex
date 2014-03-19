@@ -12,12 +12,12 @@ def filter_json_encoder(o):
     if isinstance(o, mongoengine.Document):
         if hasattr(o, 'to_ejson'):
             return o.to_ejson()
-        return o.to_mongo()
+        return o.to_mongo().to_dict()
 
     if isinstance(o, mongoengine.EmbeddedDocument):
         if hasattr(o, 'to_ejson'):
             return o.to_ejson()
-        return o.to_mongo()
+        return o.to_mongo().to_dict()
 
     if isinstance(o, bson.ObjectId):
         return str(o)
