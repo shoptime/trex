@@ -1,10 +1,9 @@
-(function(window) {
+(function(window, $) {
     var Trex = window.Trex;
     Trex._register_module("trex.form.phonenumber", "trex.form.phonenumber-lib");
 
-    var module = Trex.form.phonenumber = new Trex._TrexModule();
-    var log = new Trex.Logger('trex.form.phonenumber');
-
+    Trex.form.phonenumber = new Trex._TrexModule();
+    //var log = new Trex.Logger('trex.form.phonenumber');
 
     function bind(context) {
         $('.trex-phone-field', context).each(function() {
@@ -13,20 +12,16 @@
             var $hidden = $('<input type="hidden">').attr('name', $this.attr('name')).insertAfter($this);
             $this.attr('name', null);
 
-            var $message = $('<p></p>')
+            var $message = $('<span></span>')
                 .css({
-                    position: 'absolute',
-                    textAlign: 'right',
-                    marginTop: -$this.height() - ($this.outerHeight() - $this.height())/2,
-                    right: 25,
+                    marginLeft: 10
                 })
                 .insertAfter($this)
             ;
 
-            var phoneUtil = i18n.phonenumbers.PhoneNumberUtil.getInstance();
-            window.phoneUtil = phoneUtil; // TODO - remove me
-            var PNF = i18n.phonenumbers.PhoneNumberFormat;
-            var PNT = i18n.phonenumbers.PhoneNumberType;
+            var phoneUtil = window.i18n.phonenumbers.PhoneNumberUtil.getInstance();
+            var PNF = window.i18n.phonenumbers.PhoneNumberFormat;
+            var PNT = window.i18n.phonenumbers.PhoneNumberType;
             var $country_field = $();
             if ($this.data('country-field')) {
                 $country_field = $('#' + $this.data('country-field'));
@@ -44,10 +39,10 @@
                 value = $this.val();
                 country = current_country();
                 if (country) {
-                    $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType(country, PNT.MOBILE), PNF.NATIONAL))
+                    $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType(country, PNT.MOBILE), PNF.NATIONAL));
                 }
                 else {
-                    $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType('GB', PNT.MOBILE), PNF.INTERNATIONAL))
+                    $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType('GB', PNT.MOBILE), PNF.INTERNATIONAL));
                 }
                 try {
                     phone = phoneUtil.parseAndKeepRawInput(value, country);
@@ -94,32 +89,31 @@
                 else {
                     // Couldn't parse a phone number or it was invalid
                     is_valid = false;
-                    message = 'Invalid number';
+                    message = 'Invalid phone number';
                     $hidden.val('invalid:' + value);
                 }
 
+                // Remove any error put there by the server-side
+                $this.closest('.form-group, .control-group').find('.help-inline-error, .help-block-error').remove()
                 if (is_valid || show_error) {
                     $message
-                        .toggleClass('text-danger', !is_valid)
+                        .toggleClass('text-danger text-error', !is_valid)
                         .toggleClass('text-success', is_valid)
                         .text(message)
                         .show()
                     ;
                     $this.closest('.form-group').toggleClass('has-error', !is_valid);
+                    $this.closest('.control-group').toggleClass('error', !is_valid);
                 }
                 else {
                     $message.hide();
                     $this.closest('.form-group').removeClass('has-error');
+                    $this.closest('.control-group').removeClass('error');
                 }
             };
 
-            $this.on('blur change keyup keydown keypress', function(e) {
-                var show_error = e.type == 'change' || e.type == 'blur';
-                do_validation(show_error);
-            });
-            $country_field.on('change', function(e) {
-                do_validation();
-            });
+            $this.on('blur change keyup keydown keypress', do_validation);
+            $country_field.on('change', do_validation);
 
             update_value();
             if (phone && !$this.data('keep-raw-value')) {
@@ -134,4 +128,4 @@
     if (Trex.opt.auto_bind_form_elements) {
         bind();
     }
-})(window);
+})(window, jQuery);
