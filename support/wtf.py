@@ -772,6 +772,42 @@ class PhoneNumberField(wtf.Field):
     def __call__(self, *args, **kwargs):
         return super(PhoneNumberField, self).__call__(*args, **kwargs)
 
+class PhoneField(wtf.TextField):
+    def __init__(self, label='', validators=None, country_field=None, **kwargs):
+        self.country_field = country_field
+        super(PhoneField, self).__init__(label, validators, **kwargs)
+
+    def _value(self):
+        if self.raw_data:
+            return self.raw_data[0].replace('invalid:', '')
+        else:
+            return self.data or ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            phone = ' '.join(valuelist)
+            if phone.strip().startswith('invalid:'):
+                self.data = phone.replace('invalid:', '')
+                raise ValueError("Invalid phone number")
+            else:
+                self.data = phone
+
+    def __call__(self, **kwargs):
+        kwargs['disabled'] = 'disabled'
+
+        if 'class' in kwargs:
+            kwargs['class'] = ' '.join(kwargs['class'].split(' ') + ['trex-phone-field'])
+        else:
+            kwargs['class'] = 'trex-phone-field'
+
+        if self.country_field:
+            kwargs['data-country-field'] = self.country_field
+
+        if self.raw_data and self.raw_data[0].startswith('invalid:'):
+            kwargs['data-keep-raw-value'] = 'true'
+
+        return super(PhoneField, self).__call__(**kwargs)
+
 class InviteField(wtf.TextAreaField):
     def __init__(self, label='', validators=None, placeholder_text=None, contacts=None, **kwargs):
         self.placeholder_text = placeholder_text
