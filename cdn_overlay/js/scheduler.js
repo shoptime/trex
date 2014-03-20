@@ -270,13 +270,29 @@
         },
         reset: function() {
             _.each(this.event_views, function(view) {
-                this.remove(view.model);
+                this.remove(view.model, false);
             }, this);
+
+            var seen_dates = {};
+            var rendered_week = this.startOfWeek(this.opt.startWeek);
             this.model.each(function(model) {
-                this.add(model);
+                this.add(model, false);
+
+                var date = model.date().startOf('day');
+                var week_of_date = this.startOfWeek(model.date());
+                if (week_of_date.isSame(rendered_week)) {
+                    seen_dates[date] = date;
+                }
             }, this);
+
+            _.each(_.values(seen_dates), _.bind(function(date) {
+                this.balance_date(date);
+            }, this));
         },
-        add: function(evt) {
+        add: function(evt, balance) {
+            if (typeof(balance) === 'undefined') {
+                balance = true;
+            }
             var $column = this.event_column_for(evt.date());
             if (!$column) { return; }
             var view;
@@ -293,9 +309,14 @@
                 });
             }
             $column.append(view.$el);
-            this.balance_date(evt.date());
+            if (balance) {
+                this.balance_date(evt.date());
+            }
         },
-        remove: function(evt) {
+        remove: function(evt, balance) {
+            if (typeof(balance) === 'undefined') {
+                balance = true;
+            }
             if (this.current_open_event && this.current_open_event.model == evt) {
                 this.current_open_event.remove();
                 delete this.current_open_event;
@@ -305,7 +326,9 @@
                 delete this.event_views[evt.cid].scheduler;
                 delete this.event_views[evt.cid];
                 view.remove();
-                this.balance_date(evt.date());
+                if (balance) {
+                    this.balance_date(evt.date());
+                }
             }
         },
         change: function(evt, options) {
