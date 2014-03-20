@@ -333,14 +333,17 @@
                 this.add(evt);
             }
         },
-        // TODO - debounce this?
         balance_date: function(date) {
+            var string_date = date._d.toDateString();
             var events = this.model.filter(function(evt) {
                 if (!(this.event_views[evt.cid] instanceof Trex.Scheduler.SpanView)) {
                     // We only want to be balancing SpanViews
                     return false;
                 }
-                return evt.cid in this.event_views && date.isSame(evt.date(), 'day');
+                // Using string_date is a hack to speed this function up. It does the
+                // same job that the commented out line below does.
+                return evt.cid in this.event_views && string_date == evt.get('start')._d.toDateString();
+                //return evt.cid in this.event_views && date.isSame(evt.date(), 'day');
             }, this);
             var timelist = _.flatten(_.map(events, function(evt) {
                 return [
