@@ -35,7 +35,8 @@
                 // NEVER merged together. Also note that this option is merely
                 // passed through to the model; if you specify your own model,
                 // then set this option on that instead.
-                mergeTypes: []
+                mergeTypes: [],
+                currentTimeLine: true
             };
         },
         className: 'trex-scheduler',
@@ -192,6 +193,11 @@
             this.event_views = {};
             this.$('.trex-scheduler-scrollable')[0].scrollTop = this.opt.startHour.diff(this.opt.startHour.clone().startOf('day'), 'hours', true) * this.opt.hourHeight;
 
+            this.$timeline = $();
+            if (this.opt.currentTimeLine) {
+                this.$timeline = $('<div class="timeline"></div>');
+            }
+
             this.listenTo(this.model, 'reset', this.reset);
             this.listenTo(this.model, 'add', this.add);
             this.listenTo(this.model, 'remove', this.remove);
@@ -232,7 +238,9 @@
                 day.add('days', 1);
             });
             if (todayIndex !== null) {
-                this.$('tbody .trex-scheduler-event-row td').eq(todayIndex).addClass('trex-scheduler-today');
+                this.$timeline.css('top', this.opt.hourHeight * (now().hour() + now().minute() / 60.0));
+                var $today = this.$('tbody .trex-scheduler-event-row td').eq(todayIndex).addClass('trex-scheduler-today');
+                $today.find('> div').append(this.$timeline);
             }
             var $timeContainer = this.$('tbody .trex-scheduler-event-row .trex-scheduler-time').empty();
             var hour = now().startOf('day');
