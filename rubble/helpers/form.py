@@ -9,9 +9,32 @@ from app import app
 import re
 
 def fill(_selector='[name="%(key)s"]', _date_format='%Y-%m-%d', _time_format='%H:%M %p', **kwargs):
-    for key, value in kwargs.items():
-        el = find(_selector % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
-        is_equal(el.length() > 0, True, "Couldn't find form element: %s" % key)
+    fields = [dict(key=x[0], value=x[1]) for x in kwargs.items()]
+
+    for field in fields:
+        field['el'] = find(_selector % dict(key=field['key'])).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
+        is_equal(field['el'].length() > 0, True, "Couldn't find form element: %s" % field['key'])
+
+    # This makes sure we try to set values on trex-dependent-select-fields last
+    # (i.e. after their parent field has had a value set)
+    def compare_fields(a, b):
+        a_value = 10
+        b_value = 10
+
+        if re.search(r'(?:^|\s)trex-dependent-select-field(?:\s|$)', a['el'][0].attr('class')):
+            a_value = 100
+        if re.search(r'(?:^|\s)trex-dependent-select-field(?:\s|$)', b['el'][0].attr('class')):
+            b_value = 100
+
+        return cmp(a_value, b_value)
+
+    fields = sorted(fields, cmp=compare_fields)
+
+    for field in fields:
+        key = field['key']
+        value = field['value']
+        el = field['el']
+
         if el[0].tag_name() == 'select':
             el.select_by_value(value)
         elif el[0].attr('type') == 'radio':
