@@ -427,6 +427,44 @@ class CheckListField(wtf.SelectMultipleField):
     widget = BareListWidget()
     option_widget = BootstrapCheckboxInput()
 
+class BooleanFieldWidget(object):
+    def __call__(self, field, **kwargs):
+        input_args = dict(
+            id    = field.id,
+            name  = field.name,
+            type  = 'checkbox',
+            value = 'checked',
+        )
+        if kwargs.get('value', field._value()):
+            input_args['checked'] = 'checked'
+        data = dict(
+            input_args = wtf.widgets.html_params(**input_args),
+            label = field.boolean_label,
+        )
+
+        return wtf.widgets.HTMLString('<label class="checkbox"><input %(input_args)s> %(label)s</label>' % data)
+
+class BooleanField(wtf.Field):
+    widget = BooleanFieldWidget()
+
+    def __init__(self, label='', validators=None, **kwargs):
+        self.boolean_label = label
+        super(BooleanField, self).__init__('', validators, **kwargs)
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = valuelist[0] == 'checked'
+        else:
+            self.data = False
+
+    def _value(self):
+        from pprint import pprint
+        pprint(self.data)
+        if self.data:
+            return self.data
+        else:
+            return None
+
 class StarRatingField(wtf.IntegerField):
     def __init__(self, label='', validators=None, low_label='Poor', high_label='Excellent', star_count=5, **kwargs):
         self.low_label = low_label
