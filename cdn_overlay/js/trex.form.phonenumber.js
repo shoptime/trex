@@ -12,13 +12,14 @@
             var $hidden = $('<input type="hidden">')
                 .attr('name', $this.attr('name'))
                 .attr('class', $this.attr('class'))
-                .insertAfter($this)
+                .insertBefore($this)
             ;
             $this.attr('name', null);
 
-            var $message = $('<span></span>')
+            var $message = $('<span class="text-success"></span>')
                 .css({
-                    marginLeft: 10
+                    marginLeft: 10,
+                    display: 'none'
                 })
                 .insertAfter($this)
             ;
@@ -61,7 +62,6 @@
 
             var do_validation = function() {
                 var is_valid = false;
-                var show_error = !$this.is(':focus');
 
                 var message;
                 var extra_info = [];
@@ -101,21 +101,14 @@
                 }
 
                 // Remove any error put there by the server-side
-                $this.closest('.form-group, .control-group').find('.help-inline-error, .help-block-error').remove()
-                if (is_valid || show_error) {
-                    $message
-                        .toggleClass('text-danger text-error', !is_valid)
-                        .toggleClass('text-success', is_valid)
-                        .text(message)
-                        .show()
-                    ;
-                    $this.closest('.form-group').toggleClass('has-error', !is_valid);
-                    $this.closest('.control-group').toggleClass('error', !is_valid);
+                //$this.closest('.form-group, .control-group').find('.help-inline-error, .help-block-error').remove()
+                if (is_valid && message) {
+                    $this.closest('.form-group, .control-group').find('.help-inline-error, .help-block-error').hide();
+                    $message.text(message).show();
                 }
                 else {
+                    $this.closest('.form-group, .control-group').find('.help-inline-error, .help-block-error').show();
                     $message.hide();
-                    $this.closest('.form-group').removeClass('has-error');
-                    $this.closest('.control-group').removeClass('error');
                 }
             };
 
