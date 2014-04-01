@@ -12,8 +12,18 @@ def fill(_selector='[name="%(key)s"]', _date_format='%Y-%m-%d', _time_format='%H
     fields = [dict(key=x[0], value=x[1]) for x in kwargs.items()]
 
     for field in fields:
-        field['el'] = find(_selector % dict(key=field['key'])).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
-        is_equal(field['el'].length() > 0, True, "Couldn't find form element: %s" % field['key'])
+        el = find(_selector % dict(key=field['key']))
+
+        is_equal(el.length() > 0, True, "Couldn't find form element: %s" % field['key'])
+
+        if el[0].has_class('trex-phone-field'):
+            el = el.parent().find('[type=text].trex-phone-field')
+        else:
+            el = el.filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
+
+        is_equal(el.length() > 0, True, "Couldn't find form element: %s" % field['key'])
+
+        field['el'] = el
 
     # This makes sure we try to set values on trex-dependent-select-fields last
     # (i.e. after their parent field has had a value set)
@@ -21,9 +31,9 @@ def fill(_selector='[name="%(key)s"]', _date_format='%Y-%m-%d', _time_format='%H
         a_value = 10
         b_value = 10
 
-        if re.search(r'(?:^|\s)trex-dependent-select-field(?:\s|$)', a['el'][0].attr('class')):
+        if a['el'][0].has_class('trex-dependent-select-field'):
             a_value = 100
-        if re.search(r'(?:^|\s)trex-dependent-select-field(?:\s|$)', b['el'][0].attr('class')):
+        if b['el'][0].has_class('trex-dependent-select-field'):
             b_value = 100
 
         return cmp(a_value, b_value)
@@ -38,7 +48,7 @@ def fill(_selector='[name="%(key)s"]', _date_format='%Y-%m-%d', _time_format='%H
         if el[0].tag_name() == 'select':
             el.select_by_value(value)
         elif el[0].attr('type') == 'radio':
-            el = find('[name="%s"][value="%s"]' % (key, value))
+            el = el.filter_by_lambda(lambda el: el.get_attribute('value') == value)
             el.length_is(1, message="Couldn't find radio button %s=%s" % (key, value))
             el.scroll_to().click()
         elif el[0].attr('type') == 'checkbox':
@@ -48,12 +58,12 @@ def fill(_selector='[name="%(key)s"]', _date_format='%Y-%m-%d', _time_format='%H
                 if not isinstance(value, list):
                     value = [value]
                 for subvalue in value:
-                    el = find('[name="%s"][value="%s"]' % (key, subvalue))
-                    el.length_is(1, message="Couldn't find checkbox %s=%s" % (key, subvalue))
-                    el.scroll_to().click()
+                    subel = el.filter_by_lambda(lambda el: el.get_attribute('value') == subvalue)
+                    subel.length_is(1, message="Couldn't find checkbox %s=%s" % (key, subvalue))
+                    subel.scroll_to().click()
         elif el[0].attr('type') == 'file':
             el.type(os.path.join(app.root_path, 'test', 'data', value), clear_first=False)
-        elif el[0].attr('class') is not None and re.search(r'\btrex-date-field\b', el[0].attr('class')):
+        elif el[0].has_class('trex-date-field'):
             el[0].type(value.strftime(_date_format))
             if el.length() == 2 and re.search(r'\btrex-time-field\b', el[1].attr('class')):
                 el[1].type(value.strftime(_time_format))

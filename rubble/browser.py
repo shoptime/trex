@@ -343,6 +343,12 @@ class WebElementSet(object):
         return self
 
     @require_one_element
+    def has_class(self, name):
+        if re.search(r'(?:^|\s)%s(?:\s|$)' % re.escape(name), self.elements[0].get_attribute('class') or ''):
+            return True
+        return False
+
+    @require_one_element
     def visible(self):
         return self.elements[0].is_displayed()
 

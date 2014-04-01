@@ -9,7 +9,11 @@
         $('.trex-phone-field', context).each(function() {
             var $this = $(this);
 
-            var $hidden = $('<input type="hidden">').attr('name', $this.attr('name')).insertAfter($this);
+            var $hidden = $('<input type="hidden">')
+                .attr('name', $this.attr('name'))
+                .attr('class', $this.attr('class'))
+                .insertAfter($this)
+            ;
             $this.attr('name', null);
 
             var $message = $('<span></span>')
