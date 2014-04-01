@@ -23,7 +23,10 @@
             var PNF = Trex.i18n.phonenumbers.PhoneNumberFormat;
             var PNT = Trex.i18n.phonenumbers.PhoneNumberType;
             var $country_field = $();
-            if ($this.data('country-field')) {
+            if ($this.data('country')) {
+                $country_field = $('<input type="hidden">').val($this.data('country'));
+            }
+            else if ($this.data('country-field')) {
                 $country_field = $('#' + $this.data('country-field'));
             }
             var current_country = function() {
