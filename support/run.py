@@ -147,7 +147,7 @@ class Manager(script.Manager):
         @self.option('-r', '--resume', action='store_true', default=False, help='Resume from the last test which failed')
         @self.option('-l', '--list-tests', action='store_true', default=False, help='List all tests')
         @self.option('tests', action='store', nargs='*', default=None)
-        def rubble(processes, fail_method, debug_mail, resume, tests, list_tests):
+        def rubble(processes, fail_method, debug_mail, resume, list_tests, tests):
             """Run the new test harness"""
             import trex.rubble
 
