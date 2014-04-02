@@ -23,6 +23,7 @@ import signal
 import time
 from glob import glob
 import re
+from operator import attrgetter
 import logging
 c_logger = logging.getLogger('app.lessc')
 
@@ -153,7 +154,7 @@ class Manager(script.Manager):
 
             if list_tests:
                 test_classes = trex.rubble.load_all_tests()
-                for cls in test_classes:
+                for cls in sorted(test_classes, key=attrgetter('__name__')):
                     print cls.__name__
                 sys.exit(0)
 
