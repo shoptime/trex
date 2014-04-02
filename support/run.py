@@ -169,6 +169,9 @@ class Manager(script.Manager):
                 if os.path.isfile(trex.rubble.PASSED_TESTS_FILE):
                     with open(trex.rubble.PASSED_TESTS_FILE, 'r') as fh:
                         exclude_tests = [line.strip() for line in fh.readlines()]
+                        print "Resuming from previous run, ignoring the following tests:"
+                        for test_name in sorted(exclude_tests):
+                            print test_name
             else:
                 try:
                     os.unlink(trex.rubble.PASSED_TESTS_FILE)
