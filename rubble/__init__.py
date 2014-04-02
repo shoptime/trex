@@ -70,7 +70,7 @@ def load_tests_by_names(test_names, exclude=None):
         # If all test names haven't been consumed, then we were asked to load a test
         # that doesn't exist - except if those tests were also in the list of ones to
         # deliberately exclude.
-        if not exclude or test_names != set(exclude):
+        if not exclude or not test_names.issubset(set(exclude)):
             raise Exception("Couldn't find named tests: %s" % test_names)
 
     return tests
