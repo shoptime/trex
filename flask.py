@@ -252,6 +252,9 @@ class Flask(flask.Flask):
             assert 'url' in self.settings.options('notify'), "URL not set in [notify] section"
             assert 'channel' in self.settings.options('notify'), "channel not set in [notify] section"
 
+    def has_feature(self, feature_name):
+        return self.settings.getboolean('features', feature_name)
+
 
     def switch_to_test_mode(self, instance_number=None):
         mongo_url   = furl(self.settings.get('mongo', 'url'))
@@ -388,6 +391,8 @@ class Flask(flask.Flask):
                 if not user:
                     timezone = flask.g.user.timezone
             return q.at(timezone).as_local().strftime(format_str)
+
+        self.jinja_env.globals['has_feature'] = self.has_feature
 
         def puffer():
             """
@@ -613,6 +618,15 @@ class AuthBlueprint(flask.Blueprint):
             raise Exception("No authentication handler supplied for %s.%s" % (self.name, endpoint))
 
         authfunc = options['auth']
+
+        if 'feature' in options:
+            if not app.has_feature(options['feature']):
+                def no_feature(**kwargs):
+                    return flask.abort(404)
+                del options['feature']
+                del options['auth']
+                super(AuthBlueprint, self).add_url_rule(rule, endpoint, no_feature, **options)
+                return no_feature
 
         if hasattr(view_func, '__authblueprint_authfunc__'):
             existing_authfunc = view_func.__authblueprint_authfunc__
