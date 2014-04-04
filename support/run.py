@@ -127,6 +127,10 @@ class Manager(script.Manager):
             except ImportError:
                 pass
 
+            rc_file = os.path.normpath(os.path.join(self.app.root_path, os.pardir, 'shell.rc'))
+            if os.access(rc_file, os.R_OK):
+                execfile(rc_file, context, dict(context=context))
+
             return context
 
         @self.option('-w', '--wait', action='store_true', default=False, help='Wait for keypress on test failure')
