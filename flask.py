@@ -617,14 +617,13 @@ class AuthBlueprint(flask.Blueprint):
         if 'auth' not in options:
             raise Exception("No authentication handler supplied for %s.%s" % (self.name, endpoint))
 
-        authfunc = options['auth']
+        authfunc = options.pop('auth')
+        feature  = options.pop('feature', None)
 
-        if 'feature' in options:
-            if not app.has_feature(options['feature']):
+        if feature:
+            if not app.has_feature(feature):
                 def no_feature(**kwargs):
                     return flask.abort(404)
-                del options['feature']
-                del options['auth']
                 super(AuthBlueprint, self).add_url_rule(rule, endpoint, no_feature, **options)
                 return no_feature
 
@@ -657,7 +656,6 @@ class AuthBlueprint(flask.Blueprint):
         setattr(view_func_authed, '__authblueprint_unwrapped__', view_func)
         setattr(view_func_authed, '__authblueprint_authfunc__', authfunc)
         setattr(view_func_authed, '__authblueprint_endpoint__', endpoint)
-        del options['auth']
         view_func_authed.__name__ = view_func.__name__
         view_func_authed.allow_cors = options.pop('allow_cors', False)
 
