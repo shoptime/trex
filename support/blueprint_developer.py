@@ -5,15 +5,20 @@ from trex.flask import app
 from trex.flask import AuthBlueprint, render_html
 from .. import auth
 from . import mail
-import importlib
-import os
 
 blueprint = AuthBlueprint('trex.developer', __name__, url_prefix='/__developer__')
 
 @blueprint.route('/email', auth=auth.has_flag('trex.developer'))
+@blueprint.route('/email/<template>', auth=auth.has_flag('trex.developer'))
 @render_html('trex/developer/email.jinja2')
-def email():
-    templates = dict([(x, mail.get_template(x).create_sample()) for x in mail.all_template_names()])
+def email(template=None):
+    if template:
+        templates = {
+            template: mail.get_template(template).create_sample()
+        }
+    else:
+        templates = dict([(x, mail.get_template(x).create_sample()) for x in mail.all_template_names()])
+
     return dict(templates=templates)
 
 @blueprint.route('/email/<template>/<fmt>', auth=auth.has_flag('trex.developer'))
