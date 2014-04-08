@@ -235,6 +235,26 @@ class BaseUser(BaseDocument):
         )
         return "Password emailed to %s" % self.email
 
+    def deactivate(self, actor):
+        """Deactivates this user account.
+
+        Calls the deactivated() method to allow applications to implement custom behaviour."""
+        self.is_active = False
+        self.password = None
+        self.save()
+
+        import app.model as m
+        m.Identity.destroy_sessions_for_user(self)
+
+        self.deactivated(actor=actor)
+
+        from .audit import audit
+        audit("Deactivated user %s" % self.display_name, ['User Management'], [self], user=actor)
+
+    def deactivated(self, actor):
+        """Called when a user account is deactivated. Applications can override this to implement custom behaviour."""
+        pass
+
     def to_ejson(self):
         data = self.to_mongo().to_dict()
         data.pop('password', None)

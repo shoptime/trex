@@ -83,11 +83,7 @@ def deactivate(user_token):
     if not g.user.has_role(user.role):
         return abort(404)
 
-    user.is_active = False
-    user.password = None
-    user.save()
-    m.Identity.destroy_sessions_for_user(user)
-    audit("Deactivated user %s" % user.display_name, ['User Management'], [user])
+    user.deactivate(actor=g.user)
 
     flash('User deactivated', category='success')
     return redirect(url_for('.index'))
