@@ -50,16 +50,16 @@ def check(*matches, **kwargs):
         for email in emails:
             if compare(email, match):
                 emails.remove(email)
-                emails_to_delete.add(email.id)
+                emails_to_delete.add(email)
                 found_match = True
                 break
         if not found_match:
             harness().handle_error(TestFailureException("Failed to find match for specified email", observed=[x.as_string() for x in emails], expected=match))
 
-    for email_id in emails_to_delete:
-        CapturedEmail.objects.get(id=email_id).delete()
+    for email in emails_to_delete:
+        CapturedEmail.objects.get(id=email.id).delete()
 
-    return emails
+    return emails_to_delete
 
 def compare(email, match):
     if 'to' in match and email.to != match['to']:
