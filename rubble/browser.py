@@ -81,7 +81,7 @@ class Browser(object):
                 return True
             last[0] = value
             return False
-        WebDriverWait(self.selenium, 2).until(inner_wait)
+        WebDriverWait(self.selenium, 3).until(inner_wait)
         return self
 
     def url(self):
