@@ -18,7 +18,7 @@
             $modal = $('<div class="modal hide fade trex-modal-form-modal"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h3 class="modal-title"></h3></div><div class="modal-body"><span class="loading"></span> Loading...</div><div class="modal-footer"><span class="loading"></span><span class="label label-danger failed">Failed</span><span class="label label-success success">Success</span><button type="button" class="btn btn-primary">Save changes</button></div></div></div></div>');
         }
         else {
-            throw Error('Unknown bootstrap version in Trex.opt.bs_version');
+            throw Error('Unknown bootstrap version in Trex.opt.bootstrap_version');
         }
 
         $modal.attr('id', modal_id);
