@@ -20,6 +20,9 @@
         else {
             throw Error('Unknown bootstrap version in Trex.opt.bootstrap_version');
         }
+        if (Trex.opt.in_test_mode) {
+            $modal.removeClass('fade');
+        }
 
         $modal.attr('id', modal_id);
         $modal.attr('aria-labelledby', title_id);
