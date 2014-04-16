@@ -30,6 +30,9 @@
         var href = $e.data('href') || $e.attr('href');
 
         var modal = $('<div class="modal fade"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><a href="" class="close">&times</a><h3 class="modal-title"></h3></div><div class="modal-body"><p></p></div><div class="modal-footer"><a class="cancel btn btn-default">Cancel</a> <a class="confirm btn btn-primary">Confirm</a></div></div></div></div>');
+        if (Trex.opt.in_test_mode) {
+            modal.removeClass('fade');
+        }
         modal
             .find('.modal-header h3').text($e.data('title')).end()
             .find('.modal-body p').text($e.data('body')).end()
