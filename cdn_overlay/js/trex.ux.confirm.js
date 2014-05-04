@@ -24,10 +24,11 @@
         ;
     });
 
-    $('body').on('click', 'button.trex-post-confirm, .dropdown-menu a.trex-post-confirm', function(e) {
+    $('body').on('click', 'button.trex-post-confirm, .dropdown-menu a.trex-post-confirm, button.trex-get-confirm, .dropdown-menu a.trex-get-confirm', function(e) {
         e.preventDefault();
         var $e = $(this);
         var href = $e.data('href') || $e.attr('href');
+        var method = $e.hasClass('trex-post-confirm') ? 'post' : 'get';
 
         var modal = $('<div class="modal fade"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><a href="" class="close">&times</a><h3 class="modal-title"></h3></div><div class="modal-body"><p></p></div><div class="modal-footer"><a class="cancel btn btn-default">Cancel</a> <a class="confirm btn btn-primary">Confirm</a></div></div></div></div>');
         if (Trex.opt.in_test_mode) {
@@ -42,12 +43,21 @@
             }).end()
             .find('.modal-footer .confirm').click(function() {
                 modal.modal('hide');
-                $('<form method="post"></form>')
-                    .append($('<input type="hidden" name="_csrf_token">').val($('html').data('csrf-token')))
-                    .attr('action', href)
-                    .appendTo('body')
-                    .submit()
-                ;
+                if ( method === 'post' ) {
+                    $('<form method="post"></form>')
+                        .append($('<input type="hidden" name="_csrf_token">').val($('html').data('csrf-token')))
+                        .attr('action', href)
+                        .appendTo('body')
+                        .submit()
+                    ;
+                }
+                else {
+                    $('<form method="get"></form>')
+                        .attr('action', href)
+                        .appendTo('body')
+                        .submit()
+                    ;
+                }
                 return false;
             }).end()
         ;
