@@ -4,8 +4,8 @@ cssselect
 decorator
 flask-script
 flask-seasurf
-flask-wtf==0.8.4
-flask==0.9
+flask-wtf
+flask
 furl
 httpagentparser
 jinja2
