@@ -4,7 +4,7 @@ cssselect
 decorator
 flask-script
 flask-seasurf
-flask-wtf
+flask-wtf>=0.9
 flask
 furl
 httpagentparser
