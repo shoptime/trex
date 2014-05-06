@@ -5,7 +5,7 @@ from trex.flask import app
 from trex.flask import AuthBlueprint, render_html, flash
 from .. import auth
 from flask import g, redirect, url_for, request, abort
-from flask.ext import wtf
+from trex.support import wtf
 from .audit import audit
 import app.model as m
 from . import quantum, model as trex_model
@@ -97,8 +97,8 @@ def login():
         return redirect(g.user.default_after_login_url())
 
     class Form(wtf.Form):
-        email = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
-        password = wtf.PasswordField('Password', [wtf.Required()])
+        email = wtf.TextField('Email address', [wtf.validators.Required(), wtf.validators.Email()])
+        password = wtf.PasswordField('Password', [wtf.validators.Required()])
 
         def validate_email(form, field):
             user = m.User.objects(email=form.email.data).first()

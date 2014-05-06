@@ -1,7 +1,8 @@
 # coding=utf-8
 
 from __future__ import absolute_import
-from flask.ext import wtf
+from wtforms import *
+from flask.ext.wtf import Form
 import mongoengine
 from flask import url_for, abort, request, g
 from ..flask import AuthBlueprint, render_json, render_html
@@ -70,10 +71,10 @@ class BareListWidget(object):
                 html.append('%s %s' % (subfield(**kwargs), subfield.label))
             else:
                 html.append(subfield(**kwargs))
-        return wtf.widgets.HTMLString(''.join(html))
+        return widgets.HTMLString(''.join(html))
 
 
-class BootstrapCheckboxInput(wtf.Input):
+class BootstrapCheckboxInput(widgets.Input):
     """
     Render a checkbox (with the label wrapped around the input
     """
@@ -86,10 +87,10 @@ class BootstrapCheckboxInput(wtf.Input):
         kwargs.pop('class', None)
 
         html_string = super(BootstrapCheckboxInput, self).__call__(field, **kwargs)
-        return wtf.widgets.HTMLString('<label class="checkbox">%s %s</label>' % (html_string.__html__(), field.label.text))
+        return widgets.HTMLString('<label class="checkbox">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 
-class BootstrapRadioInput(wtf.Input):
+class BootstrapRadioInput(widgets.Input):
     """
     Render a radio (with the label wrapped around the input
     """
@@ -102,31 +103,31 @@ class BootstrapRadioInput(wtf.Input):
         kwargs.pop('class', None)
 
         html_string = super(BootstrapRadioInput, self).__call__(field, **kwargs)
-        return wtf.widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
+        return widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 class TextAreaListWidget(object):
     def __call__(self, field, **kwargs):
-        output = '<div class="trex-textarea-list-widget" %s>' % wtf.widgets.html_params(id=field.id)
+        output = '<div class="trex-textarea-list-widget" %s>' % widgets.html_params(id=field.id)
 
         def render_item(value):
             output = '<div class="item">'
             output += '<button type="button" class="btn btn-danger pull-right">&times</button>'
-            output += '<textarea class="form-control" %s>%s</textarea>' % (wtf.widgets.html_params(name=field.name), value)
+            output += '<textarea class="form-control" %s>%s</textarea>' % (widgets.html_params(name=field.name), value)
             output += '</div>'
             return output
 
         for value in kwargs.get('value', field._value()):
             output += render_item(value)
 
-        output += '<div class="add-item" %s>' % wtf.widgets.html_params(**{'data-template': render_item('')})
+        output += '<div class="add-item" %s>' % widgets.html_params(**{'data-template': render_item('')})
         output += '<button type="button" class="btn btn-default btn-block">%s</button>' % field.add_label
         output += '</div>'
         output += '</div>'
 
-        return wtf.widgets.HTMLString(output)
+        return widgets.HTMLString(output)
 
 
-class TextAreaListField(wtf.Field):
+class TextAreaListField(Field):
     widget = TextAreaListWidget()
 
     def __init__(self, label='', validators=None, add_label='Add item', **kwargs):
@@ -145,7 +146,7 @@ class TextAreaListField(wtf.Field):
         else:
             self.data = []
 
-class DateField(wtf.DateField):
+class DateField(DateField):
     def __init__(self, label='', validators=None, date_format='yyyy-mm-dd', default_mode='day', **kwargs):
         self.default_mode = default_mode
         self.js_date_format = date_format
@@ -206,10 +207,10 @@ class DateTimeWidget(object):
             time_value = value.strftime('%H:%M %p')
 
         data = dict(
-            widget_args = wtf.widgets.html_params(**{
+            widget_args = widgets.html_params(**{
                 'class':'trex-date-time-widget',
             }),
-            date_input_args = wtf.widgets.html_params(**{
+            date_input_args = widgets.html_params(**{
                 'id': '%s-date' % field.id,
                 'name': field.name,
                 'class': 'input-date form-control trex-date-field',
@@ -218,7 +219,7 @@ class DateTimeWidget(object):
                 'value': date_value,
                 'autocomplete': 'off',
             }),
-            time_input_args = wtf.widgets.html_params(**{
+            time_input_args = widgets.html_params(**{
                 'id': '%s-time' % field.id,
                 'name': field.name,
                 'class': 'input-time form-control trex-time-field',
@@ -230,14 +231,14 @@ class DateTimeWidget(object):
             }),
         )
 
-        return wtf.widgets.HTMLString("""
+        return widgets.HTMLString("""
 <div %(widget_args)s>
     <input %(date_input_args)s>
     <input %(time_input_args)s>
 </div>
 """ % data)
 
-class DateTimeField(wtf.Field):
+class DateTimeField(Field):
     widget = DateTimeWidget()
 
     def __init__(self, label='', validators=None, timezone=None, date_format='yyyy-mm-dd', date_default_mode='day', time_step=30, time_lower_bound=None, time_upper_bound='23:59', time_24h=True, **kwargs):
@@ -298,20 +299,20 @@ class DateTimeField(wtf.Field):
 class SelectDateWidget(object):
     def __call__(self, field, **kwargs):
         data = dict(
-            widget_args = wtf.widgets.html_params(**{
+            widget_args = widgets.html_params(**{
                 'class':'trex-select-date-widget',
             }),
-            day_select_args = wtf.widgets.html_params(**{
+            day_select_args = widgets.html_params(**{
                 'id': '%s-day' % field.id,
                 'name': field.name,
                 'class': 'input-day',
             }),
-            month_select_args = wtf.widgets.html_params(**{
+            month_select_args = widgets.html_params(**{
                 'id': '%s-month' % field.id,
                 'name': field.name,
                 'class': 'input-month',
             }),
-            year_select_args = wtf.widgets.html_params(**{
+            year_select_args = widgets.html_params(**{
                 'id': '%s-year' % field.id,
                 'name': field.name,
                 'class': 'input-year',
@@ -321,7 +322,7 @@ class SelectDateWidget(object):
             year_select_options = self.year_select_options(field),
         )
 
-        return wtf.widgets.HTMLString("""
+        return widgets.HTMLString("""
 <div %(widget_args)s>
     <select %(day_select_args)s>
         %(day_select_options)s
@@ -343,7 +344,7 @@ class SelectDateWidget(object):
             options = dict(value=str(day))
             if value and value.day == day:
                 options['selected'] = True
-            result.append('<option %s>%s</option>' % (wtf.widgets.html_params(**options), str(day)))
+            result.append('<option %s>%s</option>' % (widgets.html_params(**options), str(day)))
 
         return '\n'.join(result)
 
@@ -355,7 +356,7 @@ class SelectDateWidget(object):
             options = dict(value=str(month))
             if value and value.month == month:
                 options['selected'] = True
-            result.append('<option %s>%s</option>' % (wtf.widgets.html_params(**options), quantum.from_date(date(year=2013, month=month, day=1), timezone='UTC').strftime('%B')))
+            result.append('<option %s>%s</option>' % (widgets.html_params(**options), quantum.from_date(date(year=2013, month=month, day=1), timezone='UTC').strftime('%B')))
 
         return '\n'.join(result)
 
@@ -375,11 +376,11 @@ class SelectDateWidget(object):
             else:
                 if default == year:
                     options['selected'] = True
-            result.append('<option %s>%s</option>' % (wtf.widgets.html_params(**options), str(year)))
+            result.append('<option %s>%s</option>' % (widgets.html_params(**options), str(year)))
 
         return '\n'.join(result)
 
-class SelectDateField(wtf.Field):
+class SelectDateField(Field):
     widget = SelectDateWidget()
 
     def __init__(self, label='', validators=None, minyear=1970, maxyear=None, defaultyear=1980, **kwargs):
@@ -419,11 +420,11 @@ class SelectDateField(wtf.Field):
         kwargs['class'] = 'trex-select-date-field'
         return super(SelectDateField, self).__call__(*args, **kwargs)
 
-class RadioField(wtf.RadioField):
+class RadioField(RadioField):
     widget = BareListWidget()
     option_widget = BootstrapRadioInput()
 
-class CheckListField(wtf.SelectMultipleField):
+class CheckListField(SelectMultipleField):
     widget = BareListWidget()
     option_widget = BootstrapCheckboxInput()
 
@@ -438,13 +439,13 @@ class BooleanFieldWidget(object):
         if kwargs.get('value', field._value()):
             input_args['checked'] = 'checked'
         data = dict(
-            input_args = wtf.widgets.html_params(**input_args),
+            input_args = widgets.html_params(**input_args),
             label = field.boolean_label,
         )
 
-        return wtf.widgets.HTMLString('<label class="checkbox"><input %(input_args)s> %(label)s</label>' % data)
+        return widgets.HTMLString('<label class="checkbox"><input %(input_args)s> %(label)s</label>' % data)
 
-class BooleanField(wtf.Field):
+class BooleanField(Field):
     widget = BooleanFieldWidget()
 
     def __init__(self, label='', validators=None, **kwargs):
@@ -465,7 +466,7 @@ class BooleanField(wtf.Field):
         else:
             return None
 
-class StarRatingField(wtf.IntegerField):
+class StarRatingField(IntegerField):
     def __init__(self, label='', validators=None, low_label='Poor', high_label='Excellent', star_count=5, **kwargs):
         self.low_label = low_label
         self.high_label = high_label
@@ -480,7 +481,7 @@ class StarRatingField(wtf.IntegerField):
         kwargs['data-star-count'] = self.star_count
         return super(StarRatingField, self).__call__(*args, **kwargs)
 
-class DependentSelectField(wtf.SelectField):
+class DependentSelectField(SelectField):
     def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', _form=None, **kwargs):
         kwargs['coerce'] = lambda x: x is not None and str(x) or None
         super(DependentSelectField, self).__init__(label, validators, _form=_form, **kwargs)
@@ -532,7 +533,7 @@ class DependentSelectField(wtf.SelectField):
 
         return super(DependentSelectField, self).__call__(*args, **kwargs)
 
-class ChosenSelectField(wtf.SelectField):
+class ChosenSelectField(SelectField):
     def __call__(self, **kwargs):
         kwargs['class'] = 'trex-chosen-select-field'
         return super(ChosenSelectField, self).__call__(**kwargs)
@@ -540,12 +541,12 @@ class ChosenSelectField(wtf.SelectField):
 class FileListWidget(object):
     def __call__(self, field, **kwargs):
         data = dict(
-            widget_args = wtf.widgets.html_params(**{
+            widget_args = widgets.html_params(**{
                 'class':'trex-file-list-widget',
                 'data-xhr-url': url_for('trex.upload.xhr'),
                 'data-iframe-url': url_for('trex.upload.iframe'),
             }),
-            input_args = wtf.widgets.html_params(**{
+            input_args = widgets.html_params(**{
                 'id': field.id,
                 'name': field.name,
                 'type': 'hidden',
@@ -554,7 +555,7 @@ class FileListWidget(object):
             file_input_name = "%s_file_input" % field.name,
         )
 
-        return wtf.widgets.HTMLString("""
+        return widgets.HTMLString("""
 <div %(widget_args)s>
     <input %(input_args)s>
     <div class="files"></div>
@@ -562,7 +563,7 @@ class FileListWidget(object):
 </div>
 """ % data)
 
-class FileListField(wtf.Field):
+class FileListField(Field):
     widget = FileListWidget()
 
     def _value(self):
@@ -601,24 +602,24 @@ class FileWidget(object):
             options['type_validators'] = type_validators[0].for_browser()
 
         data = dict(
-            widget_args = wtf.widgets.html_params(**{
+            widget_args = widgets.html_params(**{
                 'class': self.class_name,
                 'data-xhr-url': url_for('trex.upload.xhr'),
                 'data-iframe-url': url_for('trex.upload.iframe'),
                 'data-options': tjson.dumps(options),
             }),
-            input_args = wtf.widgets.html_params(**{
+            input_args = widgets.html_params(**{
                 'id': field.id,
                 'name': field.name,
                 'type': 'hidden',
                 'value': kwargs.get('value', field._value()),
             }),
-            button_args = wtf.widgets.html_params(**{
+            button_args = widgets.html_params(**{
                 'type': 'button',
                 'class': 'btn btn-default',
                 'style': not (field.allow_clear and field.data) and 'display: none;' or '',
             }),
-            file_display_args = wtf.widgets.html_params(**{
+            file_display_args = widgets.html_params(**{
                 'class': 'file-display',
                 'style': not self.file_display(field) and 'display: none;' or '',
             }),
@@ -626,7 +627,7 @@ class FileWidget(object):
             file_display = self.file_display(field),
         )
 
-        return wtf.widgets.HTMLString("""
+        return widgets.HTMLString("""
 <div %(widget_args)s>
     <div %(file_display_args)s">%(file_display)s</div>
     <a class="add-file btn btn-default">Upload file <input name="%(file_input_name)s" type="file"></a>
@@ -636,7 +637,7 @@ class FileWidget(object):
 </div>
 """ % data)
 
-class FileField(wtf.Field):
+class FileField(Field):
     widget = FileWidget()
 
     def _value(self):
@@ -671,7 +672,7 @@ class ImageWidget(FileWidget):
     def file_display(self, field):
         if not field.data:
             return '<div class="thumbnail"><span class="no-image">No image</span></div>'
-        return '<div class="thumbnail"><img %s></div>' % wtf.widgets.html_params(src=field.data.url())
+        return '<div class="thumbnail"><img %s></div>' % widgets.html_params(src=field.data.url())
 
 class ImageField(FileField):
     widget = ImageWidget()
@@ -683,7 +684,7 @@ class ImageField(FileField):
             # view the existing image)
             TrexUploadTemporaryAccess(upload=self.data, user=g.user).save()
 
-class PhoneField(wtf.TextField):
+class PhoneField(TextField):
     def __init__(self, label='', validators=None, country=None, country_field=None, **kwargs):
         self.country_field = country_field
         self.country = country
@@ -723,7 +724,7 @@ class PhoneField(wtf.TextField):
 
         return super(PhoneField, self).__call__(**kwargs)
 
-class InviteField(wtf.TextAreaField):
+class InviteField(TextAreaField):
     def __init__(self, label='', validators=None, placeholder_text=None, contacts=None, **kwargs):
         self.placeholder_text = placeholder_text
         self.contacts = contacts
@@ -754,11 +755,11 @@ class InviteField(wtf.TextAreaField):
                 else:
                     invalid.append(invite)
             if len(invalid):
-                raise wtf.ValidationError("Invalid emails: %s" % ", ".join(invalid))
+                raise ValidationError("Invalid emails: %s" % ", ".join(invalid))
         else:
             self.data = []
 
-class TagField(wtf.TextAreaField):
+class TagField(TextAreaField):
     def __init__(self, label='', validators=None, source_data=None, behaviour=None, **kwargs):
         self.source_data = source_data
         if not source_data:
@@ -798,31 +799,31 @@ class EmailTagField(TagField):
             if not bool(EMAIL_REGEX.match(email)):
                 invalid.append(email)
         if len(invalid):
-            raise wtf.ValidationError("Invalid emails: %s" % ", ".join(invalid))
+            raise ValidationError("Invalid emails: %s" % ", ".join(invalid))
 
-class BrainTreeEncryptedTextInput(wtf.TextInput):
+class BrainTreeEncryptedTextInput(widgets.TextInput):
     def __call__(self, field, **kwargs):
         kwargs.setdefault('id', field.id)
         kwargs.setdefault('type', self.input_type)
         kwargs['data-encrypted-name'] = field.name
-        return wtf.HTMLString('<input %s>' % self.html_params(**kwargs))
+        return widgets.HTMLString('<input %s>' % self.html_params(**kwargs))
 
-class BrainTreeTextField(wtf.TextField):
+class BrainTreeTextField(TextField):
     widget = BrainTreeEncryptedTextInput()
 
-class BrainTreeEncryptedSelect(wtf.Select):
+class BrainTreeEncryptedSelect(widgets.Select):
     def __call__(self, field, **kwargs):
         kwargs.setdefault('id', field.id)
         if self.multiple:
             kwargs['multiple'] = True
         kwargs['data-encrypted-name'] = field.name
-        html = ['<select %s>' % wtf.html_params(**kwargs)]
+        html = ['<select %s>' % html_params(**kwargs)]
         for val, label, selected in field.iter_choices():
             html.append(self.render_option(val, label, selected))
         html.append('</select>')
-        return wtf.HTMLString(''.join(html))
+        return widgets.HTMLString(''.join(html))
 
-class BrainTreeSelectField(wtf.SelectField):
+class BrainTreeSelectField(SelectField):
     widget = BrainTreeEncryptedSelect()
 
     def pre_validate(self, form):
@@ -921,7 +922,7 @@ class FileType(object):
             raise TypeError("Can only validate TrexUpload objects")
 
         if field.data.file.content_type not in self.mime_types:
-            raise wtf.ValidationError(self.message)
+            raise ValidationError(self.message)
 
 blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
 

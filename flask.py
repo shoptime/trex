@@ -467,7 +467,7 @@ class Flask(flask.Flask):
         logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 
         # Identity does this, we don't want whatever flask might be doing
-        self.config['CSRF_ENABLED'] = False
+        self.config['WTF_CSRF_ENABLED'] = False
 
         server_url = furl(self.settings.get('server', 'url'))
         self.config['SERVER_NAME'] = server_url.netloc

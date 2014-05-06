@@ -5,8 +5,7 @@ from trex.flask import app
 from trex.flask import AuthBlueprint, render_html, flash
 from .. import auth
 from flask import abort, redirect, url_for, g
-from flask.ext import wtf
-from trex.support import token, wtf as twtf
+from trex.support import token, wtf
 from .audit import audit
 from .pager import MongoPager
 import app.model as m
@@ -39,16 +38,16 @@ def edit(user_token=None):
     role_choices = [ (x[0], x[1]['label']) for x in sorted(m.User.roles().items(), key=lambda x: x[1]['level']) if g.user.has_role(x[0]) ]
 
     class Form(wtf.Form):
-        display_name = wtf.TextField('Display name', [wtf.Required()])
-        email        = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
-        role         = wtf.SelectField('Role', [wtf.Required()], choices=role_choices)
-        country      = wtf.SelectField('Country', [wtf.Required()], choices=twtf.country_choices())
-        timezone     = twtf.DependentSelectField(
+        display_name = wtf.TextField('Display name', [wtf.validators.Required()])
+        email        = wtf.TextField('Email address', [wtf.validators.Required(), wtf.validators.Email()])
+        role         = wtf.SelectField('Role', [wtf.validators.Required()], choices=role_choices)
+        country      = wtf.SelectField('Country', [wtf.validators.Required()], choices=wtf.country_choices())
+        timezone     = wtf.DependentSelectField(
             'Time Zone',
-            [wtf.Required()],
+            [wtf.validators.Required()],
             parent_field = 'country',
             select_text = '',
-            choices = twtf.timezone_dependent_choices(),
+            choices = wtf.timezone_dependent_choices(),
         )
 
         def validate_email(form, field):
