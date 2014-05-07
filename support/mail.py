@@ -218,7 +218,7 @@ def _send_sendgrid(
         custom_headers = None,
         attachments    = None,
         test           = False
-        ):
+):
     username = app.settings.get('sendgrid', 'username')
     password = app.settings.get('sendgrid', 'password')
     test     = test or app.settings.getboolean('sendgrid', 'test')
@@ -229,9 +229,9 @@ def _send_sendgrid(
     if not reply_to and 'reply_to' in app.settings.options('sendgrid'):
         reply_to = app.settings.get('sendgrid', 'reply_to')
 
-    s = sendgrid.Sendgrid(username, password, secure=False)
+    s = sendgrid.SendGridClient(username, password, secure=False)
 
-    message = sendgrid.Message(sender, subject, text_body, html_body)
+    message = sendgrid.Mail(from_email=sender[1], from_name=sender[0], subject=subject, text=text_body, html=html_body)
     message.set_replyto(reply_to)
     message.add_to(to)
     if cc:

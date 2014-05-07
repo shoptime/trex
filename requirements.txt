@@ -22,7 +22,7 @@ python-postmark
 pytz
 requests>=2.0.0
 selenium
-sendgrid-python
+sendgrid-python>=0.5.1
 termcolor
 unidecode
 werkzeug
