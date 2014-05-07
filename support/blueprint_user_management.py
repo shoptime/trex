@@ -124,13 +124,7 @@ def reactivate(user_token):
     if not g.user.has_role(user.role):
         return abort(404)
 
-    new_password = token.create_token(length=8)
-    user.set_password(new_password)
-    user.is_active = True
-    user.save()
-
-    audit("Reactivated user %s and issued new password" % user.display_name, ['User Management'], [user])
-    user.notify_password_reset(new_password)
+    user.reactivate(actor=g.user)
 
     flash("User reactivated and new password issued", category='success')
     return redirect(url_for('.index'))
