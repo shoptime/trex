@@ -152,7 +152,6 @@ class BaseUser(BaseDocument):
         )
 
     def clean(self):
-        errors = {}
         if self.role not in self.__class__.roles().keys():
             raise ValidationError("Invalid role %s for User" % self.role)
 
