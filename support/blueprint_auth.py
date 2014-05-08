@@ -172,11 +172,11 @@ def change_password():
     return_to = request.args.get('return_to') or g.user.default_after_change_password_url()
 
     class Form(wtf.Form):
-        old_password = wtf.PasswordField('Old password', [wtf.Required()])
-        new_password = wtf.PasswordField('New password', [wtf.Required(), wtf.Length(min=6)])
+        old_password = wtf.PasswordField('Old password', [wtf.validators.Required()])
+        new_password = wtf.PasswordField('New password', [wtf.validators.Required(), wtf.validators.Length(min=6)])
         confirm_password = wtf.PasswordField('Confirm password', [
-            wtf.Required(),
-            wtf.EqualTo('new_password', message='Passwords must match'),
+            wtf.validators.Required(),
+            wtf.validators.EqualTo('new_password', message='Passwords must match'),
         ])
 
         def validate_old_password(form, field):
