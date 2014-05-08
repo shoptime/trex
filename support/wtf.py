@@ -296,6 +296,67 @@ class DateTimeField(Field):
         kwargs['class'] = 'trex-select-date-field'
         return super(DateTimeField, self).__call__(*args, **kwargs)
 
+class TimeWidget(object):
+    def __call__(self, field, **kwargs):
+        value = field._value()
+
+        data = dict(
+            widget_args = widgets.html_params(**{
+                'class':'trex-time-widget',
+            }),
+            time_input_args = widgets.html_params(**{
+                'id': '%s-time' % field.id,
+                'name': field.name,
+                'class': 'input-time form-control trex-time-field',
+                'data-step': field.time_step,
+                'data-lower-bound': field.time_lower_bound and field.time_lower_bound or '',
+                'data-upper-bound': field.time_upper_bound and field.time_upper_bound or '',
+                'data-24h': field.time_24h and 'true' or '',
+                'value': value,
+            }),
+        )
+
+        return widgets.HTMLString("""
+<div %(widget_args)s>
+    <input %(time_input_args)s>
+</div>
+""" % data)
+
+class TimeField(Field):
+    widget = TimeWidget()
+
+    def __init__(self, label='', validators=None, time_step=30, time_lower_bound=None, time_upper_bound='23:59', time_24h=True, **kwargs):
+        if time_step < 0 or time_step > 3600:
+            raise Exception("time_step is out of range")
+        self.time_step = time_step
+
+        self.time_lower_bound = time_lower_bound
+        self.time_upper_bound = time_upper_bound
+        self.time_24h = time_24h
+
+        super(TimeField, self).__init__(label, validators, **kwargs)
+
+    # Called to calculate the value to send to the widget, in this case we're
+    # just sending the string we were given (or None)
+    def _value(self):
+        return self.data
+
+    # Called to calculate the new value based on the form data
+    def process_formdata(self, valuelist):
+        if valuelist:
+            try:
+                if len(valuelist) == 1:
+                    self.data = valuelist[0]
+                else:
+                    self.data = None
+            except ValueError:
+                self.data = None
+                raise ValueError(self.gettext('Not a valid time value'))
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'trex-select-time-field'
+        return super(TimeField, self).__call__(*args, **kwargs)
+
 class SelectDateWidget(object):
     def __call__(self, field, **kwargs):
         data = dict(
