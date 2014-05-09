@@ -499,19 +499,27 @@ class BooleanFieldWidget(object):
         )
         if kwargs.get('value', field._value()):
             input_args['checked'] = 'checked'
+
         data = dict(
             input_args = widgets.html_params(**input_args),
-            label = field.boolean_label,
         )
 
+        if field.label_lhs:
+            return widgets.HTMLString('<div class="checkbox"><input %(input_args)s></div>' % data)
+
+        data['label'] = field.boolean_label
         return widgets.HTMLString('<label class="checkbox"><input %(input_args)s> %(label)s</label>' % data)
 
 class BooleanField(Field):
     widget = BooleanFieldWidget()
 
-    def __init__(self, label='', validators=None, **kwargs):
-        self.boolean_label = label
-        super(BooleanField, self).__init__('', validators, **kwargs)
+    def __init__(self, label='', label_lhs=False, validators=None, **kwargs):
+        self.label_lhs = label_lhs
+        if label_lhs:
+            super(BooleanField, self).__init__(label, validators, **kwargs)
+        else:
+            self.boolean_label = label
+            super(BooleanField, self).__init__('', validators, **kwargs)
 
     def process_formdata(self, valuelist):
         if valuelist:
