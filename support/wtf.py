@@ -521,7 +521,6 @@ class BooleanField(Field):
 
     def _value(self):
         from pprint import pprint
-        pprint(self.data)
         if self.data:
             return self.data
         else:
