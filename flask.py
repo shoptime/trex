@@ -22,6 +22,7 @@ import traceback
 from jinja2.exceptions import TemplateNotFound
 import trex.support.model
 import trex.support.format
+import trex.support.browser
 from .support.configparser import TrexConfigParser
 import base64
 import hashlib
@@ -208,9 +209,16 @@ def render_csv():
         http_response.content_type = 'text/csv'
         if 'filename' in response:
             http_response.headers.set('Content-Disposition', 'attachment; filename=%s.csv' % response['filename'])
-        http_response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
-        http_response.headers.set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-        http_response.headers.set('Pragma', 'no-cache')
+
+        navigator = trex.support.browser.detect()
+        if navigator.get('browser', {}).get('name', '') == 'Microsoft Internet Explorer':
+            # IE is stupid when downloading files over HTTPS (it fails if there's no-cache set) see:
+            # http://blogs.msdn.com/b/ieinternals/archive/2009/10/02/internet-explorer-cannot-download-over-https-when-no-cache.aspx
+            http_response.headers.set('Cache-Control', 'private, max-age=15')
+        else:
+            http_response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+            http_response.headers.set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+            http_response.headers.set('Pragma', 'no-cache')
 
         io.close()
         return http_response
