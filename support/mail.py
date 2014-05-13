@@ -231,11 +231,11 @@ def _send_sendgrid(
 
     s = sendgrid.SendGridClient(username, password, secure=False)
 
-    message = sendgrid.Mail(from_email=sender[1], from_name=sender[0], subject=subject, text=text_body, html=html_body)
+    message = sendgrid.Mail(from_email=sender[0], from_name=sender[1], subject=subject, text=text_body, html=html_body)
     message.set_replyto(reply_to)
     message.add_to(to)
     if cc:
-        message.add_cc(cc)
+        raise NotImplementedError("Sendgrid doesn't appear to support CC at the moment")
     if bcc:
         message.add_bcc(bcc)
 
@@ -339,10 +339,10 @@ class CapturedEmail(Document):
     @classmethod
     def from_sendgrid_object(cls, obj):
         email = cls(
-            sender    = '%s <%s>' % (obj.from_name, obj.from_address),
+            sender    = '%s <%s>' % (obj.from_name, obj.from_email),
             reply_to  = obj.reply_to,
             to        = ", ".join(obj.to),
-            cc        = ", ".join(obj.cc),
+            cc        = "",  # Sendgrid doesn't support CC it seems
             bcc       = ", ".join(obj.bcc),
             subject   = obj.subject,
             text_body = obj.text,
