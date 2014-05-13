@@ -8,8 +8,8 @@ from . import mail
 
 blueprint = AuthBlueprint('trex.developer', __name__, url_prefix='/__developer__')
 
-@blueprint.route('/email', auth=auth.has_flag('trex.developer'))
-@blueprint.route('/email/<template>', auth=auth.has_flag('trex.developer'))
+@blueprint.route('/email', endpoint='email', auth=auth.has_flag('trex.developer'))
+@blueprint.route('/email/<template>', endpoint='email_template', auth=auth.has_flag('trex.developer'))
 @render_html('trex/developer/email.jinja2')
 def email(template=None):
     if template:
