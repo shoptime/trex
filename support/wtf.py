@@ -300,20 +300,29 @@ class TimeWidget(object):
     def __call__(self, field, **kwargs):
         value = field._value()
 
+        widget_params = {
+            'id': '%s-time' % field.id,
+            'name': field.name,
+            'class': 'input-time form-control trex-time-field',
+            'data-step': field.time_step,
+            'data-lower-bound': field.time_lower_bound and field.time_lower_bound or '',
+            'data-upper-bound': field.time_upper_bound and field.time_upper_bound or '',
+            'data-24h': field.time_24h and 'true' or '',
+            'value': value is not None and value or '',
+        }
+
+        if 'placeholder' in kwargs:
+            widget_params['placeholder'] = kwargs['placeholder']
+        if 'class' in kwargs:
+            classes = widget_params['class'].split(' ')
+            classes += kwargs['class'].split(' ')
+            widget_params['class'] = ' '.join(set(classes))
+
         data = dict(
             widget_args = widgets.html_params(**{
                 'class':'trex-time-widget',
             }),
-            time_input_args = widgets.html_params(**{
-                'id': '%s-time' % field.id,
-                'name': field.name,
-                'class': 'input-time form-control trex-time-field',
-                'data-step': field.time_step,
-                'data-lower-bound': field.time_lower_bound and field.time_lower_bound or '',
-                'data-upper-bound': field.time_upper_bound and field.time_upper_bound or '',
-                'data-24h': field.time_24h and 'true' or '',
-                'value': value,
-            }),
+            time_input_args = widgets.html_params(**widget_params),
         )
 
         return widgets.HTMLString("""
@@ -354,7 +363,10 @@ class TimeField(Field):
                 raise ValueError(self.gettext('Not a valid time value'))
 
     def __call__(self, *args, **kwargs):
-        kwargs['class'] = 'trex-select-time-field'
+        if 'class' in kwargs and False:
+            kwargs['class'] += ' trex-select-time-field'
+        else:
+            kwargs['class'] = 'trex-select-time-field'
         return super(TimeField, self).__call__(*args, **kwargs)
 
 class SelectDateWidget(object):
