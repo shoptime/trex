@@ -35,7 +35,7 @@
 {% endmacro %}
 
 {% macro form_render(form, button_label='Submit', vertical=False, id=None, secondary_action_html=None, button_class='btn-primary', autofocus_field=None, action='') %}
-    <form {{ form_render_form_tag_attrs(form, vertical and 'form-vertical' or 'form-horizontal', id, action) }}>
+<form {{ form_render_form_tag_attrs(form, vertical and 'form-vertical' or 'form-horizontal', id, action) }}>
     {{ form_render_hidden_fields(form) }}
     {% for field in form %}
     {% if trex_bootstrap_version == 3 %}
