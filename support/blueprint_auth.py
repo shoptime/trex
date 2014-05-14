@@ -190,6 +190,7 @@ def change_password():
         g.user.save()
         g.identity.changed_credentials()
         audit('User changed password: %s' % g.user.display_name, ['Authentication'])
+        flash("Password successfully changed")
         return redirect(return_to)
 
     return dict(form=form)
