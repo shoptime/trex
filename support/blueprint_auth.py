@@ -97,7 +97,11 @@ def login():
         return redirect(g.user.default_after_login_url())
 
     class Form(wtf.Form):
-        email = wtf.TextField('Email address', [wtf.validators.Required(), wtf.validators.Email()])
+        email = wtf.TextField(
+            'Email address',
+            [wtf.validators.Required(), wtf.validators.Email()],
+            filters = [lambda x: x and x.strip()],
+        )
         password = wtf.PasswordField('Password', [wtf.validators.Required()])
 
         def validate_email(form, field):
