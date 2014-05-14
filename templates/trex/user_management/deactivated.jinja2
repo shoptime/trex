@@ -19,7 +19,7 @@
         </tr>
     </thead>
     <tbody>
-    {% for user in users.order_by('created') %}
+    {% for user in users %}
         <tr>
             <td>{{ user.display_name }}</td>
             <td>{{ user.email }}</td>
