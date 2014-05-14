@@ -1073,4 +1073,18 @@ def upload_view(token):
 
     return response
 
+class DecimalField(DecimalField):
+    """
+        Subclass of WTF's DecimalField to fix the weird interaction with
+        validators.Required() and invalid Decimal values
+    """
+
+    def process_formdata(self, valuelist):
+        try:
+            super(DecimalField, self).process_formdata(valuelist)
+        except ValueError:
+            if valuelist:
+                self.data = valuelist[0]
+            raise
+
 app.register_blueprint(blueprint)
