@@ -561,7 +561,7 @@ class StarRatingField(IntegerField):
         return super(StarRatingField, self).__call__(*args, **kwargs)
 
 class DependentSelectField(SelectField):
-    def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', _form=None, **kwargs):
+    def __init__(self, label='', validators=None, parent_field=None, select_text='-- select --', allow_unknown_parent_choices=False, _form=None, **kwargs):
         kwargs['coerce'] = lambda x: x is not None and str(x) or None
         super(DependentSelectField, self).__init__(label, validators, _form=_form, **kwargs)
         if parent_field is None:
@@ -569,6 +569,7 @@ class DependentSelectField(SelectField):
         self.parent_field = parent_field
         self.select_text = select_text
         self.choice_dict = self.choices
+        self.allow_unknown_parent_choices = allow_unknown_parent_choices
         self._form = _form
         self.choices = []
 
@@ -594,7 +595,8 @@ class DependentSelectField(SelectField):
             else:
                 self.choices = choices
         else:
-            raise ValueError(self.gettext('Not a valid choice'))
+            if not self.allow_unknown_parent_choices:
+                raise ValueError(self.gettext('Not a valid choice'))
 
     def __call__(self, *args, **kwargs):
         if 'class' in kwargs:
