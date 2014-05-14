@@ -79,9 +79,12 @@ textarea {
             position: absolute;
             border: 100px solid transparent;
             .opacity(0);
-            top: 0;
-            right: 0;
+            // Position it with enough overlap to make sure it entirely covers the button in IE
+            top: -10px;
+            right: -5px;
             cursor: pointer;
+            // Forcing a width gives it hasLayout in IE which prevents it moving wildly
+            width: 200px;
         }
     }
 }
