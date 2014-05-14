@@ -66,8 +66,10 @@ def edit(user_token=None):
         user.save()
         if user_token:
             audit("Updated user %s" % user.display_name, ['User Management'], [user])
+            flash("Updated user %s" % user.display_name)
         else:
             audit("Added user %s" % user.display_name, ['User Management'], [user])
+            flash("Added user %s" % user.display_name)
         return redirect(url_for('.index'))
 
     return dict(form=form, add=user_token is None)
