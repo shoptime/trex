@@ -4,19 +4,19 @@ import bson
 import mongoengine
 import json
 import datetime
+from . import quantum
 
 def filter_json_encoder(o):
+    if hasattr(o, 'to_ejson'):
+        return o.to_ejson()
+
     if isinstance(o, mongoengine.queryset.QuerySet):
         return list(o)
 
     if isinstance(o, mongoengine.Document):
-        if hasattr(o, 'to_ejson'):
-            return o.to_ejson()
         return o.to_mongo().to_dict()
 
     if isinstance(o, mongoengine.EmbeddedDocument):
-        if hasattr(o, 'to_ejson'):
-            return o.to_ejson()
         return o.to_mongo().to_dict()
 
     if isinstance(o, bson.ObjectId):
@@ -26,7 +26,10 @@ def filter_json_encoder(o):
         return str(o.id)
 
     if isinstance(o, datetime.datetime):
-        return o.isoformat()+'Z'
+        return o.isoformat() + 'Z'
+
+    if isinstance(o, quantum.Quantum):
+        return {'$quantum': o.as_unix(), '$timezone': o.tz}
 
     if isinstance(o, set):
         return list(o)
