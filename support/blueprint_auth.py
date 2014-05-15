@@ -63,7 +63,7 @@ def check_authentication(*args, **kwargs):
     if g.identity:
         g.user = g.identity.actor
 
-    if not request.method in ['GET', 'HEAD', 'OPTIONS']:
+    if not request.method in ['GET', 'HEAD', 'OPTIONS'] and not getattr(view_func, 'csrf_exempt', False):
         # Check for CSRF token
         csrf_token = request.form.get('_csrf_token')
         if not csrf_token:

@@ -666,6 +666,7 @@ class AuthBlueprint(flask.Blueprint):
         setattr(view_func_authed, '__authblueprint_endpoint__', endpoint)
         view_func_authed.__name__ = view_func.__name__
         view_func_authed.allow_cors = options.pop('allow_cors', False)
+        view_func_authed.csrf_exempt = options.pop('csrf_exempt', False)
 
         if view_func_authed.allow_cors:
             options['methods'] = ('OPTIONS',) + tuple(options.get('methods', ('GET',)))
