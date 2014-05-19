@@ -83,14 +83,20 @@
                                     window.location = data.url || $button.data('url');
                                     break;
                                 case 'close-modal':
+                                    $modal.find('.modal-footer .success').hide();
                                     $modal.modal('hide');
                                     break;
                                 default:
-                                    throw Error("Unknown action '" + action + "' returned by server");
+                                    $modal.find('.modal-footer .success').hide();
+                                    $modal.find('.modal-footer .failed').show();
+                                    $modal.find('.modal-body .overlay').remove();
+                                    Trex.log.e("Unknown action '" + action + "' returned by server");
                             }
                         }
                         else {
-                            throw Error('Unknown state returned from server');
+                            $modal.find('.modal-footer .failed').show();
+                            $modal.find('.modal-body .overlay').remove();
+                            Trex.log.e('Unknown state "' + data.state + '" returned from server');
                         }
                     },
                     error: function() {
