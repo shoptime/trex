@@ -431,6 +431,10 @@ class Flask(flask.Flask):
 
         self.jinja_env.globals['csrf_token'] = csrf_token
 
+        def is_boolean(input):
+            return type(input) == bool
+        self.jinja_env.tests['boolean'] = is_boolean
+
     def init_application(self):
         self.debug = self.settings.getboolean('server', 'debug')
         self.logger_formatter = logging.Formatter(
