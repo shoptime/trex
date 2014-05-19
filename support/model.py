@@ -737,6 +737,11 @@ class TrexUpload(BaseDocument):
 
     @classmethod
     def from_file(cls, filename, for_user=None, data=None):
+        fh = open(filename, 'r')
+        return cls.from_file_handle(fh, for_user=for_user, data=data, filename=os.path.basename(filename))
+
+    @classmethod
+    def from_file_handle(cls, fh, for_user=None, data=None, filename=None):
         if not for_user:
             for_user = g.user
         if not data:
@@ -745,13 +750,12 @@ class TrexUpload(BaseDocument):
             user = for_user,
             data = data,
         )
-        fh = open(filename, 'r')
         content_type = magic.from_buffer(fh.read(1024), mime=True)
         fh.seek(0)
         upload.file.put(
             fh,
             content_type = content_type,
-            filename     = os.path.basename(filename),
+            filename     = filename,
         )
         upload.save()
         return upload
