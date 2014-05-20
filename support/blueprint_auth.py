@@ -203,7 +203,7 @@ def change_password():
 @render_html('trex/auth/lost_password.jinja2')
 def lost_password():
     class Form(wtf.Form):
-        email = wtf.TextField('Email address', [wtf.Required(), wtf.Email()])
+        email = wtf.TextField('Email address', [wtf.validators.Required(), wtf.validators.Email()])
 
         def validate_email(form, field):
             if len(field.errors):
@@ -234,7 +234,7 @@ def lost_password():
 @render_html('trex/auth/lost_password_sent.jinja2')
 def lost_password_sent():
     class Form(wtf.Form):
-        code = wtf.TextField('Recovery code', [wtf.Required()])
+        code = wtf.TextField('Recovery code', [wtf.validators.Required()])
 
     form = Form()
 
@@ -254,10 +254,10 @@ def recover_password(code):
         return redirect(url_for('.lost_password_sent'))
 
     class Form(wtf.Form):
-        new_password = wtf.PasswordField('New password', [wtf.Required(), wtf.Length(min=6)])
+        new_password = wtf.PasswordField('New password', [wtf.validators.Required(), wtf.validators.Length(min=6)])
         confirm_password = wtf.PasswordField('Confirm password', [
-            wtf.Required(),
-            wtf.EqualTo('new_password', message='Passwords must match'),
+            wtf.validators.Required(),
+            wtf.validators.EqualTo('new_password', message='Passwords must match'),
         ])
 
     form = Form()
