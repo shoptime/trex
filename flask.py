@@ -566,6 +566,15 @@ class Flask(flask.Flask):
         app.db.connection.drop_database(app.db.name)
         mongoengine.connection.get_db(reconnect=True)
 
+    def create_collections(self):
+        def mongo_create_collections(base_class):
+            for cls in base_class.__subclasses__():
+                if cls._get_collection_name():
+                    cls._get_collection()
+                mongo_create_collections(cls)
+
+        mongo_create_collections(mongoengine.Document)
+
 
 #
 # Exception handling
