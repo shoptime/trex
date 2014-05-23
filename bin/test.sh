@@ -53,9 +53,11 @@ mkdir -p logs
 
 # Get the latest code
 if [ "$DS_DEPLOY_HASH" != "" ]; then
+    echo "Fetching and checking out $DS_DEPLOY_HASH"
     git fetch
     git checkout "$DS_DEPLOY_HASH"
 else
+    echo "Pulling latest head"
     git pull
 fi
 
