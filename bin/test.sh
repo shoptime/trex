@@ -3,16 +3,16 @@ set -e
 shopt -s extglob
 
 # Parse CLI
-config_from_stdin=false
+config_from_deployswitch=false
 test_harness_opts=''
 
 [ "$1" == "rubble" ] && shift   # backward compatibility with old invocations of this script
 
 OPTIND=1
-while getopts "sp:" opt; do
+while getopts "dp:" opt; do
     case "$opt" in
-        s)
-            config_from_stdin=true
+        d)
+            config_from_deployswitch=true
             ;;
         p)
             test_harness_opts="$test_harness_opts -p$OPTARG"
@@ -25,8 +25,8 @@ done
 shift $((OPTIND-1))
 [ "%1" = "--" ] && shift
 
-# Read config if asked for
-if $config_from_stdin; then
+# Read config from deployswitch if asked for
+if $config_from_deployswitch; then
     NORMAL_IFS="$IFS"
     IFS="="
     while read key val; do
@@ -35,6 +35,10 @@ if $config_from_stdin; then
                 IFS="$NORMAL_IFS"
                 declare $key="$val"  2>/dev/null || echo "Bad key"
                 IFS="="
+                ;;
+            .)
+                # A single '.' is the EOF marker
+                break
                 ;;
             *)
                 echo "Bad key"
@@ -48,9 +52,9 @@ source bin/activate
 mkdir -p logs
 
 # Get the latest code
-if [ "$DS_COMMIT" != "" ]; then
+if [ "$DS_DEPLOY_HASH" != "" ]; then
     git fetch
-    git checkout "$DS_COMMIT"
+    git checkout "$DS_DEPLOY_HASH"
 else
     git pull
 fi
