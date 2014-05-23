@@ -4,7 +4,7 @@ shopt -s extglob
 
 # Parse CLI
 config_from_deployswitch=false
-test_harness_opts=''
+parallel=''
 
 [ "$1" == "rubble" ] && shift   # backward compatibility with old invocations of this script
 
@@ -15,7 +15,7 @@ while getopts "dp:" opt; do
             config_from_deployswitch=true
             ;;
         p)
-            test_harness_opts="$test_harness_opts -p$OPTARG"
+            parallel="$OPTARG"
             ;;
         \?)
             ;;
@@ -79,7 +79,10 @@ bash trex/bin/install-deps.sh
 app compile_static
 
 # Run tests
-echo "Executing app rubble$test_harness_opts"
+test_harness_opts=''
+if [ $parallel ]; then
+    test_harness_opts="$test_harness_opts -p3"
+fi
 app rubble $test_harness_opts
 
 # Reload for other things that hit this hive instance
