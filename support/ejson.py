@@ -29,7 +29,10 @@ def filter_json_encoder(o):
         return o.isoformat() + 'Z'
 
     if isinstance(o, quantum.Quantum):
-        return {'$quantum': o.as_unix(), '$timezone': o.tz}
+        if o.tz:
+            return {'$quantum': o.as_unix(), '$timezone': o.tz.zone}
+        else:
+            return {'$quantum': o.as_unix(), '$timezone': o.tz}
 
     if isinstance(o, set):
         return list(o)
