@@ -51,10 +51,10 @@ def load_all_tests(exclude=None, test_dir=None, test_module=None):
 
     return test_classes
 
-def load_tests_by_names(test_names, exclude=None):
+def load_tests_by_names(test_names, exclude=None, test_dir=None, test_module=None):
     test_names = set(test_names)
     tests = set()
-    for test in load_all_tests(exclude=exclude):
+    for test in load_all_tests(exclude=exclude, test_dir=test_dir, test_module=test_module):
         if test.__name__ in test_names:
             test_names.remove(test.__name__)
             tests.add(test)

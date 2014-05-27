@@ -151,13 +151,15 @@ class Manager(script.Manager):
         @self.option('-m', '--debug-mail', action='store_true', default=False, help='Dump debug info about emails that the app tries to send')
         @self.option('-r', '--resume', action='store_true', default=False, help='Resume from the last test which failed')
         @self.option('-l', '--list-tests', action='store_true', default=False, help='List all tests')
+        @self.option('--test-dir', action='store', default=None, help='Override dir to tests (also required --test-module)')
+        @self.option('--test-module', action='store', default=None, help='Override module name for tests (also required --test-dir)')
         @self.option('tests', action='store', nargs='*', default=None)
-        def rubble(processes, fail_method, debug_mail, resume, list_tests, tests):
+        def rubble(processes, fail_method, debug_mail, resume, list_tests, tests, test_dir, test_module):
             """Run the new test harness"""
             import trex.rubble
 
             if list_tests:
-                test_classes = trex.rubble.load_all_tests()
+                test_classes = trex.rubble.load_all_tests(test_dir=test_dir, test_module=test_module)
                 for cls in sorted(test_classes, key=attrgetter('__name__')):
                     print cls.__name__
                 sys.exit(0)
@@ -183,9 +185,9 @@ class Manager(script.Manager):
                     pass
 
             if len(tests):
-                test_classes = trex.rubble.load_tests_by_names(tests, exclude=exclude_tests)
+                test_classes = trex.rubble.load_tests_by_names(tests, exclude=exclude_tests, test_dir=test_dir, test_module=test_module)
             else:
-                test_classes = trex.rubble.load_all_tests(exclude=exclude_tests)
+                test_classes = trex.rubble.load_all_tests(test_dir=test_dir, test_module=test_module)
 
             def run_tests(instance_number, instance_total):
                 def sig_quit_handler(signum, frame):
