@@ -28,35 +28,28 @@ PASSED_TESTS_FILE = os.path.join(app.root_path, '..', '.rubble_passed_tests')
 def split_tests_by_instance_number(test_classes, number, total):
     return sorted(test_classes, key=lambda x: x.__name__)[number::total]
 
-def load_all_tests(exclude=None):
-    scripts = {}
+def load_all_tests(exclude=None, test_dir=None, test_module=None):
+    import importlib
+    import glob
 
-    test_dir = os.path.join(app.root_path, 'test')
+    if test_dir is None or test_module is None:
+        test_dir = os.path.join(app.root_path, 'test')
+        test_module = 'app.test'
 
-    # Creative mechanism for loading scripts
-    for root, dirs, files in os.walk(test_dir):
-        if root == os.path.join(test_dir, 'helpers'):
-            continue
-        for name in files:
-            if name.endswith(".py") and not name.startswith("__"):
-                name = name.rsplit('.', 1)[0]
-                import importlib
-                module = importlib.import_module('app.test.%s' % name, 'app.test')
-                for k, v in module.__dict__.items():
-                    # Only want subclasses of a test
-                    if not inspect.isclass(v) or not issubclass(v, Test):
-                        continue
-                    # But not the test class itself
-                    if v == Test:
-                        continue
-                    if not v.abstract:
-                        if k in scripts:
-                            raise Exception("Duplicate test named: %s" % k)
-                        if exclude and k in exclude:
-                            continue
-                        scripts[k] = v
+    for filename in glob.glob(os.path.join(test_dir, '*.py')):
+        importlib.import_module('%s.%s' % (test_module, os.path.splitext(os.path.basename(filename))[0]))
 
-    return set(scripts.values())
+    test_classes = set()
+
+    def collect_classes(base_class):
+        sub_classes = [c for c in base_class.__subclasses__()]
+        test_classes.update([c for c in sub_classes if not c.abstract])
+        for c in sub_classes:
+            collect_classes(c)
+
+    collect_classes(Test)
+
+    return test_classes
 
 def load_tests_by_names(test_names, exclude=None):
     test_names = set(test_names)
