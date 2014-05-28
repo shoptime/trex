@@ -5,6 +5,7 @@ from app import app
 import traceback
 import re
 import os
+import signal
 import sys
 import logging
 import inspect
@@ -208,6 +209,7 @@ class Harness(object):
                     print re.sub('.', '-', banner)
                     # TODO - timing for each test?
                     start_time = time.time()
+                    os.kill(self.server_process.pid, signal.SIGUSR1)  # Force mongoengine caches to be dropped
                     obj.run()
                     obj.post_run()
                     with open(PASSED_TESTS_FILE, 'a') as fh:

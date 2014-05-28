@@ -32,6 +32,7 @@ import csv
 import StringIO
 import inspect
 import socket
+import signal
 
 app = None
 
@@ -263,6 +264,19 @@ class Flask(flask.Flask):
     def has_feature(self, feature_name):
         return self.settings.getboolean('features', feature_name)
 
+    def drop_mongoengine_cached_handles(self):
+        # Then we make sure that mongoengine doesn't have any cached
+        # connection/collection handles
+        def drop_caches(base_class):
+            for cls in base_class.__subclasses__():
+                for key in ['_collection', '__objects']:
+                    if hasattr(cls, key):
+                        self.logger.debug("dropping %s handle for %s" % (key, cls))
+                        delattr(cls, key)
+                drop_caches(cls)
+
+        drop_caches(mongoengine.Document)
+        mongoengine.connection.get_db(reconnect=True)
 
     def switch_to_test_mode(self, instance_number=None):
         mongo_url   = furl(self.settings.get('mongo', 'url'))
@@ -281,6 +295,12 @@ class Flask(flask.Flask):
         self.settings.set('mongo', 'url', str(mongo_url))
         self.settings.set('server', 'port', str(server_port))
         self.settings.set('server', 'url', str(server_url))
+
+        def sigusr1_handler(signal_number, current_stack_frame):
+            self.logger.debug("Received USR1 signal, dropping mongoengine cached collections/connections")
+            self.drop_mongoengine_cached_handles()
+
+        signal.signal(signal.SIGUSR1, sigusr1_handler)
 
         self.in_test_mode = True
         self.init_application()
@@ -556,15 +576,13 @@ class Flask(flask.Flask):
             db.close()
 
     def drop_collections(self):
-        def mongo_drop_collections(base_class):
-            for cls in base_class.__subclasses__():
-                if cls._get_collection_name():
-                    cls.drop_collection()
-                mongo_drop_collections(cls)
+        # First we just drop all collections using raw pymongo
+        for collection_name in self.db.collection_names():
+            if collection_name.startswith('system.'):
+                continue
+            self.db[collection_name].drop()
 
-        mongo_drop_collections(mongoengine.Document)
-        app.db.connection.drop_database(app.db.name)
-        mongoengine.connection.get_db(reconnect=True)
+        self.drop_mongoengine_cached_handles()
 
     def create_collections(self):
         def mongo_create_collections(base_class):
