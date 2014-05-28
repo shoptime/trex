@@ -271,7 +271,6 @@ class Flask(flask.Flask):
             for cls in base_class.__subclasses__():
                 for key in ['_collection', '__objects']:
                     if hasattr(cls, key):
-                        self.logger.debug("dropping %s handle for %s" % (key, cls))
                         delattr(cls, key)
                 drop_caches(cls)
 
