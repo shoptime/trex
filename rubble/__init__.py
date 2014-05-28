@@ -36,6 +36,9 @@ def load_all_tests(exclude=None, test_dir=None, test_module=None):
         test_dir = os.path.join(app.root_path, 'test')
         test_module = 'app.test'
 
+    if not os.path.isabs(test_dir):
+        test_dir = os.path.join(app.root_path, test_dir)
+
     for filename in glob.glob(os.path.join(test_dir, '*.py')):
         importlib.import_module('%s.%s' % (test_module, os.path.splitext(os.path.basename(filename))[0]))
 
