@@ -94,6 +94,10 @@ class Browser(object):
         WebDriverWait(self.selenium, 10).until_not(lambda x: x.execute_script('return jQuery.active'))
         return self
 
+    def wait_for_jquery(self):
+        WebDriverWait(self.selenium, 10).until(lambda x: x.execute_script('return window.jQuery ? true : false'))
+        return self
+
     def screenshot(self, message="Screenshot: "):
         if 's3_access_key' not in app.settings.options('test'):
             print "No screenshot S3 instance configured - skipping screenshot"
