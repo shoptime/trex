@@ -5,7 +5,6 @@ from app import app
 import traceback
 import re
 import os
-import signal
 import sys
 import logging
 import inspect
@@ -14,6 +13,7 @@ from furl import furl
 from pprint import pformat
 from termcolor import colored
 import time
+import requests
 
 _global_harness = None
 def global_harness():
@@ -209,7 +209,7 @@ class Harness(object):
                     print re.sub('.', '-', banner)
                     # TODO - timing for each test?
                     start_time = time.time()
-                    os.kill(self.server_process.pid, signal.SIGUSR1)  # Force mongoengine caches to be dropped
+                    requests.get(str(self.base_uri.copy().join('/__test_drop_mongoengine_cache__')))
                     obj.run()
                     obj.post_run()
                     with open(PASSED_TESTS_FILE, 'a') as fh:

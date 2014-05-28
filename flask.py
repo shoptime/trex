@@ -32,7 +32,6 @@ import csv
 import StringIO
 import inspect
 import socket
-import signal
 
 app = None
 
@@ -295,11 +294,11 @@ class Flask(flask.Flask):
         self.settings.set('server', 'port', str(server_port))
         self.settings.set('server', 'url', str(server_url))
 
-        def sigusr1_handler(signal_number, current_stack_frame):
-            self.logger.debug("Received USR1 signal, dropping mongoengine cached collections/connections")
+        @self.route('/__test_drop_mongoengine_cache__')
+        def endpoint():
+            self.logger.debug("Received /__test_drop_mongoengine_cache__ request, dropping mongoengine cached collections/connections")
             self.drop_mongoengine_cached_handles()
-
-        signal.signal(signal.SIGUSR1, sigusr1_handler)
+            return ''
 
         self.in_test_mode = True
         self.init_application()
