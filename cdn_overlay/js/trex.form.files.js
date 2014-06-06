@@ -265,7 +265,7 @@
                     initialize: function() {
                         this.$el
                             .addClass(this.className)
-                            .html('<a class="close">&times</a> <span class="filename"></span> <span class="size"></span><div class="progress progress-striped active"><div class="bar"></div></div><div class="uploading"></div><div class="label label-important">Upload failed</div>')
+                            .html('<a class="close">&times</a> <span class="filename"></span> <span class="size"></span><div class="progress progress-striped active"><div class="progress-bar bar"></div></div><div class="uploading"></div><div class="label label-danger label-important">Upload failed</div>')
                         ;
                         this.listenTo(this.model, 'change', this.render);
                         this.render();
