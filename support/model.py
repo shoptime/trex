@@ -16,6 +16,7 @@ from itertools import izip, cycle
 import binascii
 from jinja2 import Markup
 import pytz
+import shutil
 from .thumbnailers import ImageThumbnailer, PDFThumbnailer
 
 class CantGenerateThumbnail(Exception):
@@ -739,6 +740,11 @@ class TrexUpload(BaseDocument):
     def from_file(cls, filename, for_user=None, data=None):
         fh = open(filename, 'r')
         return cls.from_file_handle(fh, for_user=for_user, data=data, filename=os.path.basename(filename))
+
+    def to_file(self, filename):
+        with open(filename, 'w') as fh:
+            shutil.copyfileobj(self.file.get(), fh)
+        return
 
     @classmethod
     def from_file_handle(cls, fh, for_user=None, data=None, filename=None):
