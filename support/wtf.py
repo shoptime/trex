@@ -766,9 +766,10 @@ class ImageField(FileField):
             TrexUploadTemporaryAccess(upload=self.data, user=g.user).save()
 
 class PhoneField(TextField):
-    def __init__(self, label='', validators=None, country=None, country_field=None, **kwargs):
+    def __init__(self, label='', validators=None, country=None, country_field=None, display_placeholder=True, **kwargs):
         self.country_field = country_field
         self.country = country
+        self.display_placeholder = display_placeholder
         super(PhoneField, self).__init__(label, validators, **kwargs)
 
     def _value(self):
@@ -802,6 +803,9 @@ class PhoneField(TextField):
 
         if self.raw_data and self.raw_data[0].startswith('invalid:'):
             kwargs['data-keep-raw-value'] = 'true'
+
+        if self.display_placeholder:
+            kwargs['data-display-placeholder'] = True
 
         return super(PhoneField, self).__call__(**kwargs)
 

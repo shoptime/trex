@@ -46,11 +46,13 @@
                 }
                 value = $this.val();
                 country = current_country();
-                if (country) {
-                    $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType(country, PNT.MOBILE), PNF.NATIONAL));
-                }
-                else {
-                    $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType('GB', PNT.MOBILE), PNF.INTERNATIONAL));
+                if (typeof($this.data('display-placeholder')) !== 'undefined') {
+                    if (country) {
+                        $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType(country, PNT.MOBILE), PNF.NATIONAL));
+                    }
+                    else {
+                        $this.attr('placeholder', phoneUtil.format(phoneUtil.getExampleNumberForType('GB', PNT.MOBILE), PNF.INTERNATIONAL));
+                    }
                 }
                 try {
                     phone = phoneUtil.parseAndKeepRawInput(value, country);
