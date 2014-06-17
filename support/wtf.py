@@ -160,6 +160,8 @@ class DateField(DateField):
             return '%Y-%m-%d'
         elif self.js_date_format == 'dd-mm-yyyy':
             return '%d-%m-%Y'
+        elif self.js_date_format == 'dd/mm/yyyy':
+            return '%d/%m/%Y'
         else:
             raise ValueError("Invalid date format for trex.support.wtf.DateField: %s" % self.js_date_format)
 
