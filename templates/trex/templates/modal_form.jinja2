@@ -1,2 +1,7 @@
 {% import 'trex.jinja2' as trex with context -%}
+{% if global_error %}
+    <div class="alert alert-danger">
+        {{ global_error }}
+    </div>
+{% endif %}
 {{ trex.form_render(form, None) }}
