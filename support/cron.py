@@ -44,6 +44,8 @@ class CronJob(object):
         context = self.app.test_request_context('__cron__', base_url=self.app.settings.get('server', 'url'))
         context.push()
 
+        lock = None
+
         try:
             try:
                 self._check_timeouts()
@@ -77,7 +79,8 @@ class CronJob(object):
             app.exception_reporter.invoke(app, e)
 
         context.pop()
-        lock.delete()
+        if lock:
+            lock.delete()
         sys.exit(0)
 
 class QueuedCronJob(CronJob):
