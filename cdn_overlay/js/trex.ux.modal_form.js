@@ -99,7 +99,15 @@
                             Trex.log.e('Unknown state "' + data.state + '" returned from server');
                         }
                     },
-                    error: function() {
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        // Work around an apparent bug in either chrome, jquery or trex, whereby this
+                        // error handler will be called even after the form has been submitted
+                        // successfully. It might have something to do with the form having a file
+                        // upload field in it. It seems to be accompanied by a broken pipe on the server...
+                        if ( textStatus === 'error' && errorThrown === '' ) {
+                            Trex.log.d('Not firing error handler for modal upload, see source for info');
+                            return;
+                        }
                         $modal.find('.modal-footer .failed').show();
                         $modal.find('.modal-body .overlay').remove();
                     }
