@@ -258,7 +258,7 @@ def _send_sendgrid(
     if categories:
         message.add_category(categories)
 
-    s.web.send(message)
+    s.send(message)
 
 def _truncate(string):
     string = unicode(string)
