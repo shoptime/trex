@@ -256,7 +256,8 @@ def _send_sendgrid(
 
     categories = app.settings.getlist('sendgrid', 'categories')
     if categories:
-        message.add_category(categories)
+        for category in categories:
+            message.add_category(category)
 
     s.send(message)
 
