@@ -229,7 +229,7 @@ def _send_sendgrid(
     if not reply_to and 'reply_to' in app.settings.options('sendgrid'):
         reply_to = app.settings.get('sendgrid', 'reply_to')
 
-    s = sendgrid.SendGridClient(username, password, secure=False)
+    s = sendgrid.SendGridClient(username, password, secure=False, raise_errors=True)
 
     message = sendgrid.Mail(from_email=sender[0], from_name=sender[1], subject=subject, text=text_body, html=html_body)
     message.set_replyto(reply_to)
