@@ -60,6 +60,26 @@ class CDNPlugin(object):
     def preprocess(self, info):
         pass
 
+class CDN_JavascriptSourceMaps(CDNPlugin):
+    def preprocess(self, info):
+        self.info = info
+        info.data = re.sub(r'''^(//# sourceMappingURL\s*=\s*)(.*)''', self.url_replace, info.file_data(), flags=re.M)
+
+    def url_replace(self, match):
+        uri = match.group(2)
+        uri_object = furl(uri)
+
+        # Absolute links with a host just remain unchanged
+        if uri_object.host:
+            return "%s%s" % (match.group(1), match.group(2))
+
+        if path.isabs(uri):
+            cdn_uri = path.relpath(uri, '/')
+        else:
+            cdn_uri = path.normpath(path.join(path.relpath(path.dirname(self.info.full_path), self.cdn.root), uri))
+
+        return "%s%s" % (match.group(1), self.cdn.resolve(cdn_uri))
+
 class CDN_CSS(CDNPlugin):
     def preprocess(self, info):
         if info.mime != 'text/css':
@@ -113,6 +133,7 @@ class CDN(object):
         self._cache = {}
         self.plugins = []
         self.plugins.append(CDN_CSS(self))
+        self.plugins.append(CDN_JavascriptSourceMaps(self))
         #self.plugins.append(CDNJavascriptMinifier(self))
 
     def resolve(self, uri, base=None):
