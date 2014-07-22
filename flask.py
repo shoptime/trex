@@ -10,6 +10,7 @@ import warnings
 import pymongo
 import mongoengine
 import logging
+import logging.handlers
 from werkzeug.datastructures import OrderedMultiDict
 from .support import ejson
 from .support import parser
