@@ -419,6 +419,32 @@ class Flask(flask.Flask):
                     timezone = flask.g.user.timezone
             return q.at(timezone).as_local().strftime(format_str)
 
+        # Workaround bug in the wordwrap filter where it disregards existing linebreaks
+        # when wrapping text. See https://github.com/mitsuhiko/jinja2/issues/175
+        jinja_env = self.jinja_env
+        @self.template_filter()
+        def do_wordwrap(s, width=79, break_long_words=True):
+            """
+            Return a copy of the string passed to the filter wrapped after
+            ``79`` characters.  You can override this default using the first
+            parameter.  If you set the second parameter to `false` Jinja will not
+            split words apart if they are longer than `width`.
+            """
+            import textwrap
+            accumulator = []
+            # Workaround: pre-split the string
+            for component in re.split(r"\r?\n", s):
+                # textwrap will eat empty strings for breakfirst. Therefore we route them around it.
+                if len(component) is 0:
+                    accumulator.append(component)
+                    continue
+                accumulator.extend(
+                    textwrap.wrap(component, width=width, expand_tabs=False,
+                        replace_whitespace=False,
+                        break_long_words=break_long_words)
+                )
+            return jinja_env.newline_sequence.join(accumulator)
+
         self.jinja_env.globals['has_feature'] = self.has_feature
 
         def puffer():
