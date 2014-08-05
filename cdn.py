@@ -37,14 +37,18 @@ class FlaskCDN(object):
             if info.hash != hash:
                 abort(404)
 
+            mtime = http_date(info.stat.st_mtime)
+
             if 'If-None-Match' in request.headers and request.headers['If-None-Match'] == info.hash:
+                response = Response(None, 304)
+            elif 'If-Modified-Since' in request.headers and request.headers['If-Modified-Since'] == mtime:
                 response = Response(None, 304)
             else:
                 response = Response(info.file_data(), 200)
 
             response.headers['Content-Type'] = info.mime
             response.headers['Cache-Control'] = 'max-age=%d, public' % EXPIRE_SECONDS
-            response.headers['Last-Modified'] = http_date(info.stat.st_mtime)
+            response.headers['Last-Modified'] = mtime
             response.headers['Expires'] = http_date(info.stat.st_mtime + EXPIRE_SECONDS)
             response.headers['ETag'] = info.hash
 
