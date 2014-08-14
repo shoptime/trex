@@ -57,6 +57,12 @@
                 $form.find('.form-control').first().focus();
             });
             $form.on('submit', function(e) {
+                if ($form.data('trex-wait-for-uploads')) {
+                    // We've got something that wants to do shit before we submit, let
+                    // it do its thing (usually a file upload), it'll call back when it's
+                    // done.
+                    return;
+                }
                 e.preventDefault();
                 $modal.find('.modal-footer .loading').show();
                 $modal.find('.modal-footer .failed').hide();
@@ -118,7 +124,8 @@
             $modal.find('.modal-footer .btn-primary')
                 .prop('disabled', false)
                 .off('click')
-                .click(function() {
+                .click(function(e) {
+                    e.preventDefault();
                     $form.submit();
                     return false;
                 });

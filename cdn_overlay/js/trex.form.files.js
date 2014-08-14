@@ -190,6 +190,7 @@
             $form.on('submit', function(e) {
                 if (pass) { return; }
                 e.preventDefault();
+                e.stopImmediatePropagation(); // Prevent any other handlers from exec'ing while we delay.
 
                 var $to_disable = $form.find('input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(.disabled), a:not(.disabled)');
                 var $primary_button = $form.find('.form-actions .btn:eq(0)');
@@ -204,6 +205,7 @@
                         $to_disable.prop('disabled', false).toggleClass('disabled');
                         $primary_button.text(old_text);
                         pass = true;
+                        $form.data('trex-wait-for-uploads', false);
                         $form.submit();
                     },
                     function() {
@@ -462,6 +464,9 @@
                 view.change_model(model);
                 $(this).val('');
             });
+
+            $widget.closest('form').data('trex-wait-for-uploads', 1);
+
             $widget.find('button').on('click', function() {
                 files.reset([]);
                 view.change_model();
