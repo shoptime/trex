@@ -245,13 +245,19 @@ class CDNFile(object):
         with open(self.full_path) as fh:
             data = fh.read()
 
+        if self.mime.startswith('text/'):
+            data = data.decode('utf8')
+
         return data
 
     def calculate_mime(self):
         self.mime = mimetypes.guess_type(self.full_path)[0] or "application/octet-stream"
 
     def calculate(self):
-        self.hash = hashlib.md5(self.file_data()).hexdigest()
+        data = self.file_data()
+        if isinstance(data, unicode):
+            data = data.encode('utf8')
+        self.hash = hashlib.md5(data).hexdigest()
         self.hash = self.hash[:12]
         self.cdn_file = "%s.%s.%s" % (self.basename, self.hash, self.extension)
         if self.fragment:
