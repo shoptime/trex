@@ -2,9 +2,9 @@ blinker
 boto
 cssselect
 decorator
-flask-script
 flask-seasurf
 flask-wtf>=0.9
+click==3.0
 flask
 furl
 httpagentparser
