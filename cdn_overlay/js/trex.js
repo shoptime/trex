@@ -11,6 +11,9 @@
 
     Trex._register_module = function(this_module) {
         this._check_deps.apply(this, arguments);
+        if (Trex._loaded_modules.indexOf(this_module) !== -1) {
+            console.error("Loading a second copy of", this_module, "(You really shouldn't)");
+        }
         Trex._loaded_modules.push(this_module);
     };
 
