@@ -131,6 +131,7 @@
         var old_form_action = $form.attr('action');
         var old_form_target = $form.attr('target');
         $form
+            .data('iframe_upload', true)
             .attr('action', url)
             .attr('target', upload_id)
         ;
@@ -158,6 +159,7 @@
             collection.add(model);
         }
         $form
+            .data('iframe_upload', false)
             .attr('action', old_form_action)
             .attr('target', old_form_target)
         ;
@@ -427,7 +429,7 @@
                 $widget.find('input[type=hidden]').val(model ? JSON.stringify(model) : '');
 
                 if (finished_uploads && files.uploads_complete()) {
-                    if (model.get('error')) {
+                    if (!model) {
                         finished_uploads.reject();
                     }
                     else {
