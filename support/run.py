@@ -137,9 +137,11 @@ def shell():
 
     shell = TerminalIPythonApp.instance(
         display_banner = False,
+        quick          = True,
         user_ns        = context,
     )
     shell.initialize(argv=[])
+    shell.shell.confirm_exit = False
     shell.start()
 
 @cli.command()
