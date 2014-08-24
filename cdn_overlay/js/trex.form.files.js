@@ -80,7 +80,7 @@
                 if (!valid) {
                     model.set({
                         error: true,
-                        error_message: options.type_validators.message,
+                        error_message: options.type_validators.message
                     });
                     return;
                 }
@@ -442,13 +442,13 @@
             if ($widget.hasClass('trex-image-widget')) {
                 view = new ImageView(_.extend({
                     el: $widget,
-                    model: files.first(),
+                    model: files.first()
                 }, options));
             }
             else {
                 view = new FileView(_.extend({
                     el: $widget,
-                    model: files.first(),
+                    model: files.first()
                 }, options));
             }
             window.f = files;
