@@ -2,13 +2,13 @@ from __future__ import absolute_import
 
 import os
 import sys
-import click
 
 if 'VIRTUAL_ENV' not in os.environ:
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     activate_this = os.path.join(project_root, 'bin', 'activate_this.py')
     execfile(activate_this, dict(__file__=activate_this))
 
+import click
 from app import app
 import inspect
 import importlib
