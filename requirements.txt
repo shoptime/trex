@@ -10,7 +10,7 @@ furl
 httpagentparser
 jinja2
 markdown
-mongoengine<=0.8.4
+mongoengine>0.8.4
 passlib
 pillow
 premailer
