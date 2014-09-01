@@ -1,0 +1,23 @@
+{% extends 'base.jinja2' %}
+{% set page_title = 'Email Templates' %}
+{% block content %}
+<style>
+    iframe {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ccc;
+    }
+</style>
+<h3>{{ email.subject() }} <a href="{{ url_for('trex.developer.email_template', template=template) }}"><code class="pull-right" style="line-height: 2">{{ template }}</code></a></h3>
+<p class="muted text-muted">
+    {{ email.__class__.__doc__ }}
+</p>
+<div class="row">
+    <div class="col-lg-6 span6">
+        <iframe src="{{ url_for('trex.developer.email_sample', template=template, fmt='html') }}"></iframe>
+    </div>
+    <div class="col-lg-6 span6">
+        <iframe src="{{ url_for('trex.developer.email_sample', template=template, fmt='text') }}"></iframe>
+    </div>
+</div>
+{% endblock %}

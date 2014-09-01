@@ -1,28 +1,31 @@
 {% extends 'base.jinja2' %}
 {% set page_title = 'Email Templates' %}
 {% block content %}
-<style>
-    iframe {
-        width: 100%;
-        height: 300px;
-{% if templates|length == 1 %}
-        height: 600px;
-{% endif %}
-        border: 1px solid #ccc;
-    }
-</style>
+<h1>Email templates</h1>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Template Name</th>
+            <th>Subject</th>
+            <th class="cell-controls"></th>
+        </tr>
+    </thead>
+    <tbody>
 {% for template, email in templates.items() %}
-<h3>{{ email.subject() }} <a href="{{ url_for('trex.developer.email_template', template=template) }}"><code class="pull-right" style="line-height: 2">{{ template }}</code></a></h3>
-<p class="muted text-muted">
-    {{ email.__class__.__doc__ }}
-</p>
-<div class="row">
-    <div class="col-lg-6 span6">
-        <iframe src="{{ url_for('trex.developer.email_sample', template=template, fmt='html') }}"></iframe>
-    </div>
-    <div class="col-lg-6 span6">
-        <iframe src="{{ url_for('trex.developer.email_sample', template=template, fmt='text') }}"></iframe>
-    </div>
-</div>
+        <tr>
+            <td>{{ template }}</td>
+            <td>
+                <p>{{ email.subject() }}</p>
+                <div class="text-muted">{{ email.__class__.__doc__ }}</div>
+            </td>
+            <td class="cell-controls">
+                <a class="btn btn-default" href="{{ url_for('trex.developer.email_template', template=template) }}">
+                    view
+                    <span class="glyphicon glyphicon-arrow-right" />
+                </a>
+            </td>
+        </tr>
 {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
