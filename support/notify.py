@@ -42,7 +42,7 @@ def raw(message, channel=None):
         log.debug("notify: %s" % re.sub(r'\[colour=(?:(light)_)?(\w+)\]', replacer, message))
 
 def error(tag, message):
-    raw('[[colour=light_blue]%s[colour=reset]] [colour=light_red]%s[colour=reset]: %s' % (fqdn, tag, message))
+    raw('[[colour=light_blue]%s@%s[colour=reset]] [colour=light_red]%s[colour=reset]: %s' % (app.settings.get('app', 'slug'), fqdn, tag, message))
 
 def info(tag, message):
-    raw('[[colour=light_blue]%s[colour=reset]] %s: %s' % (fqdn, tag, message))
+    raw('[[colour=light_blue]%s@%s[colour=reset]] %s: %s' % (app.settings.get('app', 'slug'), fqdn, tag, message))
