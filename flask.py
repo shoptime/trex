@@ -650,9 +650,9 @@ def _exception_handler(app, exception):
         last_frame = data['traceback'][-1]
         file = last_frame[0]
         line = last_frame[1]
-        notify.error(app.settings.get('app', 'slug'), data['type'], '%s at %s:%s' % (data['value'], file, line))
+        notify.error(data['type'], '%s at %s:%s' % (data['value'], file, line))
     except:
-        notify.error(app.settings.get('app', 'slug'), data['type'], '%s (no file/line info available)' % data['value'])
+        notify.error(data['type'], '%s (no file/line info available)' % data['value'])
 
 
 class FlaskExceptionReporter(object):

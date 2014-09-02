@@ -1,5 +1,7 @@
 from trex.flask import app
 import requests
+import socket
+fqdn = socket.getfqdn()
 import logging
 log = logging.getLogger(__name__)
 
@@ -39,8 +41,8 @@ def raw(message, channel=None):
 
         log.debug("notify: %s" % re.sub(r'\[colour=(?:(light)_)?(\w+)\]', replacer, message))
 
-def error(site, tag, message):
-    raw('[[colour=light_blue]%s[colour=reset]] [colour=light_red]%s[colour=reset]: %s' % (site, tag, message))
+def error(tag, message):
+    raw('[[colour=light_blue]%s[colour=reset]] [colour=light_red]%s[colour=reset]: %s' % (fqdn, tag, message))
 
-def info(site, tag, message):
-    raw('[[colour=light_blue]%s[colour=reset]] %s: %s' % (site, tag, message))
+def info(tag, message):
+    raw('[[colour=light_blue]%s[colour=reset]] %s: %s' % (fqdn, tag, message))
