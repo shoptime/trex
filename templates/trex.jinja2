@@ -96,9 +96,9 @@
 {% if field.type not in ['HiddenField', 'CSRFTokenField', 'LabelField'] %}
 <div id="form-group-{{ field.id }}" class="form-group{% if field.errors %} has-error{% endif %}{% if field.flags.required %} required{% endif %}">
     {% if field.label.text %}
-    <label for="{{ field.id }}" class="col-sm-4 control-label">{{ field.label.text }}</label>
+    <label for="{{ field.id }}" class="col-sm-4 col-md-3 col-lg-2 control-label">{{ field.label.text }}</label>
     {% endif %}
-    <div class="col-sm-8{% if not field.label.text %} col-sm-offset-4{% endif %}">
+    <div class="col-sm-8 col-md-9 col-lg-10{% if not field.label.text %} col-sm-offset-4 col-md-offset-3 col-lg-offset-2{% endif %}">
         {%- if field.type == 'FileField' %}
         {{ field(**kwargs) | safe }}
         {%- else -%}
@@ -140,7 +140,7 @@
 {%- macro form_render_submit_section(form, button_label='Submit', button_class='btn-primary', secondary_action_html=None) -%}
     {% if trex_bootstrap_version == 3 %}
         <div class="form-group form-actions">
-            <div class="col-sm-offset-4 col-sm-8">
+            <div class="col-sm-offset-4 col-md-offset-3 col-lg-offset-2 col-sm-8 col-md-9 col-lg-10">
                 <button type="submit" class="btn {{ button_class }}">{{ button_label }}</button>
                 {% if secondary_action_html %}<span class="secondary">{{ secondary_action_html | safe }}</span>{% endif %}
             </div>
