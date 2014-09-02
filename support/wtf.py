@@ -529,7 +529,7 @@ class BooleanFieldWidget(object):
 class BooleanField(Field):
     widget = BooleanFieldWidget()
 
-    def __init__(self, label='', label_lhs=False, validators=None, **kwargs):
+    def __init__(self, label='', validators=None, label_lhs=False, **kwargs):
         self.label_lhs = label_lhs
         if label_lhs:
             super(BooleanField, self).__init__(label, validators, **kwargs)
