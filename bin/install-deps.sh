@@ -19,6 +19,6 @@ npm install
 
 [ -f bower.json ] || cp trex/bower.json bower.json
 [ -f .bowerrc ] || cp trex/.bowerrc .bowerrc
-node_modules/.bin/bower install
+node_modules/.bin/bower update
 
 exit 0
