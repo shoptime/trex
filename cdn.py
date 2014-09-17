@@ -68,7 +68,7 @@ class CDN_SourceMaps(CDNPlugin):
     def preprocess(self, info):
         self.info = info
         if self.info.mime in ['text/css', 'application/javascript']:
-            info.data = re.sub(r'''^((?://|/\*)# sourceMappingURL\s*=\s*)(\S+)''', self.url_replace, info.file_data(), flags=re.M)
+            info.data = re.sub(r'''((?:^//|/\*)# sourceMappingURL\s*=\s*)(\S+)''', self.url_replace, info.file_data(), flags=re.M)
 
     def url_replace(self, match):
         uri = match.group(2)
