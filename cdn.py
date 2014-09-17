@@ -64,10 +64,11 @@ class CDNPlugin(object):
     def preprocess(self, info):
         pass
 
-class CDN_JavascriptSourceMaps(CDNPlugin):
+class CDN_SourceMaps(CDNPlugin):
     def preprocess(self, info):
         self.info = info
-        info.data = re.sub(r'''^(//# sourceMappingURL\s*=\s*)(.*)''', self.url_replace, info.file_data(), flags=re.M)
+        if self.info.mime in ['text/css', 'application/javascript']:
+            info.data = re.sub(r'''^((?://|/\*)# sourceMappingURL\s*=\s*)(\S+)''', self.url_replace, info.file_data(), flags=re.M)
 
     def url_replace(self, match):
         uri = match.group(2)
@@ -137,7 +138,7 @@ class CDN(object):
         self._cache = {}
         self.plugins = []
         self.plugins.append(CDN_CSS(self))
-        self.plugins.append(CDN_JavascriptSourceMaps(self))
+        self.plugins.append(CDN_SourceMaps(self))
         #self.plugins.append(CDNJavascriptMinifier(self))
 
     def resolve(self, uri, base=None):

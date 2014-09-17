@@ -315,7 +315,7 @@ def cron():
 def compile_less_to_css(less_file, css_file):
     c_logger.debug('%s => %s' % (less_file, css_file))
     try:
-        subprocess.check_call(['../../node_modules/.bin/lessc', '-x', less_file, css_file])
+        subprocess.check_call(['../../node_modules/.bin/lessc', '--source-map', '-x', less_file, css_file])
     except subprocess.CalledProcessError as e:
         c_logger.error("lessc exited with error code %d" % e.returncode)
 
