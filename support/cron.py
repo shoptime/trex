@@ -181,3 +181,13 @@ class remove_old_sessions(CronJob):
     def run(self):
         res = app.db.identity.remove({'expires': { '$lte': datetime.utcnow()}}, w=1)
         log.info(res or 'Nothing done')
+
+class remove_old_user_account_recovery_requests(CronJob):
+    """Remove old user account recovery requests"""
+
+    def run(self):
+        from trex.support.model import UserAccountRecovery
+        cutoff = quantum.now('UTC').subtract(hours=24)
+        for uar in UserAccountRecovery.objects(created__lte=cutoff):
+            uar.delete()
+            log.debug('Removed request %s for %s' % (uar.code, uar.user.email))
