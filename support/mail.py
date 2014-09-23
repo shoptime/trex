@@ -73,6 +73,9 @@ class MailTemplate(object):
         return html_to_emailhtml(render_template('email/%s-html.jinja2' % self.name, **self.tplvars))
 
     def send(self, **kwargs):
+        if 'to' not in kwargs or not kwargs['to']:
+            raise Exception("Must provide an email address to send to")
+
         kwargs['subject'] = self.subject()
         kwargs['text_body'] = self.text_body()
         kwargs['html_body'] = self.html_body()
