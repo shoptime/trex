@@ -1,11 +1,20 @@
 {% extends 'base.jinja2' %}
 {% set page_title = 'Audit Log' %}
 {% block content %}
+<style>
+    .nowrap {
+        white-space: nowrap;
+    }
+</style>
+<div class="pull-right btn-group">
+    <a href="{{ url_for('trex.audit_log.index', page=pager.page) }}" class="btn btn-default{% if not utc %} active{% endif %}">Local Times</a>
+    <a href="{{ url_for('trex.audit_log.utc', page=pager.page) }}" class="btn btn-default{% if utc %} active{% endif %}">UTC Times</a>
+</div>
 <h2>Audit Log</h2>
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Date/Time (UTC)</th>
+            <th>Date/Time</th>
             <th>Actor</th>
             <th>Description</th>
             <th>Tags</th>
@@ -15,8 +24,14 @@
     <tbody>
     {% for entry in entries %}
         <tr>
-            <td><span class="trex-moment" data-moment="{{ entry.created.as_utc() | moment_stamp }}"></span></td>
-            <td>
+            <td class="nowrap">
+            {% if utc %}
+            {{ entry.created | quantum('datetime', timezone='UTC') }}
+            {% else %}
+            {{ entry.created | quantum('datetime') }}
+            {% endif %}
+            </td>
+            <td class="nowrap">
                 {% if entry.user %}
                 {{ entry.user.display_name }}
                 {% else %}
