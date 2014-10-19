@@ -32,9 +32,11 @@ class TrexAudit(object):
 
     def __init__(self, app):
         self.app = app
+        self.super_wsgi_app = app.wsgi_app
+        self.app.wsgi_app = self.wsgi_app
         self.fh = open('../trex-audit.log', 'a')
 
-    def __call__(self, environ, start_response):
+    def wsgi_app(self, environ, start_response):
         req = environ['werkzeug.request']
 
         session_id = 'identity' in req.cookies and req.cookies['identity'] or None
@@ -45,8 +47,8 @@ class TrexAudit(object):
             source      = 'request',
             actor       = None,
             real        = None,
-            app         = 'wikinz-hf',  # TODO get app slug from settings
             session_id  = session_id,
+            app         = self.app.settings.get('app', 'slug'),
             level       = 'info',
             tags        = [],
 
@@ -89,7 +91,7 @@ class TrexAudit(object):
 
         e_type, e_value, e_traceback = None, None, None
         try:
-            response = self.app(environ, detect_response_data)
+            response = self.super_wsgi_app(environ, detect_response_data)
         except:
             e_type, e_value, e_traceback = sys.exc_info()
             raise
