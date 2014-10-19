@@ -37,14 +37,16 @@ class TrexAudit(object):
     def __call__(self, environ, start_response):
         req = environ['werkzeug.request']
 
+        session_id = 'identity' in req.cookies and req.cookies['identity'] or None
+
         audit_document = dict(
             # Fields present in all audit documents
             timestamp   = datetime.utcnow().isoformat(), # TODO stringify
             source      = 'request',
             actor       = None,
             real        = None,
-            session_id  = 'identity' in req.cookies and req.cookies['identity'] or None,
             app         = 'wikinz-hf',  # TODO get app slug from settings
+            session_id  = session_id,
             level       = 'info',
             tags        = [],
 
@@ -64,21 +66,21 @@ class TrexAudit(object):
             ),
         )
 
-        session_id = 'identity' in req.cookies and req.cookies['identity'] or None
         if session_id:
             import app.model as m
             identity = m.Identity.from_session_id(session_id)
-            audit_document['actor'] = dict(
-                token = identity.actor.token,
-                email = identity.actor.email,
-                display_name = identity.actor.display_name,
-            )
-            if identity.actor != identity.real:
-                audit_document['real'] = dict(
-                    token = identity.real.token,
-                    email = identity.real.email,
-                    display_name = identity.real.display_name,
+            if identity.actor:
+                audit_document['actor'] = dict(
+                    token = identity.actor.token,
+                    email = identity.actor.email,
+                    display_name = identity.actor.display_name,
                 )
+                if identity.actor != identity.real:
+                    audit_document['real'] = dict(
+                        token = identity.real.token,
+                        email = identity.real.email,
+                        display_name = identity.real.display_name,
+                    )
 
         response_data = []
         def detect_response_data(status, headers, *args, **kwargs):
