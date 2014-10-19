@@ -5,6 +5,7 @@ from flask import g
 from datetime import datetime
 import json
 import sys
+import os
 import traceback
 from werkzeug.wrappers import Request
 
@@ -35,7 +36,7 @@ class TrexAudit(object):
         self.app = app
         self.super_wsgi_app = app.wsgi_app
         self.app.wsgi_app = self.wsgi_app
-        self.fh = open('../trex-audit.log', 'a')
+        self.fh = open(os.path.join(self.app.log_directory, 'trex-audit.log'), 'a')
 
     def wsgi_app(self, environ, start_response):
         if 'werkzeug.request' in environ:

@@ -33,6 +33,7 @@ import csv
 import StringIO
 import inspect
 import socket
+from distutils.dir_util import mkpath
 
 app = None
 
@@ -234,6 +235,7 @@ class Flask(flask.Flask):
     db = None
     in_test_mode = False
     papertrail_handler = None
+    log_directory = None
 
     def check_default_config(self):
         """Asserts that the config in default.ini/base.ini is sane"""
@@ -310,7 +312,7 @@ class Flask(flask.Flask):
         self.logger.debug('Switched to WSGI mode')
 
     def log_to_file(self, filename):
-        log_filename = os.path.abspath(os.path.join(self.root_path, '..', 'logs', filename))
+        log_filename = os.path.abspath(os.path.join(self.log_directory, filename))
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(self.logger_formatter)
@@ -347,6 +349,10 @@ class Flask(flask.Flask):
         self.check_default_config()
         self.settings.readfp(codecs.open(os.path.join(self.root_path, 'local.ini'), 'r', 'utf8'))
         self.check_local_config()
+
+        # Set up logging directory target. Later this can be configured
+        self.log_directory = os.path.abspath(os.path.join(self.root_path, '..', 'logs'))
+        mkpath(self.log_directory)
 
         self.init_jinja()
         self.exception_reporter = FlaskExceptionReporter(self)
