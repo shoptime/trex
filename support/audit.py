@@ -37,6 +37,9 @@ class TrexAudit(object):
         self.fh = open('../trex-audit.log', 'a')
 
     def wsgi_app(self, environ, start_response):
+        if 'werkzeug.request' not in environ:
+            print environ
+            return self.super_wsgi_app(environ, start_response)
         req = environ['werkzeug.request']
 
         session_id = 'identity' in req.cookies and req.cookies['identity'] or None
