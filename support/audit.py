@@ -119,6 +119,7 @@ class TrexAudit(object):
                 audit_document['response'] = dict(
                     status = 500,
                 )
+                audit_document['level'] = 'error'
             else:
                 audit_document['response'] = dict(
                     status  = int(response_data[0]),
