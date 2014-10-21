@@ -11,6 +11,7 @@ httpagentparser
 jinja2
 markdown
 mongoengine>0.8.4
+netaddr
 passlib
 pillow
 premailer

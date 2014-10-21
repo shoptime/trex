@@ -9,6 +9,7 @@ import traceback
 from werkzeug.wrappers import Request
 from trex.support import quantum
 import socket
+import netaddr
 
 def audit(description, tags, documents=None, user=None, system_action=False, moreinfo=None):
     import app.model as m  # We import this late so that the audit method can be loaded into the model
@@ -67,12 +68,18 @@ class TrexAudit(object):
             request    = dict(
                 method      = req.method,
                 remote_addr = req.remote_addr,
+                ip          = req.remote_addr,
                 url         = req.url,
                 host        = req.host,
                 user_agent  = 'User-Agent' in req.headers and req.headers['User-Agent'] or None,
                 headers     = [dict(k=h[0], v=h[1]) for h in req.headers],
             ),
         )
+
+        remote_addr = netaddr.IPAddress(req.remote_addr)
+
+        if len(req.access_route) and (remote_addr.is_private() or remote_addr.is_loopback()):
+            audit_document['request']['ip'] = req.access_route[-1]
 
         if session_id:
             import app.model as m
