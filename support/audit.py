@@ -66,8 +66,10 @@ class TrexAudit(object):
             error      = None,
             request    = dict(
                 method      = req.method,
-                url         = req.url,
+                path        = req.path,
+                full_path   = req.full_path,
                 host        = req.host,
+                scheme      = req.scheme,
                 user_agent  = 'User-Agent' in req.headers and req.headers['User-Agent'] or None,
                 headers     = [dict(k=h[0], v=h[1]) for h in req.headers],
             ),
