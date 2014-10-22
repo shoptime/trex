@@ -108,6 +108,14 @@ class TrexAudit(object):
             e_type, e_value, e_traceback = sys.exc_info()
             raise
         finally:
+            status = int(response_data[0])
+
+            # Early exit if this is an ignorable request
+            if req.path.startswith('/cdn') and status in [200, 304]:
+                return response
+            if req.path.startswith('/favicon.ico') and status in [200, 304]:
+                return response
+
             audit_document['error'] = e_type is not None
 
             if e_type:
@@ -128,7 +136,7 @@ class TrexAudit(object):
                 audit_document['level'] = 'error'
             else:
                 audit_document['response'] = dict(
-                    status  = int(response_data[0]),
+                    status  = status,
                     headers = [dict(k=h[0], v=h[1]) for h in response_data[1]],
                 )
 
