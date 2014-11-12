@@ -53,7 +53,7 @@ class TrexAudit(object):
             logging.getLogger('pika.channel').setLevel(logging.INFO)
             self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
             self.channel = self.connection.channel()
-            self.channel.queue_declare(queue='source_opcode_audit')
+            self.channel.queue_declare(queue='source_opcode_audit', durable=True)
         except pika.exceptions.AMQPConnectionError as e:
             log.error("Failed to connect to RabbitMQ: %s" % e)
             notify.error("audit", "Failed to connect to RabbitMQ: %s" % e)
