@@ -170,7 +170,7 @@ class TrexAudit(object):
         try:
             self.channel.basic_publish(
                 exchange    = '',
-                routing_key = 'opcode_audit',
+                routing_key = 'source_opcode_audit',
                 body        = json.dumps(audit_data),
                 properties = pika.BasicProperties(
                     delivery_mode = 2,
