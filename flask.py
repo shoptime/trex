@@ -363,6 +363,10 @@ class Flask(flask.Flask):
 
         self.init_application()
 
+        if self.settings.getboolean('server', 'opcode_audit'):
+            from trex.support.audit import TrexAudit
+            TrexAudit(self)
+
     def init_jinja(self):
         self.select_jinja_autoescape = True
 
