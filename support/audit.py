@@ -4,12 +4,16 @@ from __future__ import absolute_import
 from flask import g
 import json
 import sys
-import os
 import traceback
 from werkzeug.wrappers import Request
-from trex.support import quantum
+from . import quantum, notify
 import socket
 import netaddr
+import pika
+import logging
+import traceback
+
+log = logging.getLogger(__name__)
 
 def audit(description, tags, documents=None, user=None, system_action=False, moreinfo=None):
     import app.model as m  # We import this late so that the audit method can be loaded into the model
@@ -33,12 +37,26 @@ def audit(description, tags, documents=None, user=None, system_action=False, mor
     audit.save()
 
 class TrexAudit(object):
-
     def __init__(self, app):
         self.app = app
         self.super_wsgi_app = app.wsgi_app
         self.app.wsgi_app = self.wsgi_app
-        self.fh = open(os.path.join(self.app.log_directory, 'trex-audit.log'), 'a')
+        self.rmq_connect()
+
+    def rmq_connect(self):
+        self.connection = None
+        self.channel = None
+        try:
+            logging.getLogger('pika.callback').setLevel(logging.INFO)
+            logging.getLogger('pika.connection').setLevel(logging.INFO)
+            logging.getLogger('pika.adapters.blocking_connection').setLevel(logging.INFO)
+            logging.getLogger('pika.channel').setLevel(logging.INFO)
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            self.channel = self.connection.channel()
+            self.channel.queue_declare(queue='source_opcode_audit')
+        except pika.exceptions.AMQPConnectionError as e:
+            log.error("Failed to connect to RabbitMQ: %s" % e)
+            notify.error("audit", "Failed to connect to RabbitMQ: %s" % e)
 
     def wsgi_app(self, environ, start_response):
         if 'werkzeug.request' in environ:
@@ -97,6 +115,7 @@ class TrexAudit(object):
                     )
 
         response_data = []
+
         def detect_response_data(status, headers, *args, **kwargs):
             response_data[:] = status[:3], headers
             return start_response(status, headers, *args, **kwargs)
@@ -145,5 +164,20 @@ class TrexAudit(object):
         return response
 
     def write_audit_data(self, audit_data):
-        self.fh.writelines([json.dumps(audit_data) + "\n"])
-        self.fh.flush()
+        if not self.channel:
+            return
+
+        try:
+            self.channel.basic_publish(
+                exchange    = '',
+                routing_key = 'opcode_audit',
+                body        = json.dumps(audit_data),
+                properties = pika.BasicProperties(
+                    delivery_mode = 2,
+                )
+            )
+        except pika.exceptions.ConnectionClosed:
+            self.rmq_connect()
+        except:
+            log.error(traceback.format_exc())
+            pass

@@ -27,3 +27,4 @@ sendgrid>=0.5.1
 termcolor
 unidecode
 werkzeug
+pika
