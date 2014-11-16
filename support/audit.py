@@ -49,6 +49,8 @@ class TrexAudit(object):
         try:
             logging.getLogger('pika.callback').setLevel(logging.INFO)
             logging.getLogger('pika.connection').setLevel(logging.INFO)
+            if not self.app.debug:
+                logging.getLogger('pika.adapters.base_connection').setLevel(logging.WARN)
             logging.getLogger('pika.adapters.blocking_connection').setLevel(logging.INFO)
             logging.getLogger('pika.channel').setLevel(logging.INFO)
             self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
