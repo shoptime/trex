@@ -18,6 +18,7 @@ import operator
 import re
 from cgi import escape
 import magic
+from furl import furl
 import logging
 log = logging.getLogger(__name__)
 
@@ -1012,6 +1013,39 @@ class FileType(object):
 
         if field.data.file.content_type not in self.mime_types:
             raise ValidationError(self.message)
+
+class URLValidator(object):
+    """
+    furl-based url validation.
+
+    :param allowed_schemes:
+        A list of allowed schemes for URLs. Defaults to http and https.
+    :param require_tld:
+        If true, then the domain-name portion of the URL must contain a .tld
+        suffix.  Set this to false if you want to allow domains like
+        `localhost`.
+    """
+    def __init__(self, allowed_schemes=None, require_tld=True):
+        if allowed_schemes is None:
+            allowed_schemes = ['http', 'https']
+        self.allowed_schemes = allowed_schemes
+        self.require_tld = require_tld
+
+    def __call__(self, form, field):
+        if not field.data:
+            # Nothing to validate
+            return
+
+        parsed_url = furl(field.data)
+
+        if not parsed_url.scheme or not parsed_url.host:
+            raise ValidationError('URL is not valid')
+        if parsed_url.scheme not in self.allowed_schemes:
+            raise ValidationError('URL must be http or https.')
+        if self.require_tld and '.' not in parsed_url.host:
+            raise ValidationError('URL must point to a fully-qualified domain name.')
+
+validators.URL = URLValidator
 
 blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
 
