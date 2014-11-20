@@ -116,7 +116,7 @@ class TrexAudit(object):
                         display_name = identity.real.display_name,
                     )
 
-        response_data = []
+        response_data = [500]
 
         def detect_response_data(status, headers, *args, **kwargs):
             response_data[:] = status[:3], headers
