@@ -184,7 +184,7 @@ def shell():
 @click.option('-f', '--fail-method', default='exception', type=click.Choice(['exception', 'ipdb', 'print']), help='What to do on a test/assertion failure')
 @click.option('-m', '--debug-mail', default=False, help='Dump debug info about emails that the app tries to send')
 @click.option('-r', '--resume', default=False, help='Resume from the last test which failed')
-@click.option('-l', '--list-tests', default=False, help='List all tests')
+@click.option('-l', '--list-tests', default=False, help='List all tests', is_flag=True)
 @click.option('--test-dir', default=None, type=click.Path(exists=True, file_okay=False, resolve_path=True), help='Override dir to tests (also required --test-module)')
 @click.option('--test-module', default=None, help='Override module name for tests (also required --test-dir)')
 @click.argument('tests', nargs=-1)
