@@ -163,7 +163,7 @@ def shell():
             for obj in output:
                 table.add_row([str(getattr(obj, field)) for field in fields])
             pretty_output = table.draw()
-        elif isinstance(output, mongoengine.Document):
+        elif isinstance(output, mongoengine.Document) or isinstance(output, mongoengine.EmbeddedDocument):
             pretty_output = pformat(output.to_mongo().to_dict())
         else:
             pretty_output = pformat(output)
