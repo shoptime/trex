@@ -21,6 +21,7 @@ import copy
 import re
 import traceback
 from jinja2.exceptions import TemplateNotFound
+from jinja2_pluralize import pluralize_dj
 import trex.support.model
 import trex.support.format
 import trex.support.browser
@@ -455,6 +456,7 @@ class Flask(flask.Flask):
                 )
             return jinja_env.newline_sequence.join(accumulator)
 
+        self.jinja_env.filters['pluralize'] = pluralize_dj
         self.jinja_env.globals['has_feature'] = self.has_feature
 
         def puffer():

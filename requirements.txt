@@ -9,6 +9,7 @@ flask
 furl
 httpagentparser
 jinja2
+jinja2_pluralize
 markdown
 mongoengine>0.8.4
 netaddr
