@@ -99,6 +99,6 @@ def serve_file(document, field, index=None, set_filename=True):
     response.headers['Content-Length'] = file.length
 
     if set_filename:
-        response.headers['Content-Disposition'] = 'filename=%s' % file.filename
+        response.headers['Content-Disposition'] = 'filename="%s"' % file.filename
 
     return response
