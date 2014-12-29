@@ -96,6 +96,7 @@ def serve_file(document, field, index=None, set_filename=True):
     response.headers['Content-Type'] = file.content_type
     response.headers['ETag'] = str(file._id)
     response.headers['Cache-Control'] = 'private, max-age=31622400'
+    response.headers['Content-Length'] = file.length
 
     if set_filename:
         response.headers['Content-Disposition'] = 'filename=%s' % file.filename
