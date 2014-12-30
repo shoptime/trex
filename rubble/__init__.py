@@ -20,6 +20,8 @@ def global_harness():
     return _global_harness
 _global_init_harness_methods = []
 _global_teardown_harness_methods = []
+_global_init_process_methods = []
+_global_teardown_process_methods = []
 _global_init_test_methods = []
 _global_teardown_test_methods = []
 
@@ -81,6 +83,15 @@ def init_harness():
 
     return decorator
 
+def init_process():
+    global _global_init_process_methods
+
+    def decorator(f):
+        _global_init_process_methods.append(f)
+        return f
+
+    return decorator
+
 def init_test():
     global _global_init_test_methods
 
@@ -95,6 +106,15 @@ def teardown_harness():
 
     def decorator(f):
         _global_teardown_harness_methods.append(f)
+        return f
+
+    return decorator
+
+def teardown_process():
+    global _global_teardown_process_methods
+
+    def decorator(f):
+        _global_teardown_process_methods.append(f)
         return f
 
     return decorator
@@ -197,6 +217,9 @@ class Harness(object):
 
     def _run(self, test_classes):
         try:
+            for function in _global_init_process_methods:
+                function(self.instance_number)
+
             for cls in test_classes:
                 self.current_test_object = obj = cls(harness=self)
                 try:
@@ -225,7 +248,9 @@ class Harness(object):
                     for function in _global_teardown_test_methods:
                         function(obj)
         finally:
-            # Call teardown_harness methods
+            # Call teardown methods
+            for function in _global_teardown_process_methods:
+                function(self.instance_number)
             for function in _global_teardown_harness_methods:
                 function()
 
