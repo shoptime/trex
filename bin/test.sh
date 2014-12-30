@@ -77,6 +77,8 @@ find . -name '*.pyc' -delete
 # Sort out dependencies
 bash trex/bin/install-deps.sh
 
+[ -f deploy.hook.prestatic ] && source deploy.hook.prestatic
+
 # Compile static stuff
 app compile_static
 
