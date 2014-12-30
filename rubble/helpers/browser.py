@@ -5,6 +5,7 @@ from flask import url_for
 from trex.rubble import global_harness as harness
 from .assertions import is_equal, is_like, message
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains as SeleniumActionChains
 from selenium.webdriver.common.keys import Keys
 from app import app
 from furl import furl
@@ -105,6 +106,9 @@ def wait_for_modal_form(browser=None):
 
 def screenshot(browser=None):
     browser_for(browser).screenshot()
+
+def ActionChains(browser=None):
+    return SeleniumActionChains(browser_for(browser).selenium)
 
 def table_like(head, body, table=None):
     message("verifying table contents")
