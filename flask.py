@@ -314,7 +314,7 @@ class Flask(flask.Flask):
 
     def log_to_file(self, filename):
         log_filename = os.path.abspath(os.path.join(self.log_directory, filename))
-        file_handler = logging.FileHandler(log_filename)
+        file_handler = logging.handlers.WatchedFileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(self.logger_formatter)
         if self.settings.getboolean('server', 'debug'):
