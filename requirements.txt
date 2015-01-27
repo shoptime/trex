@@ -8,6 +8,7 @@ click==3.0
 flask
 furl
 httpagentparser
+ipython
 jinja2
 jinja2_pluralize
 markdown
