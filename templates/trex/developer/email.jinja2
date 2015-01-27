@@ -15,8 +15,11 @@
         <tr>
             <td>{{ template }}</td>
             <td>
-                <p>{{ email.subject() }}</p>
-                <div class="text-muted">{{ email.__class__.__doc__ }}</div>
+                {% if email.subject %}
+                <p>{{ email.subject }}</p>
+                {% endif %}
+                <div class="text-muted">{{ email.description }}</div>
+                <div class="text-danger">{{ email.error }}</div>
             </td>
             <td class="cell-controls">
                 <a class="btn btn-default" href="{{ url_for('trex.developer.email_template', template=template) }}">
