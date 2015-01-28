@@ -465,7 +465,7 @@ class Flask(flask.Flask):
 
         @self.template_filter()
         def rurl(url, default=''):
-            if type(url) is Undefined:
+            if url is None or type(url) is Undefined:
                 return default
             url = re.sub(r'^https?://(www\.)?', '', url)
             url = re.sub(r'/$', '', url)
