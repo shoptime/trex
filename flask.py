@@ -20,6 +20,7 @@ import sys
 import copy
 import re
 import traceback
+from jinja2 import Undefined
 from jinja2.exceptions import TemplateNotFound
 from jinja2_pluralize import pluralize_dj
 import trex.support.model
@@ -455,6 +456,12 @@ class Flask(flask.Flask):
                         break_long_words=break_long_words)
                 )
             return jinja_env.newline_sequence.join(accumulator)
+
+        @self.template_filter()
+        def rnum(number, default=''):
+            if type(number) is Undefined:
+                return default
+            return '{:,}'.format(number)
 
         self.jinja_env.filters['pluralize'] = pluralize_dj
         self.jinja_env.globals['has_feature'] = self.has_feature
