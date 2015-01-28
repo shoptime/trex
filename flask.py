@@ -463,6 +463,14 @@ class Flask(flask.Flask):
                 return default
             return '{:,}'.format(number)
 
+        @self.template_filter()
+        def rurl(url, default=''):
+            if type(url) is Undefined:
+                return default
+            url = re.sub(r'^https?://(www\.)?', '', url)
+            url = re.sub(r'/$', '', url)
+            return url
+
         self.jinja_env.filters['pluralize'] = pluralize_dj
         self.jinja_env.globals['has_feature'] = self.has_feature
 
