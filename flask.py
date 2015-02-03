@@ -225,6 +225,8 @@ def render_csv():
             http_response.headers.set('Pragma', 'no-cache')
 
         io.close()
+
+        http_response.csv_passthrough_data = response.get('csv_passthrough_data')
         return http_response
 
     return decorator(decorated)
