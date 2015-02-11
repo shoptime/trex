@@ -41,7 +41,7 @@ class CronJob(object):
             raise TimeoutException("%s timed out, forcing lock removal" % self.__class__.__name__)
 
     def run_wrapped(self):
-        context = self.app.test_request_context('__cron__', base_url=self.app.settings.get('server', 'url'))
+        context = self.app.test_request_context('__cron__')
         context.push()
 
         lock = None

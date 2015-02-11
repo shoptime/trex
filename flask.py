@@ -310,6 +310,10 @@ class Flask(flask.Flask):
         self.in_test_mode = True
         self.init_application()
 
+    def test_request_context(self, *args, **kwargs):
+        kwargs['base_url'] = app.settings.get('server', 'url')
+        return super(Flask, self).test_request_context(*args, **kwargs)
+
     def switch_to_wsgi_mode(self):
         self.log_to_file('application.log')
         self.log_to_papertrail('app')

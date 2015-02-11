@@ -174,7 +174,7 @@ def shell():
 
     shell.shell.define_magic('pp', pretty_print)
 
-    context = app.test_request_context('__shell__', base_url=app.settings.get('server', 'url'))
+    context = app.test_request_context('__shell__')
     context.push()
     shell.start()
     context.pop()
