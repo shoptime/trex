@@ -391,6 +391,14 @@ class Flask(flask.Flask):
         def textarea2html(text):
             return parser.textarea2html(text)
 
+        try:
+            from flask.ext.misaka import markdown as filter_md
+            @self.template_filter()
+            def markdown(text):
+                return filter_md(text)
+        except ImportError:
+            pass
+
         @self.template_filter()
         def english_join(items):
             return ', '.join(items[0:-1]) + ' and ' + items[-1]
