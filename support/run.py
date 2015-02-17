@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import os
 import sys
-from watchdog.events import FileCreatedEvent
 
 if 'VIRTUAL_ENV' not in os.environ:
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -78,7 +77,7 @@ def watch_static():
     os.chdir(os.path.join(app.root_path, 'cdn'))
 
     from watchdog.observers import Observer
-    from watchdog.events import FileModifiedEvent
+    from watchdog.events import FileModifiedEvent, FileCreatedEvent
 
     observer = Observer()
 
