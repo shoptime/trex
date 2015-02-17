@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+from watchdog.events import FileCreatedEvent
 
 if 'VIRTUAL_ENV' not in os.environ:
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -89,7 +90,7 @@ def watch_static():
             if event.src_path[-5:] != '.less':
                 return
 
-            if not isinstance(event, FileModifiedEvent):
+            if not (isinstance(event, FileModifiedEvent) or isinstance(event, FileCreatedEvent)):
                 # Only care if the file was actually modified
                 return
 
