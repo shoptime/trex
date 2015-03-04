@@ -82,7 +82,7 @@ def check_authentication(*args, **kwargs):
 def after_request(response):
     if g.is_cors_request:
         response.headers['Access-Control-Allow-Origin'] = '*'
-    elif hasattr(g, 'identity'):
+    elif hasattr(g, 'identity') and request.method != 'OPTIONS':
         g.identity.set_cookie(response)
     return response
 
