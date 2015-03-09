@@ -9,6 +9,7 @@ from trex.support import wtf
 from .audit import audit
 import app.model as m
 from . import quantum, model as trex_model
+from .rate_limit import rate_limit, add_to_buffer
 from furl import furl
 
 @app.before_request
@@ -90,6 +91,7 @@ blueprint = AuthBlueprint('trex.auth', __name__, url_prefix='/auth')
 
 @blueprint.route('/login', methods=['GET', 'POST'], auth=auth.public)
 @render_html('trex/auth/login.jinja2')
+@rate_limit('authentication')
 def login():
     return_to = request.args.get('return_to')
 
@@ -140,6 +142,7 @@ def login():
     return dict(form=form)
 
 @blueprint.route('/login-as/<user_token>', methods=['POST'], auth=auth.has_flag('trex.user_management_login_as'))
+@rate_limit('authentication')
 def login_as(user_token):
     return_to = request.args.get('return_to')
 
@@ -172,6 +175,7 @@ def logout():
 
 @blueprint.route('/change-password', methods=['GET', 'POST'], auth=auth.login)
 @render_html('trex/auth/change_password.jinja2')
+@rate_limit('authentication')
 def change_password():
     return_to = request.args.get('return_to') or g.user.default_after_change_password_url()
 
@@ -201,6 +205,7 @@ def change_password():
 
 @blueprint.route('/lost-password', methods=['GET', 'POST'], auth=auth.public)
 @render_html('trex/auth/lost_password.jinja2')
+@rate_limit('authentication')
 def lost_password():
     class Form(wtf.Form):
         email = wtf.TextField('Email address', [wtf.validators.Required(), wtf.validators.Email()])
@@ -245,11 +250,13 @@ def lost_password_sent():
 
 @blueprint.route('/recover-password/<code>', methods=['GET', 'POST'], auth=auth.public)
 @render_html('trex/auth/recover_password.jinja2')
+@rate_limit('authentication')
 def recover_password(code):
     valid_after = quantum.now('UTC').subtract(hours=1)
     try:
         ar = trex_model.UserAccountRecovery.objects.get(code=code, created__gte=valid_after)
     except m.DoesNotExist:
+        add_to_buffer('authentication')
         flash("Unrecognised or unacceptable code. It may have timed out. Please check your code, or reset your account again", category="error")
         return redirect(url_for('.lost_password_sent'))
 

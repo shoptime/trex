@@ -868,3 +868,13 @@ class TrexUploadThumbnail(BaseDocument):
     def delete(self):
         self.file.delete()
         super(TrexUploadThumbnail, self).delete()
+
+class RateLimitBuffer(Document):
+    meta = dict(
+        indexes = [('bucket',), ('ip',)],
+    )
+
+    created  = QuantumField(required=True, default=quantum.now)
+    bucket   = StringField(required=True)
+    ip       = StringField(required=True)
+    notified = BooleanField()

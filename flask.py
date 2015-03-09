@@ -35,6 +35,7 @@ import csv
 import StringIO
 import inspect
 import socket
+import netaddr
 from distutils.dir_util import mkpath
 
 app = None
@@ -234,6 +235,27 @@ def render_csv():
 class TrexRequest(flask.Request):
     parameter_storage_class = OrderedMultiDict
 
+    _remote_ip = None
+
+    @property
+    def remote_ip(self):
+        """Returns the "real" remote IP for the requester, ignoring local reverse proxy IPs etc."""
+        if self._remote_ip:
+            return self._remote_ip
+
+        remote_addr = self.remote_addr
+        if not remote_addr:
+            # This can happen when faking request context for local processes
+            return None
+
+        ip = netaddr.IPAddress(self.remote_addr)
+
+        if len(self.access_route) and (ip.is_private() or ip.is_loopback()):
+            ip = self.access_route[-1]
+
+        self._remote_ip = ip
+        return ip
+
 class Flask(flask.Flask):
     settings = TrexConfigParser()
     db = None
@@ -300,6 +322,7 @@ class Flask(flask.Flask):
         self.settings.set('mongo', 'url', str(mongo_url))
         self.settings.set('server', 'port', str(server_port))
         self.settings.set('server', 'url', str(server_url))
+        self.settings.set('ratelimit_authentication', 'allowed_failures', '10000')
 
         @self.route('/__test_drop_mongoengine_cache__')
         def endpoint():
