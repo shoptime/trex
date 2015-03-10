@@ -192,7 +192,7 @@ class remove_old_user_account_recovery_requests(CronJob):
             uar.delete()
             log.debug('Removed request %s for %s' % (uar.code, uar.user.email))
 
-class remote_old_rate_limit_entries(CronJob):
+class remove_old_rate_limit_entries(CronJob):
     """Remote old entries in the rate limit buffer"""
 
     def run(self):
