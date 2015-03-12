@@ -253,7 +253,8 @@ class TrexRequest(flask.Request):
         if len(self.access_route) and (ip.is_private() or ip.is_loopback()):
             ip = self.access_route[-1]
 
-        self._remote_ip = str(ip)
+        ip = str(ip)
+        self._remote_ip = ip
         return ip
 
 class Flask(flask.Flask):
