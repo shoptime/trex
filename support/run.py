@@ -274,6 +274,49 @@ def rubble(processes, fail_method, debug_mail, resume, list_tests, tests, test_d
     end_time = time.time()
     print "Total time: %0.1f seconds" % (end_time - start_time)
 
+@cli.command()
+def url_map():
+    """Prints a list of all URL routes the application will handle"""
+    from operator import itemgetter
+
+    rules = []
+    for rule in app.url_map.iter_rules():
+        # Generate a human-readable path for the url
+        tmp = []
+        for is_dynamic, data in rule._trace:
+            if is_dynamic:
+                tmp.append(u'<%s>' % data)
+            else:
+                tmp.append(data)
+        path = ''.join(tmp).lstrip('|')
+
+        # Figure out what auth decorator was used for the endpoint
+        view_func = app.view_functions[rule.endpoint]
+        if hasattr(view_func, '__authblueprint_authfunc__'):
+            auth = view_func.__authblueprint_authfunc__.__name__
+        else:
+            auth = 'NONE'
+
+        rules.append(dict(
+            path     = path,
+            endpoint = rule.endpoint,
+            methods  = rule.methods,
+            auth     = auth,
+        ))
+
+    # Emit them nicely
+    last_blueprint = None
+    for rule in sorted(rules, key=itemgetter('endpoint')):
+        blueprint = rule['endpoint'].split('.')[0]
+        if not last_blueprint or blueprint != last_blueprint:
+            if last_blueprint:
+                print
+            print blueprint
+            print '-' * len(blueprint)
+            last_blueprint = blueprint
+
+        print '%-75s %-30s -> %s (%s)' % (rule['path'], rule['auth'], rule['endpoint'], '/'.join(list(rule['methods'])))
+
 class CronJobCLI(click.MultiCommand):
     def __init__(self, *args, **kwargs):
         import trex.support.cron
