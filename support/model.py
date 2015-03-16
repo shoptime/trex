@@ -314,7 +314,6 @@ def generate_session_id():
     """
     Securely generate a random token of the correct length for a session ID
     """
-    # QUESTION: Shield the RNG?
     # QUESTION: Sign it?
     return hashlib.sha256(hashlib.sha256(os.urandom(32)).digest()).hexdigest()
 
