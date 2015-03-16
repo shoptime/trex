@@ -21,6 +21,8 @@ def has_flag(flag):
         if not g.user.has_flag(flag):
             return abort(403)
 
+    check_flag.__name__ = 'has_flag(%s)' % flag
+
     has_flag_cache[flag] = check_flag
 
     return check_flag
@@ -36,12 +38,16 @@ def has_role(role):
         if not g.user.has_role(role):
             return abort(403)
 
+    check_role.__name__ = 'has_role(%s)' % role
+
     has_role_cache[role] = check_role
 
     return check_role
 
 def is_role(role):
-    return is_role_in(role)
+    func = is_role_in(role)
+    func.__name__ = 'is_role(%s)' % role
+    return func
 
 is_role_in_cache = {}
 def is_role_in(*args):
@@ -56,6 +62,8 @@ def is_role_in(*args):
             if g.user.is_role(role):
                 return
         return abort(403)
+
+    check_role.__name__ = 'is_role_in(%s)' % (','.join(args))
 
     is_role_in_cache[role_set] = check_role
 
