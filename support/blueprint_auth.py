@@ -32,30 +32,45 @@ def check_authentication(*args, **kwargs):
     #    requests continue untouched and have no additional response headers
     #    set.
     # 2. It's a CORS request (i.e. a request from a different domain). These
-    #    requests have all request cookies stripped (to prevent accidently
+    #    requests have all request cookies stripped (to prevent accidentally
     #    granting access where it shouldn't be) and the appropriate response
     #    headers returned.
     # The decision on which of the 2 cases any given request should use is
     # decided by comparing the Origin request header with the server.url
     # configuration option.
     if view_func and getattr(view_func, 'allow_cors', False):
-        if request.method == 'OPTIONS' and 'Access-Control-Request-Method' in request.headers:
-            return app.response_class('', status=200, headers={
+        if request.method == 'OPTIONS':
+            headers = {
                 'Allow': ', '.join(request.url_rule.methods),
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': request.headers.get('Access-Control-Request-Headers'),
-            })
-        elif request.method in request.url_rule.methods and 'Origin' in request.headers:
-            origin = furl(request.headers['Origin'])
-            server = furl(app.settings.get('server', 'url'))
-            origin.path = origin.query = origin.fragment = ''
-            server.path = server.query = server.fragment = ''
-            if str(origin) != str(server):
-                # Before allowing CORS, we nuke all incoming cookies (of which
-                # there shouldn't be any anyway)
-                request.cookies = {}
+                'Access-Control-Allow-Methods': ', '.join(request.url_rule.methods),
+            }
+            ac_request_headers = request.headers.get('Access-Control-Request-Headers')
+            if ac_request_headers:
+                # TODO echoing these back is probably not a wise move
+                headers['Access-Control-Allow-Headers'] = ac_request_headers
 
+            return app.response_class('', status=200, headers=headers)
+        elif request.method in request.url_rule.methods:
+            if 'Origin' in request.headers:
+                origin = furl(request.headers['Origin'])
+                server = furl(app.settings.get('server', 'url'))
+                origin.path = origin.query = origin.fragment = ''
+                server.path = server.query = server.fragment = ''
+                if str(origin) != str(server):
+                    # Before allowing CORS, we nuke all incoming cookies (of which
+                    # there shouldn't be any anyway)
+                    request.cookies = {}
+
+                    g.is_cors_request = True
+            else:
+                # Don't trust those sneaky clients who don't provide Origin
+                request.cookies = {}
                 g.is_cors_request = True
+        else:
+            # This is for safety, but in practice flask itself has already determined that the request method is valid
+            # for us.
+            return abort(405)
 
     g.identity = m.Identity.from_request(request)
 

@@ -789,9 +789,6 @@ class AuthBlueprint(flask.Blueprint):
         view_func_authed.allow_cors = options.pop('allow_cors', False)
         view_func_authed.csrf_exempt = options.pop('csrf_exempt', False)
 
-        if view_func_authed.allow_cors:
-            options['methods'] = ('OPTIONS',) + tuple(options.get('methods', ('GET',)))
-
         super(AuthBlueprint, self).add_url_rule(rule, endpoint, view_func_authed, **options)
 
         return view_func_authed
