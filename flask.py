@@ -182,7 +182,7 @@ def render_json(cachable=False):
             return response
 
         http_response = flask.Response(ejson.dumps(response), 200)
-        http_response.content_type = 'application/json'
+        http_response.content_type = 'application/json; charset=utf-8'
 
         if cachable == False:
             http_response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
