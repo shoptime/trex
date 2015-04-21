@@ -816,5 +816,4 @@ class EnvironmentMiddleware(object):
     def __call__(self, environ, start_response):
         for var in self.vars:
             os.environ[var] = environ.get(var, '')
-            print var, os.environ[var]
         return self.app(environ, start_response)
