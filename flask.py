@@ -806,3 +806,15 @@ class AuthBlueprint(flask.Blueprint):
 
 class new_args(dict):
     pass
+
+class EnvironmentMiddleware(object):
+    """Passes OS environment variables into the WSGI environ each request"""
+    def __init__(self, app, *args):
+        self.app = app
+        self.vars = args
+
+    def __call__(self, environ, start_response):
+        for var in self.vars:
+            os.environ[var] = environ.get(var, '')
+            print var, os.environ[var]
+        return self.app(environ, start_response)
