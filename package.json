@@ -3,6 +3,7 @@
     "repository": {},
     "dependencies": {
         "bower": "",
-        "less": ""
+        "less": "",
+        "less-plugin-clean-css": ""
     }
 }
