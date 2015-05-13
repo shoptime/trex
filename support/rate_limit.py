@@ -26,7 +26,11 @@ def rate_limit(bucket):
             return abort(429)
 
         # Run the request
-        response = f(*args, **kwargs)
+        try:
+            response = f(*args, **kwargs)
+        except:
+            add_to_buffer(bucket)
+            raise
 
         # Figure out whether the request failed
         status_code = None
