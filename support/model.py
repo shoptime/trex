@@ -793,7 +793,6 @@ class TrexUpload(BaseDocument):
         return cls.from_file_handle(
             data.stream,
             filename     = data.filename,
-            content_type = data.content_type,
             for_user     = for_user,
         )
 
