@@ -787,6 +787,16 @@ class TrexUpload(BaseDocument):
         upload.save()
         return upload
 
+    @classmethod
+    def from_filestorage(cls, data, for_user=None):
+        """Imports from werkzeug FileStorage objects (e.g. those returned by WTForm's FileField object)"""
+        return cls.from_file_handle(
+            data.stream,
+            filename     = data.filename,
+            content_type = data.content_type,
+            for_user     = for_user,
+        )
+
     def update_reference(self, document, field_name):
         field = document._fields[field_name]
         if not isinstance(field, ReferenceField):
