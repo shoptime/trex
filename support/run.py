@@ -221,7 +221,7 @@ def rubble(processes, fail_method, debug_mail, resume, list_tests, tests, test_d
     if len(tests):
         test_classes = trex.rubble.load_tests_by_names(tests, exclude=exclude_tests, test_dir=test_dir, test_module=test_module)
     else:
-        test_classes = trex.rubble.load_all_tests(test_dir=test_dir, test_module=test_module)
+        test_classes = trex.rubble.load_all_tests(test_dir=test_dir, test_module=test_module, exclude=exclude_tests)
 
     def run_tests(instance_number, instance_total):
         def sig_quit_handler(signum, frame):

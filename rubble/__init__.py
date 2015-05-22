@@ -35,6 +35,9 @@ def load_all_tests(exclude=None, test_dir=None, test_module=None):
     import importlib
     import glob
 
+    if exclude is None:
+        exclude = []
+
     if test_dir is None or test_module is None:
         test_dir = os.path.join(app.root_path, 'test')
         test_module = 'app.test'
@@ -49,7 +52,7 @@ def load_all_tests(exclude=None, test_dir=None, test_module=None):
 
     def collect_classes(base_class):
         sub_classes = [c for c in base_class.__subclasses__()]
-        test_classes.update([c for c in sub_classes if not c.abstract])
+        test_classes.update([c for c in sub_classes if not c.abstract and c.__name__ not in exclude])
         for c in sub_classes:
             collect_classes(c)
 
