@@ -80,8 +80,13 @@ def select_by_label(select_name, label):
     select = find('[name="%s"]' % select_name).length_is(1)
     select.select_by_value(select.find('option').filter_by_text(label).attr('value'))
 
-def submit():
-    find('.form-group button[type="submit"]').filter_by_visible().length_is(1).scroll_to().click()
+def submit(button_index=None):
+    if button_index is None:
+        # We expect just one button
+        find('.form-group button[type="submit"]').filter_by_visible().length_is(1).scroll_to().click()
+    else:
+        # Use the one they asked for
+        find('.form-group button[type="submit"]').filter_by_visible()[button_index].scroll_to().click()
 
 def submit_bs2():
     find('.form-actions button[type="submit"]').filter_by_visible().length_is(1).click()
