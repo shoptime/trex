@@ -147,6 +147,53 @@ class TextAreaListField(Field):
         else:
             self.data = []
 
+class MonthField(DateField):
+    def __init__(self, label='', validators=None, date_format='yyyy-mm', default_mode='month', **kwargs):
+        self.default_mode = default_mode
+        self.js_date_format = date_format
+        self.py_date_format = self._calculate_strftime_format()
+
+        kwargs['format'] = self.py_date_format
+        super(MonthField, self).__init__(label, validators, **kwargs)
+
+    def _calculate_strftime_format(self):
+        if self.js_date_format == 'yyyy-mm':
+            return '%Y-%m'
+        elif self.js_date_format == 'mm-yyyy':
+            return '%m-%Y'
+        elif self.js_date_format == 'mm/yyyy':
+            return '%m/%Y'
+        else:
+            raise ValueError("Invalid date format for trex.support.wtf.MonthField: %s" % self.js_date_format)
+
+    def _value(self):
+        if self.raw_data:
+            return ' '.join(self.raw_data)
+        else:
+            return self.data and self.data.strftime(self.format) or ''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            date_str = ' '.join(valuelist)
+            if date_str.strip():
+                try:
+                    self.data = quantum.parse_date("01|" + date_str, format="%d|" + self.format)
+                except ValueError:
+                    self.data = None
+                    raise ValueError(self.gettext('Not a valid date value'))
+            else:
+                self.data = None
+
+    def __call__(self, *args, **kwargs):
+        kwargs['class'] = 'trex-month-field form-control'
+        if self.default_mode == 'month':
+            kwargs['data-date-viewmode'] = 1
+        elif self.default_mode == 'year':
+            kwargs['data-date-viewmode'] = 2
+
+        kwargs['data-date-format'] = self.js_date_format
+        return super(MonthField, self).__call__(*args, **kwargs)
+
 class DateField(DateField):
     def __init__(self, label='', validators=None, date_format='yyyy-mm-dd', default_mode='day', **kwargs):
         self.default_mode = default_mode

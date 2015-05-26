@@ -777,7 +777,21 @@
                 if (e.which === 9) {
                     $(this).datepicker('hide');
                 }
-            })
+            });
+        });
+
+        $('.trex-month-field', context).each(function() {
+            $(this).datepicker({minViewMode: "months"}).on('changeDate', function(e) {
+                if (e.viewMode === 'months') {
+                    // Hide the picker when the user selects a date
+                    $(this).datepicker('hide');
+                }
+            });
+            $(this).on('keydown', function(e) {
+                if (e.which === 9) {
+                    $(this).datepicker('hide');
+                }
+            });
         });
 
         $('.trex-time-field', context).each(function() {
