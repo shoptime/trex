@@ -51,7 +51,7 @@ class ForeverDocument(Document):
         # This is to prevent mongoengine doing weird conversions on new values
         # passed in the constructor
         kwargs['__auto_convert'] = False
-        return super(Document, self).__init__(*args, **kwargs)
+        return super(ForeverDocument, self).__init__(*args, **kwargs)
 
     @queryset_manager
     def objects(cls, queryset):
@@ -96,7 +96,7 @@ class ForeverDocument(Document):
         self.save()
 
     def real_delete(self, *args, **kwargs):
-        super(Document, self).delete(*args, **kwargs)
+        super(ForeverDocument, self).delete(*args, **kwargs)
 
 class InvalidRoleException(Exception):
     pass
