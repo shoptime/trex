@@ -367,7 +367,7 @@ class Quantum(object):
             raise QuantumException("Can't represent a Quantum as local time without a timezone")
         dt = convert_timezone(self.dt, 'UTC', self.tz)
         if include_tzinfo:
-            return dt.replace(tzinfo=self.tz)
+            return self.tz.localize(dt)
         return dt
 
     def as_unix(self):
@@ -424,7 +424,7 @@ class Quantum(object):
         return new
 
     def strftime(self, format):
-        local_dt = self.as_local()
+        local_dt = self.as_local(include_tzinfo=True)
         result   = local_dt.strftime(format)
 
         suffix_placeholder = '{TH}'
