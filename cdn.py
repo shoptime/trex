@@ -102,6 +102,10 @@ class CDN_CSS(CDNPlugin):
         if uri_object.host:
             return "url(%(quotes)s%(uri)s%(quotes)s)" % dict(quotes=quotes, uri=uri)
 
+        # data uris also remain unchanged
+        if uri.startswith('data:'):
+            return "url(%(quotes)s%(uri)s%(quotes)s)" % dict(quotes=quotes, uri=uri)
+
         # Absolute links (i.e. those starting with /) are treated as
         # referencing the top of the CDN
         if path.isabs(uri):
