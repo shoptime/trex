@@ -548,10 +548,13 @@ class BaseIdentity(BaseDocument):
         Set the cookie with the current session
         """
         # Update expiry so session stays valid
-        if self.real or self.actor:
-            self.set_expiry(settings.getint('identity', 'activity_timeout'))
-        else:
-            self.set_expiry(settings.getint('identity', 'anonymous_activity_timeout'))
+        activity_timeout_key = 'anonymous_activity_timeout'
+        if self.real:
+            activity_timeout_key = '%s_activity_timeout' % self.real.role
+            if not settings.has_option('identity', activity_timeout_key):
+                activity_timeout_key = 'activity_timeout'
+
+        self.set_expiry(settings.getint('identity', activity_timeout_key))
 
         # Ensure we're setting the cookie matching the stored session
         self.save()
@@ -597,7 +600,13 @@ class BaseIdentity(BaseDocument):
             return True
 
         # What about its final session expiry?
-        if self.created.at('UTC').add(seconds=settings.getint('identity', 'session_timeout')) < quantum.now('UTC'):
+        session_timeout_key = 'session_timeout'
+        if self.real:
+            role_session_timeout_key = '%s_session_timeout' % self.real.role
+            if settings.has_option('identity', role_session_timeout_key):
+                session_timeout_key = role_session_timeout_key
+
+        if self.created.at('UTC').add(seconds=settings.getint('identity', session_timeout_key)) < quantum.now('UTC'):
             return True
 
         return False
