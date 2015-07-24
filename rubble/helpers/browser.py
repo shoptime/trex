@@ -73,6 +73,14 @@ def wait_for_element_visible(selector, browser=None):
         return browser.find(selector)[0].visible()
     WebDriverWait(browser.selenium, 10).until(inner_wait)
 
+def wait_for_element_invisible(selector, browser=None):
+    wait_for_element_exists(selector, browser)
+
+    browser = browser_for(browser)
+    def inner_wait(driver):
+        return not browser.find(selector)[0].visible()
+    WebDriverWait(browser.selenium, 10).until(inner_wait)
+
 def wait_for_lambda(l, browser=None):
     browser = browser_for(browser)
     WebDriverWait(browser.selenium, 10).until(l)
