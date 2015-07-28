@@ -16,6 +16,9 @@ def browser_for(browser):
         return harness().browser_for_key(browser)
     return harness().current_browser()
 
+def current_url(browser=None):
+    return browser_for(browser).url()
+
 def back(browser=None):
     browser_for(browser).back()
 
