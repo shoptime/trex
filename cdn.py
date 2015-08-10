@@ -74,6 +74,10 @@ class CDN_SourceMaps(CDNPlugin):
         uri = match.group(2)
         uri_object = furl(uri)
 
+        # data: URIs should be left alone
+        if uri.startswith('data:'):
+            return "%s%s" % (match.group(1), match.group(2))
+
         # Absolute links with a host just remain unchanged
         if uri_object.host:
             return "%s%s" % (match.group(1), match.group(2))
@@ -128,6 +132,7 @@ class CDN_CSS(CDNPlugin):
 class CDN_LessProcessor(CDNPlugin):
     def __init__(self, *args, **kwargs):
         mimetypes.add_type('text/less', '.less')
+        mimetypes.add_type('application/json', '.map')
         super(self.__class__, self).__init__(*args, **kwargs)
 
     def preprocess(self, info):
