@@ -36,14 +36,24 @@ log = logging.getLogger(__name__)
 capturing = False
 
 def get_template(name):
-    subclasses = dict([(x.__name__, x) for x in MailTemplate.__subclasses__()])
+    subclasses = dict([(x.__name__, x) for x in all_templates()])
     template = subclasses.get(name)
     if not template:
         raise Exception("No email template named %s found" % name)
     return template
 
+def _collect_subclasses(cls):
+    sub_classes = set(cls.__subclasses__())
+    for c in cls.__subclasses__():
+        sub_classes.update(_collect_subclasses(c))
+
+    return list([s for s in sub_classes if 'abstract' not in s.__dict__ or not s.abstract])
+
+def all_templates():
+    return _collect_subclasses(MailTemplate)
+
 def all_template_names():
-    return [x.__name__ for x in MailTemplate.__subclasses__()]
+    return [x.__name__ for x in all_templates()]
 
 class MailTemplate(object):
     """Base class for all templated emails"""
