@@ -272,7 +272,7 @@ def recover_password(code):
         ar = trex_model.UserAccountRecovery.objects.get(code=code, created__gte=valid_after)
     except m.DoesNotExist:
         add_to_buffer('authentication')
-        flash("Unrecognised or unacceptable code. It may have timed out. Please check your code, or reset your account again", category="error")
+        flash("Unrecognised or unacceptable code. It may have timed out. Please check your code, or reset your account again.", category="danger")
         return redirect(url_for('.lost_password_sent'))
 
     class Form(wtf.Form):
