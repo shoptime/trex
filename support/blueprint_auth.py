@@ -293,6 +293,6 @@ def recover_password(code):
         flash("Your password has been successfully reset")
         return redirect(ar.user.default_after_login_url())
 
-    return dict(form=form)
+    return dict(form=form, code=code)
 
 app.register_blueprint(blueprint)
