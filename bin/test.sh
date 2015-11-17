@@ -87,7 +87,9 @@ test_harness_opts=''
 if [ $parallel ]; then
     test_harness_opts="$test_harness_opts -p3"
 fi
+[ -f deploy.hook.pretest ] && source deploy.hook.pretest
 app rubble $test_harness_opts
+[ -f deploy.hook.posttest ] && source deploy.hook.posttest
 
 # Reload for other things that hit this hive instance
 touch site.wsgi
