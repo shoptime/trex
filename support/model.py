@@ -268,7 +268,7 @@ class BaseUser(BaseDocument):
 class UserAccountRecovery(BaseDocument):
     created = QuantumField(required=True, default=quantum.now)
     user    = ReferenceField('User')
-    code    = StringField(required=True, unique=True, default=token.create_human_token(length=8))
+    code    = StringField(required=True, unique=True, default=lambda: token.create_human_token(length=8))
 
     def send_recovery_email(self):
         from trex.support import mail
