@@ -416,7 +416,7 @@ class Flask(flask.Flask):
             return parser.textarea2html(text)
 
         try:
-            from flask.ext.misaka import markdown as filter_md
+            from flask_misaka import markdown as filter_md
             @self.template_filter()
             def markdown(text):
                 return filter_md(text)
