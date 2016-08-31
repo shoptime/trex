@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 from wtforms import *
-from flask.ext.wtf import Form
+from flask_wtf import Form
 import mongoengine
 from flask import url_for, abort, request, g
 from ..flask import AuthBlueprint, render_json, render_html
