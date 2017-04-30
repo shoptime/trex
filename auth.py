@@ -1,14 +1,21 @@
 # coding=utf-8
 
 from __future__ import absolute_import
+from app import app
 from flask import g, request, url_for, redirect, abort
+import urllib
+
+login_url = app.settings.get('security', 'login_url')
+
+def get_login_url(return_to):
+    return '{}?{}'.format(login_url, urllib.urlencode(dict(return_to=return_to)))
 
 def public(*args, **kwargs):
     pass
 
 def login(*args, **kwargs):
     if not g.user:
-        return redirect(url_for('trex.auth.login', return_to = request.url))
+        return redirect(get_login_url(request.url))
 
 has_flag_cache = {}
 def has_flag(flag):
@@ -17,7 +24,7 @@ def has_flag(flag):
 
     def check_flag(*args, **kwargs):
         if not g.user:
-            return redirect(url_for('trex.auth.login', return_to = request.url))
+            return redirect(get_login_url(request.url))
         if not g.user.has_flag(flag):
             return abort(403)
 
@@ -34,7 +41,7 @@ def has_role(role):
 
     def check_role(*args, **kwargs):
         if not g.user:
-            return redirect(url_for('trex.auth.login', return_to = request.url))
+            return redirect(get_login_url(request.url))
         if not g.user.has_role(role):
             return abort(403)
 
@@ -57,7 +64,7 @@ def is_role_in(*args):
 
     def check_role(*args, **kwargs):
         if not g.user:
-            return redirect(url_for('trex.auth.login', return_to = request.url))
+            return redirect(get_login_url(request.url))
         for role in role_set:
             if g.user.is_role(role):
                 return
