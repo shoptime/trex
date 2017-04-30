@@ -63,16 +63,16 @@ def applying_deltas():
 
 @tests.test
 def leap_years():
-    q = quantum.parse('2013-03-01', relaxed=True, timezone='UTC')
+    q = quantum.parse('01-03-2013', relaxed=True, timezone='UTC')
     assert q.subtract(days=1).as_utc() == datetime(2013,2,28)
 
-    q = quantum.parse('2013-02-01', relaxed=True, timezone='UTC')
+    q = quantum.parse('01-02-2013', relaxed=True, timezone='UTC')
     assert q.add(months=1).as_utc() == datetime(2013,3,1)
 
-    q = quantum.parse('2016-03-01', relaxed=True, timezone='UTC')
+    q = quantum.parse('01-03-2016', relaxed=True, timezone='UTC')
     assert q.subtract(days=1).as_utc() == datetime(2016,2,29)
 
-    q = quantum.parse('2016-02-01', relaxed=True, timezone='UTC')
+    q = quantum.parse('01-02-2016', relaxed=True, timezone='UTC')
     assert q.add(months=1).as_utc() == datetime(2016,3,1)
 
 @tests.test
@@ -80,7 +80,7 @@ def formatting():
     with Assert.raises(quantum.QuantumException):
         quantum.now().format_date() == '1 Feb 2013'
 
-    q = quantum.parse('2013-02-01', relaxed=True, timezone='UTC')
+    q = quantum.parse('01-02-2013', relaxed=True, timezone='UTC')
     assert q.format_date() == '1 Feb 2013'
 
 if __name__ == '__main__':
