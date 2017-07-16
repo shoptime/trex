@@ -66,11 +66,17 @@ def render_html(template=None, add_etag=False, stream=False):
 
         response['app'] = app
         response['trex_bootstrap_version'] = app.settings.getint('trex', 'bootstrap_version')
+        response['html_classes'] = []
 
         if flask.request.blueprint:
             response['html_classes'] = [ 'blueprint-%s' % x for x in [ flask.request.blueprint.replace('.', '-') ] ]
         if flask.request.endpoint:
             response['html_id'] = 'endpoint-%s' % flask.request.endpoint.replace('.', '-')
+
+        status  = response.get('_status', 200)
+
+        if status != 200:
+            response['html_classes'].append('status-{}'.format(status))
 
         try:
             if stream:
@@ -86,7 +92,6 @@ def render_html(template=None, add_etag=False, stream=False):
                 return flask.abort(404)
             raise
 
-        status  = response.get('_status', 200)
         headers = response.get('_headers', {})
 
         default_headers = {
