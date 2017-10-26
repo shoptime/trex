@@ -552,6 +552,11 @@ class Flask(flask.Flask):
 
     def init_application(self):
         self.debug = self.settings.getboolean('server', 'debug')
+
+        # Work around a flask issue: https://github.com/pallets/flask/issues/1907
+        if self.debug:
+            self.jinja_env.auto_reload = True
+
         self.logger_formatter = logging.Formatter(
             '%(asctime)s [%(process)5d] [%(name)20.20s] %(levelname)8s - %(message)s '
             '[in %(pathname)s:%(lineno)d]'
