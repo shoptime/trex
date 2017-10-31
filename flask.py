@@ -20,6 +20,7 @@ import sys
 import copy
 import re
 import traceback
+import jinja2
 from jinja2 import Undefined
 from jinja2.exceptions import TemplateNotFound
 from jinja2_pluralize import pluralize_dj
@@ -538,6 +539,12 @@ class Flask(flask.Flask):
         self.jinja_env.globals['puffer'] = puffer
         self.jinja_env.globals['urlencode'] = urllib.quote
 
+        @jinja2.contextfunction
+        def include_file(ctx, name):
+            env = ctx.environment
+            return jinja2.Markup(env.loader.get_source(env, name)[0])
+
+        self.jinja_env.globals['include_file'] = include_file
 
         def csrf_token():
             if hasattr(flask.g, 'identity'):
