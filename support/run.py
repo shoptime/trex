@@ -143,37 +143,6 @@ def shell():
     shell.initialize(argv=[])
     shell.shell.confirm_exit = False
 
-    def pretty_print(self, arg):
-        from pprint import pformat
-        import mongoengine
-        import texttable
-
-        output = None
-        for line in self.shell.history_manager.get_tail(50):
-            try:
-                output = self.shell.history_manager.output_hist[line[1]]
-            except KeyError:
-                pass
-
-        if isinstance(output, mongoengine.QuerySet):
-            table = texttable.Texttable(max_width=0)
-            table.set_deco(texttable.Texttable.HEADER)
-            fields = output[0]._fields.keys()
-            table.add_row(fields)
-            for obj in output:
-                table.add_row([str(getattr(obj, field)) for field in fields])
-            pretty_output = table.draw()
-        elif isinstance(output, mongoengine.Document) or isinstance(output, mongoengine.EmbeddedDocument):
-            pretty_output = pformat(output.to_mongo().to_dict())
-        else:
-            pretty_output = pformat(output)
-
-        print pretty_output
-
-        return None
-
-    shell.shell.define_magic('pp', pretty_print)
-
     context = app.test_request_context('__shell__')
     context.push()
     shell.start()
