@@ -35,7 +35,24 @@ class FlaskCDN(object):
                 abort(404)
 
             if info.hash != hash:
-                abort(404)
+                if self.requested_by_bot():  # If some kind of bot or scraper
+                    # Return the file, so the bot gets something somewhat useful, don't let it be cached.
+                    # Normally we don't want to return the file since different hash = different contents, but
+                    # in the case of some bots (like Googlebot), they'll scrape the page first, then come and visit
+                    # it again later, after we might have done a deploy in which the file content has changed. In an
+                    # attempt to reduce 404 error rates (because they might affect how reliable Google things our site
+                    # is), we serve the current file anyway. Most of the time this won't really cause any issue as
+                    # any changes in the CSS are most often small ones that won't affect what Google sees.
+                    response = Response(info.file_data(), 200)
+
+                    response.headers['Content-Type'] = info.mime
+                    response.headers['Cache-Control'] = 'max-age=0, public'
+                    response.headers['Expires'] = http_date(info.stat.st_mtime)
+                    response.headers['X-Flask-CDN-Stale'] = 1
+
+                    return response
+                else:
+                    abort(404)
 
             mtime = http_date(info.stat.st_mtime)
 
@@ -56,6 +73,17 @@ class FlaskCDN(object):
 
     def __call__(self, uri, **kwargs):
         return self.cdn.resolve(uri, **kwargs)
+
+    @classmethod
+    def requested_by_bot(cls):
+        user_agent = str(request.user_agent)
+
+        return any([
+            'Googlebot' in user_agent,
+            'bingbot' in user_agent,
+            'Twitterbot' in user_agent,
+        ])
+
 
 class CDNPlugin(object):
     def __init__(self, cdn):
