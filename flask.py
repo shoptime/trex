@@ -620,10 +620,11 @@ class Flask(flask.Flask):
                 # See https://en.wikipedia.org/wiki/Strict_Transport_Security
                 response.headers.set('Strict-Transport-Security', 'max-age=31536000')
 
-                if self.settings.get('security','frames') == 'deny':
-                    response.headers.set('X-Frame-Options','DENY')
-                elif self.settings.get('security', 'frames') == 'sameorigin':
-                    response.headers.set('X-Frame-Options','SAMEORIGIN')
+                if 'X-Frame-Options' not in response.headers:
+                    if self.settings.get('security','frames') == 'deny':
+                        response.headers.set('X-Frame-Options','DENY')
+                    elif self.settings.get('security', 'frames') == 'sameorigin':
+                        response.headers.set('X-Frame-Options','SAMEORIGIN')
 
                 return response
 
