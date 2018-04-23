@@ -6,7 +6,6 @@ import os.path
 from ConfigParser import ConfigParser, NoOptionError
 import codecs
 import md5
-import warnings
 import pymongo
 import mongoengine
 import logging
@@ -637,12 +636,7 @@ class Flask(flask.Flask):
             mongo_url.username = self.settings.get('mongo', 'username')
             mongo_url.password = self.settings.get('mongo', 'password')
 
-        # This warning catcher is here because pymongo emits a UserWarning if
-        # you don't specify a username/password (even if you don't want to use
-        # authentication).
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning)
-            self.db = pymongo.Connection(str(mongo_url))[mongo_db]
+        self.db = pymongo.MongoClient(str(mongo_url))[mongo_db]
 
         mongoengine.register_connection('default', mongo_db, host=str(mongo_url))
         mongoengine.connection.get_db(reconnect=True)

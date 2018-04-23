@@ -18,7 +18,7 @@ passlib
 pillow
 premailer
 pycrypto
-pymongo<2.6.3
+pymongo
 python-dateutil
 python-magic
 python-postmark
