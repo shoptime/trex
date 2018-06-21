@@ -22,6 +22,7 @@ class FlaskCDN(object):
     def init_app(self):
         self.cdn = CDN('%s/cdn' % self.app.root_path, '/cdn/')
         self.app.cdn = self.cdn.resolve
+        self.app.cdn_info = self.cdn.info
         self.app.jinja_env.globals['cdn'] = self.cdn.resolve
 
         @self.app.route('/cdn/<path:uri>', endpoint='cdn')

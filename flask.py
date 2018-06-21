@@ -545,6 +545,12 @@ class Flask(flask.Flask):
 
         self.jinja_env.globals['include_file'] = include_file
 
+        @jinja2.contextfunction
+        def include_cdn_file(ctx, name):
+            return jinja2.Markup(self.cdn_info(name).file_data())
+
+        self.jinja_env.globals['include_cdn_file'] = include_cdn_file
+
         def csrf_token():
             if hasattr(flask.g, 'identity'):
                 return flask.g.identity.get_csrf()
