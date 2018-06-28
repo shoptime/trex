@@ -36,24 +36,23 @@ class FlaskCDN(object):
                 abort(404)
 
             if info.hash != hash:
-                if self.requested_by_bot():  # If some kind of bot or scraper
-                    # Return the file, so the bot gets something somewhat useful, don't let it be cached.
-                    # Normally we don't want to return the file since different hash = different contents, but
-                    # in the case of some bots (like Googlebot), they'll scrape the page first, then come and visit
-                    # it again later, after we might have done a deploy in which the file content has changed. In an
-                    # attempt to reduce 404 error rates (because they might affect how reliable Google things our site
-                    # is), we serve the current file anyway. Most of the time this won't really cause any issue as
-                    # any changes in the CSS are most often small ones that won't affect what Google sees.
-                    response = Response(info.file_data(), 200)
+                # Return the file, so the client gets something somewhat useful, but don't let it be cached.
+                # Normally we wouldn't want to return the file since different hash = different contents, but
+                # it's possible that the client might have downloaded a page referencing an "old" CDN url, and then
+                # tried to request the file later. In the case of some bots (like Googlebot), this definitely happens -
+                # they'll scrape the page first, then come and visit it again later, after we might have done a deploy
+                # in which the file content has changed. In an attempt to reduce 404 error rates (because they might
+                # affect how reliable Google thinks our site is), we serve the current file anyway. Most of the time
+                # this won't really cause any issue as any changes in a CDN are most often small ones that won't affect
+                # what Google sees.
+                response = Response(info.file_data(), 200)
 
-                    response.headers['Content-Type'] = info.mime
-                    response.headers['Cache-Control'] = 'max-age=0, public'
-                    response.headers['Expires'] = http_date(info.stat.st_mtime)
-                    response.headers['X-Flask-CDN-Stale'] = 1
+                response.headers['Content-Type'] = info.mime
+                response.headers['Cache-Control'] = 'max-age=0, public'
+                response.headers['Expires'] = http_date(info.stat.st_mtime)
+                response.headers['X-Flask-CDN-Stale'] = 1
 
-                    return response
-                else:
-                    abort(404)
+                return response
 
             mtime = http_date(info.stat.st_mtime)
 
