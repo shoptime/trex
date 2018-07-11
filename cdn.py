@@ -4,7 +4,7 @@ import re
 import os
 from os import path
 import hashlib
-from flask import Response, abort, request
+from flask import Response, abort, request, redirect, url_for
 import mimetypes
 from werkzeug.http import http_date
 from furl import furl
@@ -36,22 +36,17 @@ class FlaskCDN(object):
                 abort(404)
 
             if info.hash != hash:
-                # Return the file, so the client gets something somewhat useful, but don't let it be cached.
-                # Normally we wouldn't want to return the file since different hash = different contents, but
+                # Return a redirect to the actual location of the file.
+                # Normally we wouldn't want to return the new file since different hash = different contents, but
                 # it's possible that the client might have downloaded a page referencing an "old" CDN url, and then
                 # tried to request the file later. In the case of some bots (like Googlebot), this definitely happens -
                 # they'll scrape the page first, then come and visit it again later, after we might have done a deploy
                 # in which the file content has changed. In an attempt to reduce 404 error rates (because they might
-                # affect how reliable Google thinks our site is), we serve the current file anyway. Most of the time
-                # this won't really cause any issue as any changes in a CDN are most often small ones that won't affect
-                # what Google sees.
-                response = Response(info.file_data(), 200)
-
-                response.headers['Content-Type'] = info.mime
-                response.headers['Cache-Control'] = 'max-age=0, public'
-                response.headers['Expires'] = http_date(info.stat.st_mtime)
+                # affect how reliable Google thinks our site is), we serve a redirect to the current file. Most of the
+                # time this won't really cause any issue as any changes in a CDN are most often small ones that won't
+                # affect what Google sees.
+                response = redirect(url_for('cdn', uri=info.cdn_file), 302)
                 response.headers['X-Flask-CDN-Stale'] = 1
-
                 return response
 
             mtime = http_date(info.stat.st_mtime)
