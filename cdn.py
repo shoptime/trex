@@ -129,6 +129,9 @@ class CDN_CSS(CDNPlugin):
         if uri_object.host:
             return "url(%(quotes)s%(uri)s%(quotes)s)" % dict(quotes=quotes, uri=uri)
 
+        if uri.startswith('passthrough:'):
+            return "url(%(quotes)s%(uri)s%(quotes)s)" % dict(quotes=quotes, uri=uri.replace('passthrough:', ''))
+
         # data uris also remain unchanged
         if uri.startswith('data:'):
             return "url(%(quotes)s%(uri)s%(quotes)s)" % dict(quotes=quotes, uri=uri)
