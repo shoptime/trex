@@ -95,7 +95,7 @@ def render_html(template=None, add_etag=False, stream=False):
         headers = response.get('_headers', {})
 
         default_headers = {
-            'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+            'Cache-Control': 'private, no-cache, no-store, no-transform, must-revalidate',
             'Expires': 'Sat, 01 Jan 2000 00:00:00 GMT',
             'Pragma': 'no-cache',
         }
