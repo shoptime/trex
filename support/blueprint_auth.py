@@ -16,10 +16,6 @@ from furl import furl
 def check_authentication(*args, **kwargs):
     g.is_cors_request = False
 
-    # Don't want auth for these
-    if request.endpoint in ['static', 'cdn']:
-        return
-
     # Don't want auth for routing exceptions
     if request.routing_exception:
         return
@@ -39,10 +35,11 @@ def check_authentication(*args, **kwargs):
     # decided by comparing the Origin request header with the server.url
     # configuration option.
     if view_func and getattr(view_func, 'allow_cors', False):
+        allow_cors_origin = getattr(view_func, 'allow_cors_origin', '*')
         if request.method == 'OPTIONS':
             headers = {
                 'Allow': ', '.join(request.url_rule.methods),
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': allow_cors_origin,
                 'Access-Control-Allow-Methods': ', '.join(request.url_rule.methods),
             }
             ac_request_headers = request.headers.get('Access-Control-Request-Headers')
@@ -63,14 +60,20 @@ def check_authentication(*args, **kwargs):
                     request.cookies = {}
 
                     g.is_cors_request = True
+                    g.allow_cors_origin = allow_cors_origin
             else:
                 # Don't trust those sneaky clients who don't provide Origin
                 request.cookies = {}
                 g.is_cors_request = True
+                g.allow_cors_origin = allow_cors_origin
         else:
             # This is for safety, but in practice flask itself has already determined that the request method is valid
             # for us.
             return abort(405)
+
+    # Don't want auth for these
+    if request.endpoint in ['static', 'cdn']:
+        return
 
     g.identity = m.Identity.from_request(request)
 
@@ -97,7 +100,7 @@ def check_authentication(*args, **kwargs):
 @app.after_request
 def after_request(response):
     if g.is_cors_request:
-        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Origin'] = g.allow_cors_origin
     elif hasattr(g, 'identity') and request.method != 'OPTIONS':
         g.identity.set_cookie(response)
     return response

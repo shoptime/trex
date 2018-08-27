@@ -65,6 +65,8 @@ class FlaskCDN(object):
             response.headers['ETag'] = info.hash
 
             return response
+        serve_file.allow_cors = self.app.settings.getboolean('cdn', 'allow_cors')
+        serve_file.allow_cors_origin = self.app.settings.get('cdn', 'allow_cors_origin')
 
     def __call__(self, uri, **kwargs):
         return self.cdn.resolve(uri, **kwargs)
