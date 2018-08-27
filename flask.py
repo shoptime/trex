@@ -623,7 +623,8 @@ class Flask(flask.Flask):
 
             def add_security_headers(response):
                 # See https://en.wikipedia.org/wiki/Strict_Transport_Security
-                response.headers.set('Strict-Transport-Security', 'max-age=31536000')
+                if 'Strict-Transport-Security' not in response.headers:
+                    response.headers.set('Strict-Transport-Security', 'max-age=31536000')
 
                 if 'X-Frame-Options' not in response.headers:
                     if self.settings.get('security','frames') == 'deny':
