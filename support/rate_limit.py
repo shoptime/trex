@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from __future__ import absolute_import
+
 
 from app import app
 from decorator import decorator
@@ -41,7 +41,7 @@ def rate_limit(bucket):
         elif type(response) == dict:
             # If it's a dictionary, it's likely to be a response designed to be render_html()'d. We look for a form
             # in the response and use it to figure out what happened.
-            for k, v in response.items():
+            for k, v in list(response.items()):
                 if isinstance(v, wtf.Form):
                     if v.is_submitted() and v.errors:
                         form_failed = True
@@ -51,7 +51,7 @@ def rate_limit(bucket):
             status_code = response.status_code
 
         # If the response was bad, add an entry to the buffer
-        if form_failed or status_code >= 400:
+        if form_failed or status_code and status_code >= 400:
             add_to_buffer(bucket)
 
         return response

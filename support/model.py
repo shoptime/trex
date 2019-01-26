@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 from mongoengine import *
 from .mongoengine import QuantumField
 import os
@@ -12,7 +12,7 @@ import hashlib
 from . import token, quantum
 import magic
 import random
-from itertools import izip, cycle
+from itertools import cycle
 import binascii
 from jinja2 import Markup
 import pytz
@@ -119,8 +119,8 @@ class BaseUser(BaseDocument):
     last_login   = QuantumField()
     role         = StringField(required=True, default='user')
     is_active    = BooleanField(required=True, default=True)
-    country      = StringField(required=True, choices=pytz.country_names.keys())
-    timezone     = StringField(required=True, choices=[x for y in pytz.country_timezones.values() for x in y])
+    country      = StringField(required=True, choices=list(pytz.country_names.keys()))
+    timezone     = StringField(required=True, choices=[x for y in list(pytz.country_timezones.values()) for x in y])
 
     @queryset_manager
     def active(cls, queryset):
@@ -153,7 +153,7 @@ class BaseUser(BaseDocument):
         )
 
     def clean(self):
-        if self.role not in self.__class__.roles().keys():
+        if self.role not in list(self.__class__.roles().keys()):
             raise ValidationError("Invalid role %s for User" % self.role)
 
     def default_after_login_url(self):
@@ -199,7 +199,7 @@ class BaseUser(BaseDocument):
         if flag in my_role.get('flags', []):
             return True
 
-        for role in self.roles().values():
+        for role in list(self.roles().values()):
             if role['level'] < my_role['level'] and flag in role.get('flags', []):
                 return True
 
@@ -365,14 +365,14 @@ settings = None
 def default_expiry():
     return quantum.now('UTC').add(seconds=settings.getint('identity', 'activity_timeout'))
 
-def xor_hex_string(s, key):
+def xor_hex_string(s, key) -> str:
     """
     XOR a string using the given key string
     """
     s = bytearray(binascii.unhexlify(s))
     key = bytearray(binascii.unhexlify(key))
 
-    return binascii.hexlify(''.join([chr(a ^ b) for (a, b) in izip(s, cycle(key))]))
+    return binascii.hexlify(b''.join([bytes(a ^ b) for (a, b) in zip(s, cycle(key))])).decode('utf8')
 
 class FlashMessage(EmbeddedDocument):
     message  = StringField(required=True)
@@ -463,7 +463,7 @@ class BaseIdentity(BaseDocument):
         Rotate the session ID and CSRF token
         """
         self.session_id = generate_session_id()
-        self.hashed_id = hashlib.sha256(self.session_id).hexdigest()
+        self.hashed_id = hashlib.sha256(self.session_id.encode('utf8')).hexdigest()
         self.csrf_token = generate_session_id()
 
     def reset_csrf(self):
@@ -487,8 +487,6 @@ class BaseIdentity(BaseDocument):
         if not s or not verify_csrf_token(s):
             return False
 
-        s = s.decode('ascii')
-
         if settings.getboolean('security','shadow_csrf'):
             token_length = len(generate_session_id())
             shadow = s[:token_length]
@@ -497,7 +495,7 @@ class BaseIdentity(BaseDocument):
             token = s
 
         # Hash for comparison prevents string timing attacks
-        return hashlib.sha256(token).digest() == hashlib.sha256(self.csrf_token).digest()
+        return hashlib.sha256(token.encode('utf8')).digest() == hashlib.sha256(self.csrf_token.encode('utf8')).digest()
 
     @classmethod
     def from_request(cls, request):
@@ -525,7 +523,7 @@ class BaseIdentity(BaseDocument):
             return cls.create()
 
         # Got session id in cookie, look in DB
-        session = cls.objects(hashed_id=hashlib.sha256(session_id).hexdigest()).first()
+        session = cls.objects(hashed_id=hashlib.sha256(session_id.encode('utf8')).hexdigest()).first()
 
         # Not in DB? create new session.
         if not session:
@@ -541,7 +539,7 @@ class BaseIdentity(BaseDocument):
     @classmethod
     def create(cls):
         session_id = generate_session_id()
-        return cls(session_id = session_id, hashed_id = hashlib.sha256(session_id).hexdigest())
+        return cls(session_id = session_id, hashed_id = hashlib.sha256(session_id.encode('utf8')).hexdigest())
 
     def set_cookie(self, response):
         """

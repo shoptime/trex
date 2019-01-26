@@ -1,6 +1,6 @@
 # coding: utf8
 
-from __future__ import absolute_import
+
 from trex.rubble import global_harness as harness, TestFailureException
 import sys
 import re
@@ -57,5 +57,5 @@ def message(message):
         depth += 1
 
     for i in range(depth-1):
-        print "    ",
-    print message
+        print("    ", end=' ')
+    print(message)

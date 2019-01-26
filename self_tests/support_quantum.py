@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from __future__ import absolute_import
+
 
 from attest import Tests, Assert
 from trex.support import quantum

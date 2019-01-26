@@ -1,6 +1,6 @@
 # coding: utf8
 
-from __future__ import absolute_import
+
 from flask import url_for
 from .browser import *
 from .assertions import *

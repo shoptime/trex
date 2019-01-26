@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 from trex.flask import app
 from trex.flask import AuthBlueprint, render_html, flash
 from .. import auth
@@ -35,7 +35,7 @@ def edit(user_token=None):
     if not g.user.has_role(user.role):
         return abort(404)
 
-    role_choices = [ (x[0], x[1]['label']) for x in sorted(m.User.roles().items(), key=lambda x: x[1]['level']) if g.user.has_role(x[0]) ]
+    role_choices = [ (x[0], x[1]['label']) for x in sorted(list(m.User.roles().items()), key=lambda x: x[1]['level']) if g.user.has_role(x[0]) ]
 
     class Form(wtf.Form):
         display_name = wtf.TextField('Display name', [wtf.validators.Required()])

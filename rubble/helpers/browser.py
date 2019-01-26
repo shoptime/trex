@@ -1,6 +1,6 @@
 # coding: utf8
 
-from __future__ import absolute_import
+
 from flask import url_for
 from trex.rubble import global_harness as harness
 from .assertions import is_equal, is_like, message
@@ -12,7 +12,7 @@ from furl import furl
 import re
 
 def browser_for(browser):
-    if isinstance(browser, basestring):
+    if isinstance(browser, str):
         return harness().browser_for_key(browser)
     return harness().current_browser()
 
@@ -100,7 +100,7 @@ def url_like(expected, browser=None):
 
 def flash_is(expected, browser=None):
     if app.settings.get('trex', 'bootstrap_version') == '2':
-        expected = u"^\xd7\s+%s$" % re.escape(expected)
+        expected = "^\xd7\s+%s$" % re.escape(expected)
         browser_for(browser).find('.flash').text_like(expected, message='Flash text matches')
     else:
         browser_for(browser).find('.flash>div').text_is(expected, message="Flash text matches")

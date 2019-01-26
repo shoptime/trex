@@ -2,7 +2,7 @@
 
 # TODO - some sort of .replace() support
 
-from __future__ import absolute_import
+
 import calendar
 import datetime
 import dateutil.parser
@@ -129,7 +129,7 @@ city_list = [  # {{{
     ("San Salvador", "America/El_Salvador"),
     ("Santiago", "America/Santiago"),
     ("Santo Domingo", "America/Santo_Domingo"),
-    (u"São Paulo", "America/Sao_Paulo"),
+    ("São Paulo", "America/Sao_Paulo"),
     ("Seattle", "America/Los_Angeles"),
     ("Seoul", "Asia/Seoul"),
     ("Shanghai", "Asia/Shanghai"),
@@ -153,7 +153,7 @@ city_list = [  # {{{
     ("Winnipeg", "America/Winnipeg"),
     ("Yangon", "Asia/Rangoon"),
     ("Zagreb", "Europe/Zagreb"),
-    (u"Zürich", "Europe/Zurich"),
+    ("Zürich", "Europe/Zurich"),
 ]  # }}}
 
 override_timezone = []
@@ -173,7 +173,7 @@ def default_timezone():
     return None
 
 def get_timezone(tz):
-    if isinstance(tz, basestring):
+    if isinstance(tz, str):
         tz = pytz.timezone(tz)
 
     if not (tz == pytz.utc or isinstance(tz, pytz.tzinfo.DstTzInfo) or isinstance(tz, pytz.tzinfo.StaticTzInfo)):

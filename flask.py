@@ -1,11 +1,9 @@
-from __future__ import absolute_import
-
 from decorator import decorator
 import flask
 import os.path
-from ConfigParser import ConfigParser, NoOptionError
+from configparser import ConfigParser, NoOptionError
 import codecs
-import md5
+from hashlib import md5
 import pymongo
 import mongoengine
 import logging
@@ -30,9 +28,9 @@ from .support.configparser import TrexConfigParser
 import base64
 import hashlib
 import random
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import csv
-import StringIO
+import io
 import inspect
 import socket
 import netaddr
@@ -99,7 +97,7 @@ def render_html(template=None, add_etag=False, stream=False):
             'Expires': 'Sat, 01 Jan 2000 00:00:00 GMT',
             'Pragma': 'no-cache',
         }
-        headers = dict(default_headers.items() + headers.items())
+        headers = dict(list(default_headers.items()) + list(headers.items()))
 
         if add_etag:
             etag = md5.new(out.encode('utf-8')).hexdigest()
@@ -204,15 +202,15 @@ def render_csv():
         if type(response) != dict:
             return response
 
-        io = StringIO.StringIO()
+        io = io.StringIO()
 
         output = csv.writer(io)
 
         if 'headers' in response:
-            output.writerow([unicode(x).encode('utf-8') for x in response['headers']])
+            output.writerow([str(x).encode('utf-8') for x in response['headers']])
 
         for row in response['rows']:
-            output.writerow([unicode(x).encode('utf-8') for x in row])
+            output.writerow([str(x).encode('utf-8') for x in row])
 
         io.seek(0)
         http_response = flask.Response(io.getvalue(), 200)
@@ -536,7 +534,7 @@ class Flask(flask.Flask):
         self.jinja_env.globals['hostname'] = os.uname()[1]
         self.jinja_env.globals['format'] = trex.support.format
         self.jinja_env.globals['puffer'] = puffer
-        self.jinja_env.globals['urlencode'] = urllib.quote
+        self.jinja_env.globals['urlencode'] = urllib.parse.quote
 
         @jinja2.contextfunction
         def include_file(ctx, name):
@@ -717,7 +715,7 @@ def _exception_handler(app, exception):
 
     env_data = copy.copy(flask.request.environ)
 
-    for key in env_data.keys():
+    for key in list(env_data.keys()):
         if not re.search(r'^[A-Z_]+$', key):
             del env_data[key]
 

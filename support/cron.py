@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from trex.flask import app
 import logging
@@ -74,7 +74,7 @@ class CronJob(object):
             log.info('%s completed (%.2f secs)', self.__class__.__name__, run_time)
             if not sys.stdout.isatty():
                 time.sleep(max(0, 15 - run_time))
-        except Exception, e:
+        except Exception as e:
             log.error(traceback.format_exc())
             app.exception_reporter.invoke(app, e)
 
@@ -154,7 +154,7 @@ class CronJobQueue(DynamicDocument):
 
         job = CronJobQueue()
         job.type = type
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             setattr(job, k, v)
         job.save()
 

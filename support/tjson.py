@@ -2,7 +2,7 @@
 
 # The idea of this as that it's a lot like ejson, but bi-directional
 
-from __future__ import absolute_import
+
 from . import quantum
 import json
 

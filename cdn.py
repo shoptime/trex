@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import re
 import os
@@ -166,7 +166,7 @@ class CDN_LessProcessor(CDNPlugin):
     def preprocess(self, info):
         if info.mime != 'text/less':
             return
-        print "PROCESS LESS"
+        print("PROCESS LESS")
 
 class CDN(object):
     def __init__(self, root, base=None):
@@ -228,7 +228,7 @@ class CDN(object):
 
         try:
             stat = os.stat(info.full_path)
-        except OSError, e:
+        except OSError as e:
             raise CDNNotFound(e)
 
         if force_update or not info.stat or info.stat.st_mtime != stat.st_mtime:
@@ -280,11 +280,12 @@ class CDNFile(object):
         if self.data is not None:
             return self.data
 
-        with open(self.full_path) as fh:
+        with open(self.full_path, 'rb') as fh:
             data = fh.read()
 
         if self.mime.startswith('text/') or self.mime == 'application/javascript':
-            data = data.decode('utf8')
+            if isinstance(data, bytes):
+                data = data.decode('utf8')
 
         return data
 
@@ -293,7 +294,7 @@ class CDNFile(object):
 
     def calculate(self):
         data = self.file_data()
-        if isinstance(data, unicode):
+        if isinstance(data, str):
             data = data.encode('utf8')
         self.hash = hashlib.md5(data).hexdigest()
         self.hash = self.hash[:12]

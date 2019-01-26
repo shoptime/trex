@@ -1,6 +1,6 @@
 # coding: utf8
 
-from __future__ import absolute_import
+
 from trex.rubble import global_harness as harness, TestFailureException
 from .browser import *
 from .assertions import *
@@ -9,7 +9,7 @@ from app import app
 import re
 
 def fill(_selector='[name="%(key)s"]', _date_format='%Y-%m-%d', _time_format='%H:%M %p', **kwargs):
-    fields = [dict(key=x[0], value=x[1]) for x in kwargs.items()]
+    fields = [dict(key=x[0], value=x[1]) for x in list(kwargs.items())]
 
     for field in fields:
         el = find(_selector % dict(key=field['key']))
@@ -96,8 +96,8 @@ def submit_modal():
     wait_for_ajax()
 
 def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
-    find('.form-group.has-error').length_is(len(kwargs.keys()), message="Correct number of errors")
-    for key, value in kwargs.items():
+    find('.form-group.has-error').length_is(len(list(kwargs.keys())), message="Correct number of errors")
+    for key, value in list(kwargs.items()):
         el = find(_selector % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
         if not len(el):
             el = find(_selector % dict(key=key + '_file_input')).filter_by_lambda(lambda el: el.get_attribute('type') == 'file')
@@ -109,8 +109,8 @@ def check_errors(_selector='.has-error [name="%(key)s"]', **kwargs):
         parent.find('.help-block-error')[0].text_is(value)
 
 def check_errors_bs2(**kwargs):
-    find('.control-group.error').length_is(len(kwargs.keys()), message='Correct number of errors')
-    for key, value in kwargs.items():
+    find('.control-group.error').length_is(len(list(kwargs.keys())), message='Correct number of errors')
+    for key, value in list(kwargs.items()):
         el = find('.error [name="%(key)s"]' % dict(key=key)).filter_by_lambda(lambda el: el.get_attribute('type') != 'hidden')
         if not len(el):
             failure("Couldn't find form element: %s" % key)

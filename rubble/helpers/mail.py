@@ -1,6 +1,6 @@
 # coding: utf8
 
-from __future__ import absolute_import
+
 from trex.rubble import global_harness as harness, TestFailureException
 from trex.support.mail import CapturedEmail
 import re

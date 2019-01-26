@@ -1,14 +1,14 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 from app import app
 from flask import g, request, url_for, redirect, abort
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 login_url = app.settings.get('security', 'login_url')
 
 def get_login_url(return_to):
-    return '{}?{}'.format(login_url, urllib.urlencode(dict(return_to=return_to)))
+    return '{}?{}'.format(login_url, urllib.parse.urlencode(dict(return_to=return_to)))
 
 def public(*args, **kwargs):
     pass

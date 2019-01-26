@@ -9,7 +9,7 @@ def create_token(length=32, chars=default_token_chars):
     """Create a random token"""
     token = ''
 
-    for i in xrange(0, length):
+    for i in range(0, length):
         token += chars[random.randint(0, len(chars)-1)]
 
     return token
@@ -28,7 +28,7 @@ def create_token_factory(**factory_args):
     return _create_token
 
 def generate_slug(source):
-    slug = unidecode(unicode(source)).lower()
+    slug = unidecode(str(source)).lower()
     slug = re.sub(r'\W+', '-', slug)
     return slug
 

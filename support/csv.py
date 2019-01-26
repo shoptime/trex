@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from __future__ import absolute_import
+
 import codecs
 import csv
 
@@ -20,7 +20,7 @@ def read_csv_file(filename):
     if hasattr(filename, 'read') and hasattr(filename, 'seek'):
         start_bytes = filename.read(10)
         filename.seek(0)
-        for bom, encoding in bomdict.items():
+        for bom, encoding in list(bomdict.items()):
             if start_bytes.startswith(bom):
                 filename.read(len(bom))  # Strip the BOM
                 csvfile = codecs.EncodedFile(filename, 'UTF8', encoding)
@@ -33,7 +33,7 @@ def read_csv_file(filename):
             reader = csv.reader(csvfile)
     else:
         start_bytes = open(filename, 'r').read(10)
-        for bom, encoding in bomdict.items():
+        for bom, encoding in list(bomdict.items()):
             if start_bytes.startswith(bom):
                 csvfile = codecs.open(filename, 'r', encoding)
                 csvfile.read(1)  # Strip the BOM
@@ -45,10 +45,10 @@ def read_csv_file(filename):
             csvfile = open(filename, 'r')
             reader = csv.reader(csvfile)
 
-    headers = reader.next()
+    headers = next(reader)
     for row in reader:
-        contact = dict(zip(headers, row))
-        for k, v in contact.items():
+        contact = dict(list(zip(headers, row)))
+        for k, v in list(contact.items()):
             if not v:
                 del contact[k]
             else:

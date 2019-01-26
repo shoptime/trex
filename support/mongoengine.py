@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import mongoengine
 from flask import request, abort
 from . import quantum
@@ -13,7 +13,7 @@ class LowerCaseEmailField(mongoengine.EmailField):
     def prepare_query_value(self, *args, **kwargs):
         value = super(self.__class__, self).prepare_query_value(*args, **kwargs)
 
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return value.lower()
 
         if isinstance(value, RE_COMPILED_TYPE):
@@ -31,7 +31,7 @@ class QuantumField(mongoengine.fields.BaseField):
     def validate(self, value):
         new_value = self.to_mongo(value)
         if not isinstance(new_value, datetime):
-            self.error(u'cannot parse quantum "%s"' % value)
+            self.error('cannot parse quantum "%s"' % value)
 
     def to_mongo(self, value):
         if value is None:
@@ -59,7 +59,7 @@ class QuantumDateField(mongoengine.fields.BaseField):
     def validate(self, value):
         new_value = self.to_mongo(value)
         if not isinstance(new_value, date):
-            self.error(u'cannot parse quantum date "%s"' % value)
+            self.error('cannot parse quantum date "%s"' % value)
 
     def to_mongo(self, value):
         if value is None:

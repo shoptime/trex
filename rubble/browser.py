@@ -1,6 +1,6 @@
 # coding: utf8
 
-from __future__ import absolute_import
+
 
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
 from selenium.webdriver.support.wait import WebDriverWait
@@ -100,7 +100,7 @@ class Browser(object):
 
     def screenshot(self, message="Screenshot: "):
         if 's3_access_key' not in app.settings.options('test'):
-            print "No screenshot S3 instance configured - skipping screenshot"
+            print("No screenshot S3 instance configured - skipping screenshot")
             return
 
         if not hasattr(self, 's3_connection'):
@@ -124,7 +124,7 @@ class Browser(object):
         key.metadata['Cache-Control'] = 'public, max-age=86400'
         key.set_contents_from_string(self.selenium.get_screenshot_as_png())
         key.make_public()
-        print "%s%s" % (message, key.generate_url(expires_in=0, query_auth=False))
+        print("%s%s" % (message, key.generate_url(expires_in=0, query_auth=False)))
 
 class WebElementSet(object):
 # TODO - implement these methods?
@@ -240,7 +240,7 @@ class WebElementSet(object):
     def parent(self):
         return self.find('xpath:..', selector_desc='parent')
 
-    def next(self):
+    def __next__(self):
         return self.find('xpath:following-sibling::*[1]', selector_desc='next')
 
     def __iter__(self):

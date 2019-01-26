@@ -1,8 +1,8 @@
 # coding: utf-8
 
-from __future__ import absolute_import
 
-from ConfigParser import ConfigParser
+
+from configparser import ConfigParser
 from furl import furl
 
 class TrexConfigParser(ConfigParser):

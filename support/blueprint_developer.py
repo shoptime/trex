@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 from trex.flask import app
 from trex.flask import AuthBlueprint, render_html
 from .. import auth

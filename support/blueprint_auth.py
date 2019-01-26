@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 from trex.flask import app
 from trex.flask import AuthBlueprint, render_html, flash
 from .. import auth
@@ -88,6 +88,7 @@ def check_authentication(*args, **kwargs):
         if not csrf_token:
             csrf_token = request.headers.get('X-CSRFToken')
 
+
         if not g.identity.check_csrf(csrf_token):
             # Refuse submit
             flash("Please try again")
@@ -140,7 +141,7 @@ def login():
             try:
                 user.check_login(form.password.data)
             except trex_model.InvalidLoginException as e:
-                raise wtf.ValidationError(e.message)
+                raise wtf.ValidationError(str(e))
 
     form = Form()
 

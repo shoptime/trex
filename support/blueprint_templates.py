@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 from ..flask import AuthBlueprint, render_html, app
 from flask import render_template, abort, request
 from .. import auth

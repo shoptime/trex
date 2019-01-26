@@ -1,8 +1,8 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 from wtforms import *
-from flask_wtf import Form
+from flask_wtf import FlaskForm as Form
 import mongoengine
 from flask import url_for, abort, request, g
 from ..flask import AuthBlueprint, render_json, render_html
@@ -43,11 +43,11 @@ class AttrDict(dict):
 def country_choices():
     country_names = dict(pytz.country_names)
     country_names['GS'] = 'South Georgia' # no South Sandwich Islands for you!
-    return [('', '-- select --')] + sorted(country_names.items(), key=operator.itemgetter(1))
+    return [('', '-- select --')] + sorted(list(country_names.items()), key=operator.itemgetter(1))
 
 def timezone_dependent_choices():
     choices = dict()
-    for country_code, timezone_list in pytz.country_timezones.items():
+    for country_code, timezone_list in list(pytz.country_timezones.items()):
         choices[country_code] = []
         for tz in timezone_list:
             choices[country_code].append((tz, tz))
@@ -329,7 +329,7 @@ class DateTimeField(Field):
     def process_formdata(self, valuelist):
         if valuelist:
             try:
-                if len(valuelist) == 2 and len(filter(lambda x: re.search(r'\S', x), valuelist)):
+                if len(valuelist) == 2 and len([x for x in valuelist if re.search(r'\S', x)]):
                     # Only try to process it if there's actually something in one of the input boxes
                     self.data = self._valuelist_to_quantum(valuelist)
                 else:
@@ -879,7 +879,7 @@ class InviteField(TextAreaField):
         return super(InviteField, self).__call__(**kwargs)
 
     def _value(self):
-        return u''
+        return ''
 
     def process_formdata(self, valuelist):
         if valuelist:
@@ -915,7 +915,7 @@ class TagField(TextAreaField):
         return super(TagField, self).__call__(**kwargs)
 
     def _value(self):
-        return u''
+        return ''
 
     def process_formdata(self, valuelist):
         if valuelist:

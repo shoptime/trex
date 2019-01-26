@@ -1,9 +1,9 @@
 # coding=utf-8
 
-from __future__ import absolute_import
+
 
 from PIL import Image
-from cStringIO import StringIO
+from io import StringIO
 from mongoengine import NotUniqueError
 import subprocess
 

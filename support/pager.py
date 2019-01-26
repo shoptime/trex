@@ -62,7 +62,7 @@ class Pager(object):
     def skip(self):
         return (self.page - 1) * self.per_page
 
-    def next(self):
+    def __next__(self):
         if ( self.page < self.last_page ):
             return self.page + 1
         return None

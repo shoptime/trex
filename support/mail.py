@@ -13,7 +13,7 @@ attempt to wrap those at this time.
 
 """
 
-from __future__ import absolute_import
+
 import postmark
 from postmark.core import PMMailUnprocessableEntityException
 import sendgrid
@@ -275,7 +275,7 @@ def _send_sendgrid(
     s.send(message)
 
 def _truncate(string):
-    string = unicode(string)
+    string = str(string)
     if len(string) > 200:
         return string[0:200] + '...'
     return string

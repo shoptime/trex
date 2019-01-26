@@ -1,5 +1,5 @@
 # coding: utf8
-from __future__ import absolute_import
+
 
 from app import app
 import traceback
@@ -177,12 +177,12 @@ class Harness(object):
 
     def handle_error(self, exception):
         self.error_count += 1
-        for key, browser in self.browsers.items():
+        for key, browser in list(self.browsers.items()):
             browser.screenshot(message="Exception screenshot (%s): " % key)
         if self.fail_method == 'exception':
             raise exception
         if self.fail_method == 'ipdb':
-            print exception
+            print(exception)
             import ipdb
             frame = sys._getframe()
             rubble_base = os.path.dirname(__file__)
@@ -191,7 +191,7 @@ class Harness(object):
             ipdb.set_trace(frame=frame)
             return
         if self.fail_method == 'print':
-            print exception
+            print(exception)
             return
 
     def ipdb(self):
@@ -230,9 +230,9 @@ class Harness(object):
                         function(obj)
                     obj.setup()
                     banner = "[%d] %s - %s" % (os.getpid(), obj.__class__.__name__, obj.run.__code__.co_filename)
-                    print
-                    print banner
-                    print re.sub('.', '-', banner)
+                    print()
+                    print(banner)
+                    print(re.sub('.', '-', banner))
                     # TODO - timing for each test?
                     start_time = time.time()
                     requests.get(str(self.base_uri.copy().join('/__test_drop_mongoengine_cache__')))
@@ -241,9 +241,9 @@ class Harness(object):
                     with open(PASSED_TESTS_FILE, 'a') as fh:
                         fh.write("%s\n" % obj.__class__.__name__)
                     end_time = time.time()
-                    print "# %s took %0.1f seconds" % (obj.__class__.__name__, end_time-start_time)
+                    print("# %s took %0.1f seconds" % (obj.__class__.__name__, end_time-start_time))
                 except:
-                    for key, browser in self.browsers.items():
+                    for key, browser in list(self.browsers.items()):
                         browser.screenshot(message="Uncaught exception screenshot (%s): " % key)
                     raise
                 finally:
@@ -276,7 +276,7 @@ class Harness(object):
         return self.browser_for_key('default')
 
     def cleanup_browsers(self):
-        for browser in self.browsers.values():
+        for browser in list(self.browsers.values()):
             browser.shutdown()
 
     def start_application(self):

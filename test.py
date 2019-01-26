@@ -177,7 +177,7 @@ class TestRunner:
                 _current_test_case = None
                 failed += test_case.failed
         except KeyboardInterrupt:
-            print "interrupt"
+            print("interrupt")
             failed += 1
         except:
             failed += 1
@@ -216,7 +216,7 @@ class TestRunner:
                     name = name.rsplit('.', 1)[0]
                     import importlib
                     module = importlib.import_module('app.test.%s' % name, 'app.test')
-                    for k, v in module.__dict__.items():
+                    for k, v in list(module.__dict__.items()):
                         if not inspect.isclass(v) or not issubclass(v, TestBase):
                             continue
                         if v == TestBase:
@@ -339,7 +339,7 @@ class WebElementSet(object):
     def parent(self):
         return self.find('xpath:..', selector_desc='parent')
 
-    def next(self):
+    def __next__(self):
         return self.find('xpath:following-sibling::*[1]', selector_desc='next')
 
     def __getitem__(self, index):
@@ -690,7 +690,7 @@ class TestBase(object):
         """
         self.number += 1
         message = message or ''
-        print "ok %d %s" % (self.number, message)
+        print("ok %d %s" % (self.number, message))
 
     def failure(self, message=None):
         """
@@ -703,9 +703,9 @@ class TestBase(object):
         self.failed += 1
         message = message or ''
         if sys.stdout.isatty():
-            print colored("not ok %d %s" % (self.number, message), 'red')
+            print(colored("not ok %d %s" % (self.number, message), 'red'))
         else:
-            print "not ok %d %s" % (self.number, message)
+            print("not ok %d %s" % (self.number, message))
         self.screenshot('%s-failure-%d.png' % (self.__class__.__name__, self.failed))
         raise TestFailureException(message)
 
@@ -722,8 +722,8 @@ class TestBase(object):
         for i in range(indent):
             space += "\t"
 
-        for line in unicode(message).splitlines():
-            print "# %s%s" % (space, line)
+        for line in str(message).splitlines():
+            print("# %s%s" % (space, line))
 
     def is_equal(self, got, expected, message=None):
         """
@@ -808,11 +808,11 @@ class TestBase(object):
         Display final report
         """
         if self.number:
-            print "1..%d" % self.number
+            print("1..%d" % self.number)
             if self.failed:
                 self.diag("Looks like you failed %d test(s) of %d." % (self.failed, self.number))
         else:
-            print "1..0"
+            print("1..0")
             self.diag("No tests run!")
 
     def refresh(self):
@@ -852,7 +852,7 @@ class TestBase(object):
         full_uri = furl(self.base_uri).join(uri)
         try:
             self.browser.get(str(full_uri))
-        except Exception, e:
+        except Exception as e:
             self.failure('%s (%s)' % (message, str(e)))
             return
 

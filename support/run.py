@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import os
 import sys
@@ -6,7 +6,7 @@ import sys
 if 'VIRTUAL_ENV' not in os.environ:
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     activate_this = os.path.join(project_root, 'bin', 'activate_this.py')
-    execfile(activate_this, dict(__file__=activate_this))
+    exec(compile(open(activate_this).read(), activate_this, 'exec'), dict(__file__=activate_this))
 
 import click
 from app import app
@@ -133,7 +133,7 @@ def shell():
 
     rc_file = os.path.normpath(os.path.join(app.root_path, os.pardir, 'shell.rc'))
     if os.access(rc_file, os.R_OK):
-        execfile(rc_file, context, dict(context=context))
+        exec(compile(open(rc_file).read(), rc_file, 'exec'), context, dict(context=context))
 
     shell = TerminalIPythonApp.instance(
         display_banner = False,
@@ -164,7 +164,7 @@ def rubble(processes, fail_method, debug_mail, resume, list_tests, tests, test_d
     if list_tests:
         test_classes = trex.rubble.load_all_tests(test_dir=test_dir, test_module=test_module)
         for cls in sorted(test_classes, key=attrgetter('__name__')):
-            print cls.__name__
+            print(cls.__name__)
         sys.exit(0)
 
     start_time = time.time()
@@ -178,9 +178,9 @@ def rubble(processes, fail_method, debug_mail, resume, list_tests, tests, test_d
         if os.path.isfile(trex.rubble.PASSED_TESTS_FILE):
             with open(trex.rubble.PASSED_TESTS_FILE, 'r') as fh:
                 exclude_tests = [line.strip() for line in fh.readlines()]
-                print "Resuming from previous run, ignoring the following tests:"
+                print("Resuming from previous run, ignoring the following tests:")
                 for test_name in sorted(exclude_tests):
-                    print test_name
+                    print(test_name)
     else:
         try:
             os.unlink(trex.rubble.PASSED_TESTS_FILE)
@@ -194,19 +194,19 @@ def rubble(processes, fail_method, debug_mail, resume, list_tests, tests, test_d
 
     def run_tests(instance_number, instance_total):
         def sig_quit_handler(signum, frame):
-            print "[%d] Got SIGQUIT - exiting now" % os.getpid()
+            print("[%d] Got SIGQUIT - exiting now" % os.getpid())
             raise SystemExit(3)
         signal.signal(signal.SIGQUIT, sig_quit_handler)
         tests = trex.rubble.split_tests_by_instance_number(test_classes, instance_number, instance_total)
         harness = trex.rubble.Harness(instance_number=instance_number, fail_method=fail_method, debug_mail=debug_mail)
         harness.run(tests)
         if harness.error_count:
-            print "[%d] Process complete with errors" % os.getpid()
+            print("[%d] Process complete with errors" % os.getpid())
             raise SystemExit(1)
         else:
-            print "[%d] Process complete" % os.getpid()
+            print("[%d] Process complete" % os.getpid())
 
-    print "Initialising the harness"
+    print("Initialising the harness")
     for function in trex.rubble._global_init_harness_methods:
         function()
 
@@ -241,7 +241,7 @@ def rubble(processes, fail_method, debug_mail, resume, list_tests, tests, test_d
         run_tests(0, 1)
 
     end_time = time.time()
-    print "Total time: %0.1f seconds" % (end_time - start_time)
+    print("Total time: %0.1f seconds" % (end_time - start_time))
 
 @cli.command()
 def url_map():
@@ -254,7 +254,7 @@ def url_map():
         tmp = []
         for is_dynamic, data in rule._trace:
             if is_dynamic:
-                tmp.append(u'<%s>' % data)
+                tmp.append('<%s>' % data)
             else:
                 tmp.append(data)
         path = ''.join(tmp).lstrip('|')
@@ -279,22 +279,22 @@ def url_map():
         blueprint = rule['endpoint'].split('.')[0]
         if not last_blueprint or blueprint != last_blueprint:
             if last_blueprint:
-                print
-            print blueprint
-            print '-' * len(blueprint)
+                print()
+            print(blueprint)
+            print('-' * len(blueprint))
             last_blueprint = blueprint
 
-        print '%-75s %-30s -> %s (%s)' % (rule['path'], rule['auth'], rule['endpoint'], '/'.join(list(rule['methods'])))
+        print('%-75s %-30s -> %s (%s)' % (rule['path'], rule['auth'], rule['endpoint'], '/'.join(list(rule['methods']))))
 
 class CronJobCLI(click.MultiCommand):
     def __init__(self, *args, **kwargs):
         import trex.support.cron
 
-        possible_jobs = trex.support.cron.__dict__.items()
+        possible_jobs = list(trex.support.cron.__dict__.items())
         self.jobs = {}
         try:
             cron_module = importlib.import_module('app.support.cron', 'app.support')
-            possible_jobs.extend(cron_module.__dict__.items())
+            possible_jobs.extend(list(cron_module.__dict__.items()))
         except ImportError:
             pass
 
@@ -310,7 +310,7 @@ class CronJobCLI(click.MultiCommand):
         super(CronJobCLI, self).__init__(*args, **kwargs)
 
     def list_commands(self, ctx):
-        return self.jobs.keys()
+        return list(self.jobs.keys())
 
     def get_command(self, ctx, name):
         @click.command(help=self.jobs[name].__doc__)
