@@ -9,8 +9,8 @@
     {% for page in pager.list %}
     <li{% if page == pager.page %} class="active"{% endif %}><a href="{{ pager.uri.remove(['page']).add({'page':page}) }}">{{ page }}</a></li>
     {% endfor %}
-    {% if pager.next() %}
-        <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.next()}) }}">Next</a></li>
+    {% if pager.__next__() %}
+        <li><a href="{{ pager.uri.remove(['page']).add({'page':pager.__next__()}) }}">Next</a></li>
     {% else %}
         <li class="disabled"><a>Next</a></li>
     {% endif %}
