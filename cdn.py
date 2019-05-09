@@ -283,7 +283,7 @@ class CDNFile(object):
         with open(self.full_path, 'rb') as fh:
             data = fh.read()
 
-        if self.mime.startswith('text/') or self.mime == 'application/javascript':
+        if self.mime.startswith('text/') or self.mime == 'application/javascript' or self.mime == 'image/svg+xml':
             if isinstance(data, bytes):
                 data = data.decode('utf8')
 
