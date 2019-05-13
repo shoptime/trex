@@ -372,7 +372,7 @@ def xor_hex_string(s, key) -> str:
     s = bytearray(binascii.unhexlify(s))
     key = bytearray(binascii.unhexlify(key))
 
-    return binascii.hexlify(b''.join([bytes(a ^ b) for (a, b) in zip(s, cycle(key))])).decode('utf8')
+    return binascii.hexlify(b''.join([bytes((a ^ b,)) for (a, b) in zip(s, cycle(key))])).decode('utf8')
 
 class FlashMessage(EmbeddedDocument):
     message  = StringField(required=True)
