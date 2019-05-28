@@ -353,9 +353,6 @@ class Flask(flask.Flask):
         file_handler.setFormatter(self.logger_formatter)
         if self.settings.getboolean('server', 'debug'):
             self.logger.debug("Logging to file: %s" % filename)
-        else:
-            # Nuke the existing StreamHandler
-            logging.root.handlers = []
         logging.root.addHandler(file_handler)
 
     def log_to_papertrail(self, tag):
