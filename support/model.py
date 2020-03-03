@@ -574,14 +574,16 @@ class BaseIdentity(BaseDocument):
                             path=settings.get('identity', 'path'),
                             domain=domain,
                             httponly=settings.get('identity', 'http_only'),
-                            secure=settings.get('server', 'url').startswith('https:'))
+                            secure=settings.get('server', 'url').startswith('https:'),
+                            samesite=settings.get('identity', 'samesite'))
 
         response.set_cookie(settings.get('identity', 'cookie_key'), self.session_id,
                             max_age=max_age,
                             path=settings.get('identity', 'path'),
                             domain=domain,
                             httponly=settings.get('identity', 'http_only'),
-                            secure=settings.get('server', 'url').startswith('https:'))
+                            secure=settings.get('server', 'url').startswith('https:'),
+                            samesite=settings.get('identity', 'samesite'))
 
     def set_expiry(self, seconds_from_now):
         """
