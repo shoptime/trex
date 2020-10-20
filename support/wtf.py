@@ -16,7 +16,7 @@ import json
 import pytz
 import operator
 import re
-from cgi import escape
+from html import escape
 import magic
 from furl import furl
 import logging
