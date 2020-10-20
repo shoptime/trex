@@ -485,7 +485,7 @@ class Flask(flask.Flask):
             # Workaround: pre-split the string
             for component in re.split(r"\r?\n", s):
                 # textwrap will eat empty strings for breakfirst. Therefore we route them around it.
-                if len(component) is 0:
+                if len(component) == 0:
                     accumulator.append(component)
                     continue
                 accumulator.extend(
