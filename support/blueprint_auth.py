@@ -106,7 +106,7 @@ def after_request(response):
         g.identity.set_cookie(response)
     return response
 
-blueprint = AuthBlueprint('trex.auth', __name__, url_prefix='/auth')
+blueprint = AuthBlueprint('trex_auth', __name__, url_prefix='/auth')
 
 @blueprint.route('/login', methods=['GET', 'POST'], auth=auth.public)
 @render_html('trex/auth/login.jinja2')

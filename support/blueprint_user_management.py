@@ -10,7 +10,7 @@ from .audit import audit
 from .pager import MongoPager
 import app.model as m
 
-blueprint = AuthBlueprint('trex.user_management', __name__, url_prefix='/admin/users')
+blueprint = AuthBlueprint('trex_user_management', __name__, url_prefix='/admin/users')
 
 @blueprint.route('/', auth=auth.has_flag('trex.user_management'))
 @render_html('trex/user_management/index.jinja2')

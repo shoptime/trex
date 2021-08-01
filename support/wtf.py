@@ -676,8 +676,8 @@ class FileListWidget(object):
         data = dict(
             widget_args = widgets.html_params(**{
                 'class':'trex-file-list-widget',
-                'data-xhr-url': url_for('trex.upload.xhr'),
-                'data-iframe-url': url_for('trex.upload.iframe'),
+                'data-xhr-url': url_for('trex_upload.xhr'),
+                'data-iframe-url': url_for('trex_upload.iframe'),
             }),
             input_args = widgets.html_params(**{
                 'id': field.id,
@@ -737,8 +737,8 @@ class FileWidget(object):
         data = dict(
             widget_args = widgets.html_params(**{
                 'class': self.class_name,
-                'data-xhr-url': url_for('trex.upload.xhr'),
-                'data-iframe-url': url_for('trex.upload.iframe'),
+                'data-xhr-url': url_for('trex_upload.xhr'),
+                'data-iframe-url': url_for('trex_upload.iframe'),
                 'data-options': tjson.dumps(options),
             }),
             input_args = widgets.html_params(**{
@@ -1094,7 +1094,7 @@ class URLValidator(object):
 
 validators.URL = URLValidator
 
-blueprint = AuthBlueprint('trex.upload', __name__, url_prefix='/trex/upload')
+blueprint = AuthBlueprint('trex_upload', __name__, url_prefix='/trex/upload')
 
 @blueprint.route('/xhr', methods=['POST'], endpoint='xhr', auth=auth.login)
 @render_json()
@@ -1109,7 +1109,7 @@ def upload_xhr():
     upload.save()
 
     return dict(
-        url      = url_for('trex.upload.view', token=upload.token),
+        url      = url_for('trex_upload.view', token=upload.token),
         oid      = str(upload.id),
         progress = 100,
     )
@@ -1136,7 +1136,7 @@ def upload_iframe():
 
     return dict(
         file_info = dict(
-            url      = url_for('trex.upload.view', token=upload.token),
+            url      = url_for('trex_upload.view', token=upload.token),
             oid      = str(upload.id),
             size     = upload.file.length,
             progress = 100,

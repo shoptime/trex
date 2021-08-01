@@ -62,7 +62,7 @@
                         {% if g.user.has_flag('trex.user_management_login_as') and g.user != user %}
                         <li>
                             <a class="trex-post-confirm"
-                                href="{{ url_for('trex.auth.login_as', user_token=user.token) }}"
+                                href="{{ url_for('trex_auth.login_as', user_token=user.token) }}"
                                 data-title="Confirm log in as"
                                 data-body="This will log you in as {{ user.display_name }} &lt;{{ user.email }}&gt;. Are you sure you wish to proceed?"
                                 data-confirm-label="Log in"
@@ -115,7 +115,7 @@
                 {% if g.user.has_flag('trex.user_management_login_as') and g.user != user %}
                 <button
                     class="btn btn-small trex-post-confirm"
-                    data-href="{{ url_for('trex.auth.login_as', user_token=user.token) }}"
+                    data-href="{{ url_for('trex_auth.login_as', user_token=user.token) }}"
                     data-title="Confirm log in as"
                     data-body="This will log you in as {{ user.email }}. Are you sure you wish to proceed?"
                     data-confirm-label="Log in"

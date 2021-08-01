@@ -167,10 +167,10 @@ class BaseUser(BaseDocument):
 
     @classmethod
     def url_for_add_user(cls, **kwargs):
-        return url_for('trex.user_management.add', **kwargs)
+        return url_for('trex_user_management.add', **kwargs)
 
     def url_for_edit_user(self, **kwargs):
-        return url_for('trex.user_management.edit', user_token=self.token, **kwargs)
+        return url_for('trex_user_management.edit', user_token=self.token, **kwargs)
 
     def role_label(self):
         return self.roles()[self.role]['label']
@@ -278,8 +278,8 @@ class UserAccountRecovery(BaseDocument):
             subject   = 'Password reset email for %s' % app.settings.get('app', 'name'),
             text_body = "Hi,\n\nYou can reset your password by clicking on this link:\n %(direct_url)s\n\nOr, you can use the code %(code)s at this link: %(url)s\n\n--\n%(app_name)s" % dict(
                 code       = self.code,
-                direct_url = url_for('trex.auth.recover_password', _external=True, code=self.code),
-                url        = url_for('trex.auth.lost_password_sent', _external=True),
+                direct_url = url_for('trex_auth.recover_password', _external=True, code=self.code),
+                url        = url_for('trex_auth.lost_password_sent', _external=True),
                 app_name   = app.settings.get('app', 'name'),
             )
         )

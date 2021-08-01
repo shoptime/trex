@@ -8,7 +8,7 @@ from jinja2.exceptions import TemplateNotFound
 import json
 import hashlib
 
-blueprint = AuthBlueprint('trex.templates', __name__, url_prefix='/trex/templates')
+blueprint = AuthBlueprint('trex_templates', __name__, url_prefix='/trex/templates')
 
 @blueprint.route('/<path:template>', methods=['GET', 'POST'], auth=auth.public)
 @render_html()
