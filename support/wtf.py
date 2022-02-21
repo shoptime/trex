@@ -817,7 +817,7 @@ class ImageField(FileField):
             # view the existing image)
             TrexUploadTemporaryAccess(upload=self.data, user=g.user).save()
 
-class PhoneField(TextField):
+class PhoneField(StringField):
     def __init__(self, label='', validators=None, country=None, country_field=None, display_placeholder=True, **kwargs):
         self.country_field = country_field
         self.country = country
@@ -945,7 +945,7 @@ class BrainTreeEncryptedTextInput(widgets.TextInput):
         kwargs['data-encrypted-name'] = field.name
         return widgets.HTMLString('<input %s>' % self.html_params(**kwargs))
 
-class BrainTreeTextField(TextField):
+class BrainTreeTextField(StringField):
     widget = BrainTreeEncryptedTextInput()
 
 class BrainTreeEncryptedSelect(widgets.Select):
