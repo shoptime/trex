@@ -19,6 +19,7 @@ import re
 from html import escape
 import magic
 from furl import furl
+from markupsafe import Markup
 import logging
 log = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class BareListWidget(object):
                 html.append('%s %s' % (subfield(**kwargs), subfield.label))
             else:
                 html.append(subfield(**kwargs))
-        return widgets.HTMLString(''.join(html))
+        return Markup(''.join(html))
 
 
 class BootstrapCheckboxInput(widgets.Input):
@@ -88,7 +89,7 @@ class BootstrapCheckboxInput(widgets.Input):
         kwargs.pop('class', None)
 
         html_string = super(BootstrapCheckboxInput, self).__call__(field, **kwargs)
-        return widgets.HTMLString('<label class="checkbox">%s %s</label>' % (html_string.__html__(), field.label.text))
+        return Markup('<label class="checkbox">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 
 class BootstrapRadioInput(widgets.Input):
@@ -104,7 +105,7 @@ class BootstrapRadioInput(widgets.Input):
         kwargs.pop('class', None)
 
         html_string = super(BootstrapRadioInput, self).__call__(field, **kwargs)
-        return widgets.HTMLString('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
+        return Markup('<label class="radio">%s %s</label>' % (html_string.__html__(), field.label.text))
 
 class TextAreaListWidget(object):
     def __call__(self, field, **kwargs):
@@ -125,7 +126,7 @@ class TextAreaListWidget(object):
         output += '</div>'
         output += '</div>'
 
-        return widgets.HTMLString(output)
+        return Markup(output)
 
 
 class TextAreaListField(Field):
@@ -281,7 +282,7 @@ class DateTimeWidget(object):
             }),
         )
 
-        return widgets.HTMLString("""
+        return Markup("""
 <div %(widget_args)s>
     <input %(date_input_args)s>
     <input %(time_input_args)s>
@@ -377,7 +378,7 @@ class TimeWidget(object):
             time_input_args = widgets.html_params(**widget_params),
         )
 
-        return widgets.HTMLString("""
+        return Markup("""
 <div %(widget_args)s>
     <input %(time_input_args)s>
 </div>
@@ -447,7 +448,7 @@ class SelectDateWidget(object):
             year_select_options = self.year_select_options(field),
         )
 
-        return widgets.HTMLString("""
+        return Markup("""
 <div %(widget_args)s>
     <select %(day_select_args)s>
         %(day_select_options)s
@@ -569,10 +570,10 @@ class BooleanFieldWidget(object):
         )
 
         if field.label_lhs:
-            return widgets.HTMLString('<div class="checkbox"><input %(input_args)s></div>' % data)
+            return Markup('<div class="checkbox"><input %(input_args)s></div>' % data)
 
         data['label'] = field.boolean_label
-        return widgets.HTMLString('<label class="checkbox"><input %(input_args)s> %(label)s</label>' % data)
+        return Markup('<label class="checkbox"><input %(input_args)s> %(label)s</label>' % data)
 
 class BooleanField(Field):
     widget = BooleanFieldWidget()
@@ -688,7 +689,7 @@ class FileListWidget(object):
             file_input_name = "%s_file_input" % field.name,
         )
 
-        return widgets.HTMLString("""
+        return Markup("""
 <div %(widget_args)s>
     <input %(input_args)s>
     <div class="files"></div>
@@ -760,7 +761,7 @@ class FileWidget(object):
             file_display = self.file_display(field),
         )
 
-        return widgets.HTMLString("""
+        return Markup("""
 <div %(widget_args)s>
     <div %(file_display_args)s">%(file_display)s</div>
     <a class="add-file btn btn-default">Upload file <input name="%(file_input_name)s" type="file"></a>
@@ -943,7 +944,7 @@ class BrainTreeEncryptedTextInput(widgets.TextInput):
         kwargs.setdefault('id', field.id)
         kwargs.setdefault('type', self.input_type)
         kwargs['data-encrypted-name'] = field.name
-        return widgets.HTMLString('<input %s>' % self.html_params(**kwargs))
+        return Markup('<input %s>' % self.html_params(**kwargs))
 
 class BrainTreeTextField(StringField):
     widget = BrainTreeEncryptedTextInput()
@@ -958,7 +959,7 @@ class BrainTreeEncryptedSelect(widgets.Select):
         for val, label, selected in field.iter_choices():
             html.append(self.render_option(val, label, selected))
         html.append('</select>')
-        return widgets.HTMLString(''.join(html))
+        return Markup(''.join(html))
 
 class BrainTreeSelectField(SelectField):
     widget = BrainTreeEncryptedSelect()
